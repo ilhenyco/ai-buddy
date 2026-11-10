@@ -1,0 +1,249 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P02" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P02_collab">
+    <bpmn:participant id="P02_pool" name="Первый вход и следующий шаг" processRef="P02_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P02_process" name="Первый вход и следующий шаг" isExecutable="false">
+    <bpmn:documentation>Область: Прототип
+Старт: Стажёр открывает экран входа
+Результат: Показан свой план и вход в нужную карточку либо указан контакт руководителя.
+Приёмка: Два тестовых пользователя видят разные планы. Ошибка входа возвращает 401. При отсутствии опубликованного плана карточки закрыты, виден контакт руководителя.
+POST /demo/session, затем GET /onboarding. Контакт руководителя берётся из профиля, доступного по сессии.
+Выбор карточки открывает P03, P04 или P07. Чат открывает P14. Пользователь может вернуться в P02 без потери прогресса.</bpmn:documentation>
+    <bpmn:laneSet id="P02_lanes">
+      <bpmn:lane id="P02_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P02_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_login</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_choose</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P02_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P02_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_signed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_err</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_load</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_has</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_contact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_home</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P02_blocked</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P02_s" name="Первый вход">
+      <bpmn:outgoing>P02_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="P02_login" name="Войти под тестовым аккаунтом">
+      <bpmn:documentation>Лист 3, строка 8. Первый вход
+Роль: Стажёр
+Результат: Стажёр увидел свой план или передал руководителю вопрос.
+Участие AI-buddy: Прототип. Показывает план и ближайший шаг. Если плана нет, указывает контакт руководителя.</bpmn:documentation>
+      <bpmn:incoming>P02_F01</bpmn:incoming>
+      <bpmn:incoming>P02_F06</bpmn:incoming>
+      <bpmn:outgoing>P02_F02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P02_session" name="Проверить данные входа">
+      <bpmn:incoming>P02_F02</bpmn:incoming>
+      <bpmn:outgoing>P02_F03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P02_signed" name="Сессия создана?" default="P02_F05" gatewayDirection="Diverging">
+      <bpmn:incoming>P02_F03</bpmn:incoming>
+      <bpmn:outgoing>P02_F04</bpmn:outgoing>
+      <bpmn:outgoing>P02_F05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P02_err" name="Показать ошибку входа">
+      <bpmn:incoming>P02_F05</bpmn:incoming>
+      <bpmn:outgoing>P02_F06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P02_load" name="Загрузить свой опубликованный план">
+      <bpmn:incoming>P02_F04</bpmn:incoming>
+      <bpmn:outgoing>P02_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P02_has" name="План доступен?" default="P02_F09" gatewayDirection="Diverging">
+      <bpmn:incoming>P02_F07</bpmn:incoming>
+      <bpmn:outgoing>P02_F08</bpmn:outgoing>
+      <bpmn:outgoing>P02_F09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P02_contact" name="Показать контакт руководителя">
+      <bpmn:incoming>P02_F09</bpmn:incoming>
+      <bpmn:outgoing>P02_F10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P02_home" name="Показать «Мой старт» и три карточки">
+      <bpmn:documentation>Лист 3, строка 9. Карточка «Мой старт»
+Роль: AI-buddy
+Результат: Стажёр понимает, с чего начать и к кому обратиться.
+Участие AI-buddy: Прототип. Показывает доступные стажёру этап, контакты и следующий шаг.</bpmn:documentation>
+      <bpmn:incoming>P02_F08</bpmn:incoming>
+      <bpmn:outgoing>P02_F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="P02_choose" name="Выбрать карточку или чат">
+      <bpmn:incoming>P02_F11</bpmn:incoming>
+      <bpmn:outgoing>P02_F12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="P02_e" name="Открыт сценарий">
+      <bpmn:incoming>P02_F12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P02_blocked" name="План недоступен">
+      <bpmn:incoming>P02_F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P02_F01" sourceRef="P02_s" targetRef="P02_login"/>
+    <bpmn:sequenceFlow id="P02_F02" sourceRef="P02_login" targetRef="P02_session"/>
+    <bpmn:sequenceFlow id="P02_F03" sourceRef="P02_session" targetRef="P02_signed"/>
+    <bpmn:sequenceFlow id="P02_F04" sourceRef="P02_signed" targetRef="P02_load" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">sessionCreated</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P02_F05" sourceRef="P02_signed" targetRef="P02_err" name="Нет"/>
+    <bpmn:sequenceFlow id="P02_F06" sourceRef="P02_err" targetRef="P02_login"/>
+    <bpmn:sequenceFlow id="P02_F07" sourceRef="P02_load" targetRef="P02_has"/>
+    <bpmn:sequenceFlow id="P02_F08" sourceRef="P02_has" targetRef="P02_home" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">publishedPlanVisible</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P02_F09" sourceRef="P02_has" targetRef="P02_contact" name="Нет"/>
+    <bpmn:sequenceFlow id="P02_F10" sourceRef="P02_contact" targetRef="P02_blocked"/>
+    <bpmn:sequenceFlow id="P02_F11" sourceRef="P02_home" targetRef="P02_choose"/>
+    <bpmn:sequenceFlow id="P02_F12" sourceRef="P02_choose" targetRef="P02_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P02_diagram" name="Первый вход и следующий шаг">
+    <bpmndi:BPMNPlane id="P02_plane" bpmnElement="P02_collab">
+      <bpmndi:BPMNShape id="P02_pool_di" bpmnElement="P02_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1674" height="408"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_lane_I_di" bpmnElement="P02_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1644" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_lane_A_di" bpmnElement="P02_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="1644" height="264"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_s_di" bpmnElement="P02_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_login_di" bpmnElement="P02_login" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_choose_di" bpmnElement="P02_choose" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="1293" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_e_di" bpmnElement="P02_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1518" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="1470" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_session_di" bpmnElement="P02_session" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="423" y="258" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_signed_di" bpmnElement="P02_signed" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="642" y="282" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="588" y="336" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_err_di" bpmnElement="P02_err" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="771" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_load_di" bpmnElement="P02_load" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="771" y="318" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_has_di" bpmnElement="P02_has" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="990" y="282" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="936" y="336" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_contact_di" bpmnElement="P02_contact" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1119" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_home_di" bpmnElement="P02_home" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1119" y="318" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P02_blocked_di" bpmnElement="P02_blocked" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1344" y="288" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="1296" y="330" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P02_F01_di" bpmnElement="P02_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="249" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F02_di" bpmnElement="P02_F02">
+        <di:waypoint x="387" y="102"/>
+        <di:waypoint x="396" y="102"/>
+        <di:waypoint x="396" y="306"/>
+        <di:waypoint x="423" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F03_di" bpmnElement="P02_F03">
+        <di:waypoint x="561" y="306"/>
+        <di:waypoint x="642" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F04_di" bpmnElement="P02_F04">
+        <di:waypoint x="690" y="306"/>
+        <di:waypoint x="756" y="306"/>
+        <di:waypoint x="756" y="366"/>
+        <di:waypoint x="771" y="366"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="726" y="281" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F05_di" bpmnElement="P02_F05">
+        <di:waypoint x="690" y="306"/>
+        <di:waypoint x="702" y="306"/>
+        <di:waypoint x="702" y="246"/>
+        <di:waypoint x="771" y="246"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="720" y="221" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F06_di" bpmnElement="P02_F06">
+        <di:waypoint x="840" y="198"/>
+        <di:waypoint x="840" y="162"/>
+        <di:waypoint x="318" y="162"/>
+        <di:waypoint x="318" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F07_di" bpmnElement="P02_F07">
+        <di:waypoint x="909" y="366"/>
+        <di:waypoint x="918" y="366"/>
+        <di:waypoint x="918" y="306"/>
+        <di:waypoint x="990" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F08_di" bpmnElement="P02_F08">
+        <di:waypoint x="1038" y="306"/>
+        <di:waypoint x="1104" y="306"/>
+        <di:waypoint x="1104" y="366"/>
+        <di:waypoint x="1119" y="366"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="1074" y="281" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F09_di" bpmnElement="P02_F09">
+        <di:waypoint x="1038" y="306"/>
+        <di:waypoint x="1050" y="306"/>
+        <di:waypoint x="1050" y="246"/>
+        <di:waypoint x="1119" y="246"/>
+        <bpmndi:BPMNLabel labelStyle="P02_font">
+          <dc:Bounds x="1068" y="221" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F10_di" bpmnElement="P02_F10">
+        <di:waypoint x="1257" y="246"/>
+        <di:waypoint x="1266" y="246"/>
+        <di:waypoint x="1266" y="306"/>
+        <di:waypoint x="1344" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F11_di" bpmnElement="P02_F11">
+        <di:waypoint x="1257" y="366"/>
+        <di:waypoint x="1278" y="366"/>
+        <di:waypoint x="1278" y="102"/>
+        <di:waypoint x="1293" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P02_F12_di" bpmnElement="P02_F12">
+        <di:waypoint x="1431" y="102"/>
+        <di:waypoint x="1518" y="102"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P02_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

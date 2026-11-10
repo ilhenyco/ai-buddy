@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P13" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P13_collab">
+    <bpmn:participant id="P13_pool" name="Завершение плана" processRef="P13_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P13_process" name="Завершение плана" isExecutable="false">
+    <bpmn:documentation>Область: Полная версия
+Старт: Ответственный зафиксировал итог или ожидаемую дату ответа
+Результат: Стажёр видит статус и следующий шаг. После решения HR запускает оформление, стажёр проверяет передачу и заполняет опрос.
+Приёмка: Если решение ещё согласуется, показывается срок и контакт. Кадровые действия запускает HR после согласованного решения.
+После согласования решения просмотр обновляется по факту записи нового статуса. Переход в штат и закрытие стажировки — варианты действия HR вне прототипа.</bpmn:documentation>
+    <bpmn:laneSet id="P13_lanes">
+      <bpmn:lane id="P13_lane_H" name="HR">
+        <bpmn:flowNodeRef>P13_hr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P13_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P13_i</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P13_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P13_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_show</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_w</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P13_s" name="Статус зафиксирован">
+      <bpmn:outgoing>P13_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P13_show" name="Показать согласованный статус">
+      <bpmn:documentation>Лист 3, строка 41. Завершение плана
+Роль: AI-buddy
+Результат: Стажёр видит согласованный итог или ожидаемую дату ответа.
+Участие AI-buddy: Полная версия. Показывает статус и следующий шаг после отметки ответственного. При ожидании показывает срок и контакт.</bpmn:documentation>
+      <bpmn:incoming>P13_F01</bpmn:incoming>
+      <bpmn:outgoing>P13_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P13_g" name="Решение принято?" default="P13_F04" gatewayDirection="Diverging">
+      <bpmn:incoming>P13_F02</bpmn:incoming>
+      <bpmn:outgoing>P13_F03</bpmn:outgoing>
+      <bpmn:outgoing>P13_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P13_wait" name="Показать срок и контакт">
+      <bpmn:documentation>Лист 3, строка 41. Завершение плана
+Роль: AI-buddy
+Результат: Стажёр видит согласованный итог или ожидаемую дату ответа.
+Участие AI-buddy: Полная версия. Показывает статус и следующий шаг после отметки ответственного. При ожидании показывает срок и контакт.</bpmn:documentation>
+      <bpmn:incoming>P13_F04</bpmn:incoming>
+      <bpmn:outgoing>P13_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P13_w" name="Ожидание решения">
+      <bpmn:incoming>P13_F05</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:manualTask id="P13_hr" name="Запустить оформление и передать опрос">
+      <bpmn:documentation>Лист 3, строка 39. Документы, опрос и переход
+Роль: HR
+Результат: Оформление идёт по нужному маршруту. Стажёр знает, что делать дальше.
+Участие AI-buddy: Не участвует. Оформление, опрос и приглашения ведёт HR.</bpmn:documentation>
+      <bpmn:incoming>P13_F03</bpmn:incoming>
+      <bpmn:outgoing>P13_F06</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P13_i" name="Проверить передачу и заполнить опрос">
+      <bpmn:documentation>Лист 3, строка 40. Личный итог и обратная связь
+Роль: Стажёр
+Результат: Опрос заполнен, вопросы по документам переданы HR.
+Участие AI-buddy: Не участвует. Стажёр заполняет опрос и обращается в HR за документами.</bpmn:documentation>
+      <bpmn:incoming>P13_F06</bpmn:incoming>
+      <bpmn:outgoing>P13_F07</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P13_e" name="Стажировка завершена">
+      <bpmn:incoming>P13_F07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P13_F01" sourceRef="P13_s" targetRef="P13_show"/>
+    <bpmn:sequenceFlow id="P13_F02" sourceRef="P13_show" targetRef="P13_g"/>
+    <bpmn:sequenceFlow id="P13_F03" sourceRef="P13_g" targetRef="P13_hr" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">decisionConfirmed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P13_F04" sourceRef="P13_g" targetRef="P13_wait" name="Нет"/>
+    <bpmn:sequenceFlow id="P13_F05" sourceRef="P13_wait" targetRef="P13_w"/>
+    <bpmn:sequenceFlow id="P13_F06" sourceRef="P13_hr" targetRef="P13_i"/>
+    <bpmn:sequenceFlow id="P13_F07" sourceRef="P13_i" targetRef="P13_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P13_diagram" name="Завершение плана">
+    <bpmndi:BPMNPlane id="P13_plane" bpmnElement="P13_collab">
+      <bpmndi:BPMNShape id="P13_pool_di" bpmnElement="P13_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1152" height="432"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_H_di" bpmnElement="P13_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1122" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_I_di" bpmnElement="P13_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="1122" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_A_di" bpmnElement="P13_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="324" width="1122" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_hr_di" bpmnElement="P13_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_i_di" bpmnElement="P13_i" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="771" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_e_di" bpmnElement="P13_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="996" y="228" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="948" y="270" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_s_di" bpmnElement="P13_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="372" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="78" y="414" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_show_di" bpmnElement="P13_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="342" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_g_di" bpmnElement="P13_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="468" y="366" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="414" y="420" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_wait_di" bpmnElement="P13_wait" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="342" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_w_di" bpmnElement="P13_w" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="822" y="372" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="774" y="414" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P13_F01_di" bpmnElement="P13_F01">
+        <di:waypoint x="162" y="390"/>
+        <di:waypoint x="249" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F02_di" bpmnElement="P13_F02">
+        <di:waypoint x="387" y="390"/>
+        <di:waypoint x="468" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F03_di" bpmnElement="P13_F03">
+        <di:waypoint x="516" y="390"/>
+        <di:waypoint x="528" y="390"/>
+        <di:waypoint x="528" y="102"/>
+        <di:waypoint x="597" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="547" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F04_di" bpmnElement="P13_F04">
+        <di:waypoint x="516" y="390"/>
+        <di:waypoint x="597" y="390"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="540" y="365" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F05_di" bpmnElement="P13_F05">
+        <di:waypoint x="735" y="390"/>
+        <di:waypoint x="822" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F06_di" bpmnElement="P13_F06">
+        <di:waypoint x="735" y="102"/>
+        <di:waypoint x="744" y="102"/>
+        <di:waypoint x="744" y="246"/>
+        <di:waypoint x="771" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F07_di" bpmnElement="P13_F07">
+        <di:waypoint x="909" y="246"/>
+        <di:waypoint x="996" y="246"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P13_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

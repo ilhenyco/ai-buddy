@@ -1,0 +1,246 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P10" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P10_collab">
+    <bpmn:participant id="P10_pool" name="Экватор стажировки" processRef="P10_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P10_process" name="Экватор стажировки" isExecutable="false">
+    <bpmn:documentation>Область: Полная версия
+Старт: Наступила контрольная точка экватора по плану
+Результат: Руководитель дал обратную связь, приоритеты уточнены, стажёр и бадди согласовали ближайшие задачи.
+Приёмка: AI показывает согласованные материалы и готовит черновик только по запросу. Оценку и обновлённые цели подтверждает руководитель.
+Точная дата в опубликованном плане. Ориентир для 6 месяцев — конец 3-го, для 9 месяцев — середина 5-го. Репетиция проводится при необходимости.</bpmn:documentation>
+    <bpmn:laneSet id="P10_lanes">
+      <bpmn:lane id="P10_lane_H" name="HR">
+        <bpmn:flowNodeRef>P10_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P10_hr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P10_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P10_review</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P10_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P10_rehearse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P10_plan</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P10_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P10_collect</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P10_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P10_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P10_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P10_show</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P10_lane_M" name="Модель AI">
+        <bpmn:flowNodeRef>P10_ai</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P10_s" name="Экватор по плану">
+      <bpmn:outgoing>P10_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="P10_hr" name="Сообщить дату, формат и шаблон">
+      <bpmn:documentation>Лист 3, строка 27. Подготовка экваторной встречи
+Роль: HR
+Результат: Стажёр, бадди и руководитель знают формат и дату.
+Участие AI-buddy: Полная версия. Показывает согласованные дату, формат и ссылку на шаблон.</bpmn:documentation>
+      <bpmn:incoming>P10_F01</bpmn:incoming>
+      <bpmn:outgoing>P10_F02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:serviceTask id="P10_show" name="Показать точку и материалы">
+      <bpmn:documentation>Лист 3, строка 29. Подготовка к экватору
+Роль: AI-buddy
+Результат: У стажёра есть черновик для проверки и дополнения.
+Участие AI-buddy: Полная версия. Показывает материалы. По запросу собирает черновик повестки из отмеченного прогресса.</bpmn:documentation>
+      <bpmn:incoming>P10_F02</bpmn:incoming>
+      <bpmn:outgoing>P10_F03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P10_collect" name="Собрать результаты и вопросы">
+      <bpmn:documentation>Лист 3, строка 28. Промежуточные результаты
+Роль: Стажёр
+Результат: Есть материалы для разговора о результатах и блокерах.
+Участие AI-buddy: По запросу · полная версия. Помогает разложить отмеченные результаты по согласованным целям.</bpmn:documentation>
+      <bpmn:incoming>P10_F03</bpmn:incoming>
+      <bpmn:outgoing>P10_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="P10_g" name="Нужна помощь с повесткой?" default="P10_F06" gatewayDirection="Diverging">
+      <bpmn:incoming>P10_F04</bpmn:incoming>
+      <bpmn:outgoing>P10_F05</bpmn:outgoing>
+      <bpmn:outgoing>P10_F06</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P10_ai" name="Собрать черновик повестки">
+      <bpmn:documentation>Лист 3, строка 29. Подготовка к экватору
+Роль: AI-buddy
+Результат: У стажёра есть черновик для проверки и дополнения.
+Участие AI-buddy: Полная версия. Показывает материалы. По запросу собирает черновик повестки из отмеченного прогресса.</bpmn:documentation>
+      <bpmn:incoming>P10_F05</bpmn:incoming>
+      <bpmn:outgoing>P10_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P10_rehearse" name="Помочь с примерами и репетицией">
+      <bpmn:documentation>Лист 3, строка 30. Репетиция и следующие задачи
+Роль: Бадди
+Результат: У стажёра есть конкретные задачи и договорённость о поддержке.
+Участие AI-buddy: По запросу · полная версия. Помогает оформить список задач, который согласовали стажёр и бадди.</bpmn:documentation>
+      <bpmn:incoming>P10_F06</bpmn:incoming>
+      <bpmn:incoming>P10_F07</bpmn:incoming>
+      <bpmn:outgoing>P10_F08</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P10_review" name="Обсудить итоги и согласовать цели">
+      <bpmn:documentation>Лист 3, строка 31. Обратная связь и пересмотр плана
+Роль: Руководитель
+Результат: Стажёр понимает, что улучшить и по каким критериям оценят итог.
+Участие AI-buddy: Не участвует во встрече. Обратную связь и обновлённые цели согласует руководитель.</bpmn:documentation>
+      <bpmn:incoming>P10_F08</bpmn:incoming>
+      <bpmn:outgoing>P10_F09</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P10_plan" name="Разложить цели на ближайшие задачи">
+      <bpmn:documentation>Лист 3, строка 30. Репетиция и следующие задачи
+Роль: Бадди
+Результат: У стажёра есть конкретные задачи и договорённость о поддержке.
+Участие AI-buddy: По запросу · полная версия. Помогает оформить список задач, который согласовали стажёр и бадди.</bpmn:documentation>
+      <bpmn:incoming>P10_F09</bpmn:incoming>
+      <bpmn:outgoing>P10_F10</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P10_e" name="План до финала понятен">
+      <bpmn:incoming>P10_F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P10_F01" sourceRef="P10_s" targetRef="P10_hr"/>
+    <bpmn:sequenceFlow id="P10_F02" sourceRef="P10_hr" targetRef="P10_show"/>
+    <bpmn:sequenceFlow id="P10_F03" sourceRef="P10_show" targetRef="P10_collect"/>
+    <bpmn:sequenceFlow id="P10_F04" sourceRef="P10_collect" targetRef="P10_g"/>
+    <bpmn:sequenceFlow id="P10_F05" sourceRef="P10_g" targetRef="P10_ai" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">agendaRequested</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P10_F06" sourceRef="P10_g" targetRef="P10_rehearse" name="Нет"/>
+    <bpmn:sequenceFlow id="P10_F07" sourceRef="P10_ai" targetRef="P10_rehearse"/>
+    <bpmn:sequenceFlow id="P10_F08" sourceRef="P10_rehearse" targetRef="P10_review"/>
+    <bpmn:sequenceFlow id="P10_F09" sourceRef="P10_review" targetRef="P10_plan"/>
+    <bpmn:sequenceFlow id="P10_F10" sourceRef="P10_plan" targetRef="P10_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P10_diagram" name="Экватор стажировки">
+    <bpmndi:BPMNPlane id="P10_plane" bpmnElement="P10_collab">
+      <bpmndi:BPMNShape id="P10_pool_di" bpmnElement="P10_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1848" height="864"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_H_di" bpmnElement="P10_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_L_di" bpmnElement="P10_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_B_di" bpmnElement="P10_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="324" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_I_di" bpmnElement="P10_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_A_di" bpmnElement="P10_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="612" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_lane_M_di" bpmnElement="P10_lane_M" isHorizontal="true">
+        <dc:Bounds x="60" y="756" width="1818" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_s_di" bpmnElement="P10_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P10_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_hr_di" bpmnElement="P10_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_review_di" bpmnElement="P10_review" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1293" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_rehearse_di" bpmnElement="P10_rehearse" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="1119" y="342" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_plan_di" bpmnElement="P10_plan" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="1467" y="342" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_collect_di" bpmnElement="P10_collect" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_g_di" bpmnElement="P10_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="816" y="510" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P10_font">
+          <dc:Bounds x="762" y="564" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_e_di" bpmnElement="P10_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1692" y="516" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P10_font">
+          <dc:Bounds x="1644" y="558" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_show_di" bpmnElement="P10_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="423" y="630" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P10_ai_di" bpmnElement="P10_ai" bioc:fill="#EDE8FF" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="774" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P10_F01_di" bpmnElement="P10_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="249" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F02_di" bpmnElement="P10_F02">
+        <di:waypoint x="387" y="102"/>
+        <di:waypoint x="396" y="102"/>
+        <di:waypoint x="396" y="678"/>
+        <di:waypoint x="423" y="678"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F03_di" bpmnElement="P10_F03">
+        <di:waypoint x="561" y="678"/>
+        <di:waypoint x="570" y="678"/>
+        <di:waypoint x="570" y="534"/>
+        <di:waypoint x="597" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F04_di" bpmnElement="P10_F04">
+        <di:waypoint x="735" y="534"/>
+        <di:waypoint x="816" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F05_di" bpmnElement="P10_F05">
+        <di:waypoint x="864" y="534"/>
+        <di:waypoint x="930" y="534"/>
+        <di:waypoint x="930" y="822"/>
+        <di:waypoint x="945" y="822"/>
+        <bpmndi:BPMNLabel labelStyle="P10_font">
+          <dc:Bounds x="900" y="509" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F06_di" bpmnElement="P10_F06">
+        <di:waypoint x="864" y="534"/>
+        <di:waypoint x="876" y="534"/>
+        <di:waypoint x="876" y="390"/>
+        <di:waypoint x="1119" y="390"/>
+        <bpmndi:BPMNLabel labelStyle="P10_font">
+          <dc:Bounds x="981" y="365" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F07_di" bpmnElement="P10_F07">
+        <di:waypoint x="1083" y="822"/>
+        <di:waypoint x="1092" y="822"/>
+        <di:waypoint x="1092" y="390"/>
+        <di:waypoint x="1119" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F08_di" bpmnElement="P10_F08">
+        <di:waypoint x="1257" y="390"/>
+        <di:waypoint x="1266" y="390"/>
+        <di:waypoint x="1266" y="246"/>
+        <di:waypoint x="1293" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F09_di" bpmnElement="P10_F09">
+        <di:waypoint x="1431" y="246"/>
+        <di:waypoint x="1440" y="246"/>
+        <di:waypoint x="1440" y="390"/>
+        <di:waypoint x="1467" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P10_F10_di" bpmnElement="P10_F10">
+        <di:waypoint x="1605" y="390"/>
+        <di:waypoint x="1614" y="390"/>
+        <di:waypoint x="1614" y="534"/>
+        <di:waypoint x="1692" y="534"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P10_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

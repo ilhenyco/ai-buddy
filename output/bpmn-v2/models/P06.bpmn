@@ -1,0 +1,319 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P06" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P06_collab">
+    <bpmn:participant id="P06_pool" name="Проверка статуса доступа" processRef="P06_process"/>
+    <bpmn:participant id="P06_accessService" name="Тестовый сервис доступов"/>
+    <bpmn:messageFlow id="P06_request" name="Запрос GET" sourceRef="P06_read" targetRef="P06_accessService"/>
+    <bpmn:messageFlow id="P06_response" name="Статус и ревизия" sourceRef="P06_accessService" targetRef="P06_read"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P06_process" name="Проверка статуса доступа" isExecutable="false">
+    <bpmn:documentation>Область: Прототип
+Старт: Стажёр явно нажал «Проверить статус»
+Результат: Отображён подтверждённый статус, последнее известное состояние при сбое либо предусмотренный следующий шаг.
+Приёмка: Устаревший ответ не понижает ревизию. При отказе показан контакт бадди. Одобрение другого ресурса не открывает первую задачу.
+GET /access-requests/{resourceId} вызывает GET /requests/{operationId}. При сбое serviceAvailable=false. GET /onboarding использует сохранённое состояние без внешнего вызова.
+При pending стажёр может открыть другие карточки. При submitting интерфейс предлагает повтор P05. При approved возможность открыть P07 зависит от ID требуемого ресурса.</bpmn:documentation>
+    <bpmn:laneSet id="P06_lanes">
+      <bpmn:lane id="P06_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P06_s</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P06_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P06_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_try</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_none</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_read</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_got</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_last</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_store</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_status</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_no</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P06_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P06_s" name="Статус запрошен">
+      <bpmn:outgoing>P06_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P06_check" name="Проверить права и попытку">
+      <bpmn:incoming>P06_F01</bpmn:incoming>
+      <bpmn:outgoing>P06_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P06_try" name="Есть попытка?" default="P06_F04" gatewayDirection="Diverging">
+      <bpmn:incoming>P06_F02</bpmn:incoming>
+      <bpmn:outgoing>P06_F03</bpmn:outgoing>
+      <bpmn:outgoing>P06_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P06_none" name="Нет доступной попытки">
+      <bpmn:incoming>P06_F04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="P06_read" name="Прочитать статус по operationId">
+      <bpmn:documentation>Лист 3, строка 16. Заявка на доступ
+Роль: Стажёр
+Результат: В плане видны номер и статус заявки либо причина, почему её не удалось отправить.
+Участие AI-buddy: Прототип. Готовит черновик. После подтверждения стажёра отправляет через сервис и показывает статус.</bpmn:documentation>
+      <bpmn:incoming>P06_F03</bpmn:incoming>
+      <bpmn:outgoing>P06_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P06_got" name="Сервис ответил?" default="P06_F07" gatewayDirection="Diverging">
+      <bpmn:incoming>P06_F05</bpmn:incoming>
+      <bpmn:outgoing>P06_F06</bpmn:outgoing>
+      <bpmn:outgoing>P06_F07</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P06_last" name="Показать последнее состояние">
+      <bpmn:incoming>P06_F07</bpmn:incoming>
+      <bpmn:outgoing>P06_F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P06_store" name="Сохранить только свежую ревизию">
+      <bpmn:documentation>Лист 3, строка 17. Черновик и статус заявки
+Роль: AI-buddy
+Результат: Сохранены номер и статус либо показан понятный способ повтора.
+Участие AI-buddy: Прототип. Предлагает обоснование и показывает ответ сервиса. При сбое даёт повторить без дубликата.</bpmn:documentation>
+      <bpmn:incoming>P06_F06</bpmn:incoming>
+      <bpmn:outgoing>P06_F09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P06_status" name="Статус заявки" default="P06_F12" gatewayDirection="Diverging">
+      <bpmn:incoming>P06_F09</bpmn:incoming>
+      <bpmn:outgoing>P06_F10</bpmn:outgoing>
+      <bpmn:outgoing>P06_F11</bpmn:outgoing>
+      <bpmn:outgoing>P06_F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P06_wait" name="Ожидание или повтор">
+      <bpmn:incoming>P06_F12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P06_ok" name="Одобрение показано">
+      <bpmn:incoming>P06_F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="P06_no" name="Показать отказ и контакт бадди">
+      <bpmn:documentation>Лист 3, строка 15. Доступы и инструменты
+Роль: Бадди
+Результат: Стажёр знает, какие доступы запросить и к кому идти с блокером.
+Участие AI-buddy: Прототип. Показывает статус и контакт бадди, если заявка отклонена.</bpmn:documentation>
+      <bpmn:incoming>P06_F11</bpmn:incoming>
+      <bpmn:outgoing>P06_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P06_e" name="Показан следующий шаг">
+      <bpmn:incoming>P06_F08</bpmn:incoming>
+      <bpmn:incoming>P06_F13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P06_F01" sourceRef="P06_s" targetRef="P06_check"/>
+    <bpmn:sequenceFlow id="P06_F02" sourceRef="P06_check" targetRef="P06_try"/>
+    <bpmn:sequenceFlow id="P06_F03" sourceRef="P06_try" targetRef="P06_read" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">attemptVisible</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P06_F04" sourceRef="P06_try" targetRef="P06_none" name="Нет"/>
+    <bpmn:sequenceFlow id="P06_F05" sourceRef="P06_read" targetRef="P06_got"/>
+    <bpmn:sequenceFlow id="P06_F06" sourceRef="P06_got" targetRef="P06_store" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">serviceResponded</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P06_F07" sourceRef="P06_got" targetRef="P06_last" name="Нет"/>
+    <bpmn:sequenceFlow id="P06_F08" sourceRef="P06_last" targetRef="P06_e"/>
+    <bpmn:sequenceFlow id="P06_F09" sourceRef="P06_store" targetRef="P06_status"/>
+    <bpmn:sequenceFlow id="P06_F10" sourceRef="P06_status" targetRef="P06_ok" name="Одобрена">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">statusApproved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P06_F11" sourceRef="P06_status" targetRef="P06_no" name="Отказ">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">statusDenied</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P06_F12" sourceRef="P06_status" targetRef="P06_wait" name="Ожидание"/>
+    <bpmn:sequenceFlow id="P06_F13" sourceRef="P06_no" targetRef="P06_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P06_diagram" name="Проверка статуса доступа">
+    <bpmndi:BPMNPlane id="P06_plane" bpmnElement="P06_collab">
+      <bpmndi:BPMNShape id="P06_pool_di" bpmnElement="P06_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1674" height="528"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_lane_I_di" bpmnElement="P06_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1644" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_lane_A_di" bpmnElement="P06_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="1644" height="384"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_accessService_di" bpmnElement="P06_accessService" isHorizontal="true">
+        <dc:Bounds x="30" y="648" width="1674" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_s_di" bpmnElement="P06_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_check_di" bpmnElement="P06_check" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="318" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_try_di" bpmnElement="P06_try" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="468" y="342" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="414" y="396" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_none_di" bpmnElement="P06_none" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="648" y="288" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="600" y="330" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_read_di" bpmnElement="P06_read" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="378" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_got_di" bpmnElement="P06_got" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="816" y="342" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="762" y="396" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_last_di" bpmnElement="P06_last" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="258" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_store_di" bpmnElement="P06_store" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="378" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_status_di" bpmnElement="P06_status" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1164" y="342" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1110" y="396" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_wait_di" bpmnElement="P06_wait" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1344" y="228" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1296" y="270" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_ok_di" bpmnElement="P06_ok" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1344" y="348" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1296" y="390" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_no_di" bpmnElement="P06_no" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1293" y="438" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P06_e_di" bpmnElement="P06_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1518" y="348" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1470" y="390" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P06_F01_di" bpmnElement="P06_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="234" y="102"/>
+        <di:waypoint x="234" y="366"/>
+        <di:waypoint x="249" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F02_di" bpmnElement="P06_F02">
+        <di:waypoint x="387" y="366"/>
+        <di:waypoint x="468" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F03_di" bpmnElement="P06_F03">
+        <di:waypoint x="516" y="366"/>
+        <di:waypoint x="582" y="366"/>
+        <di:waypoint x="582" y="426"/>
+        <di:waypoint x="597" y="426"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="552" y="341" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F04_di" bpmnElement="P06_F04">
+        <di:waypoint x="516" y="366"/>
+        <di:waypoint x="528" y="366"/>
+        <di:waypoint x="528" y="306"/>
+        <di:waypoint x="648" y="306"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="572" y="281" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F05_di" bpmnElement="P06_F05">
+        <di:waypoint x="735" y="426"/>
+        <di:waypoint x="744" y="426"/>
+        <di:waypoint x="744" y="366"/>
+        <di:waypoint x="816" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F06_di" bpmnElement="P06_F06">
+        <di:waypoint x="864" y="366"/>
+        <di:waypoint x="930" y="366"/>
+        <di:waypoint x="930" y="426"/>
+        <di:waypoint x="945" y="426"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="900" y="341" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F07_di" bpmnElement="P06_F07">
+        <di:waypoint x="864" y="366"/>
+        <di:waypoint x="876" y="366"/>
+        <di:waypoint x="876" y="306"/>
+        <di:waypoint x="945" y="306"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="894" y="281" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F08_di" bpmnElement="P06_F08">
+        <di:waypoint x="1083" y="306"/>
+        <di:waypoint x="1284" y="306"/>
+        <di:waypoint x="1284" y="336"/>
+        <di:waypoint x="1536" y="336"/>
+        <di:waypoint x="1536" y="348"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F09_di" bpmnElement="P06_F09">
+        <di:waypoint x="1083" y="426"/>
+        <di:waypoint x="1092" y="426"/>
+        <di:waypoint x="1092" y="366"/>
+        <di:waypoint x="1164" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F10_di" bpmnElement="P06_F10">
+        <di:waypoint x="1212" y="366"/>
+        <di:waypoint x="1344" y="366"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1244" y="341" width="68" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F11_di" bpmnElement="P06_F11">
+        <di:waypoint x="1212" y="366"/>
+        <di:waypoint x="1224" y="366"/>
+        <di:waypoint x="1224" y="384"/>
+        <di:waypoint x="1278" y="384"/>
+        <di:waypoint x="1278" y="486"/>
+        <di:waypoint x="1293" y="486"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1223" y="451" width="47" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F12_di" bpmnElement="P06_F12">
+        <di:waypoint x="1212" y="366"/>
+        <di:waypoint x="1224" y="366"/>
+        <di:waypoint x="1224" y="246"/>
+        <di:waypoint x="1344" y="246"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="1250" y="221" width="68" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_F13_di" bpmnElement="P06_F13">
+        <di:waypoint x="1431" y="486"/>
+        <di:waypoint x="1440" y="486"/>
+        <di:waypoint x="1440" y="366"/>
+        <di:waypoint x="1518" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_request_di" bpmnElement="P06_request">
+        <di:waypoint x="633" y="474"/>
+        <di:waypoint x="633" y="600"/>
+        <di:waypoint x="597" y="600"/>
+        <di:waypoint x="597" y="648"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="462" y="612" width="130" height="20"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P06_response_di" bpmnElement="P06_response">
+        <di:waypoint x="731" y="648"/>
+        <di:waypoint x="731" y="600"/>
+        <di:waypoint x="699" y="600"/>
+        <di:waypoint x="699" y="474"/>
+        <bpmndi:BPMNLabel labelStyle="P06_font">
+          <dc:Bounds x="736" y="612" width="130" height="20"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P06_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P09" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P09_collab">
+    <bpmn:participant id="P09_pool" name="Учебная практика" processRef="P09_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P09_process" name="Учебная практика" isExecutable="false">
+    <bpmn:documentation>Область: Полная карта процесса вне AI-buddy
+Старт: Стажёру может понадобиться оформить учебную практику во втором месяце
+Результат: Согласованы список документов и срок либо шаг пропущен.
+Приёмка: Шаг условный и не блокирует другие этапы. Владелец порядка оформления — HR. AI не обрабатывает документы.
+Это организационный сценарий. Он описывает взаимодействие стажёра и HR вне продукта.</bpmn:documentation>
+    <bpmn:laneSet id="P09_lanes">
+      <bpmn:lane id="P09_lane_H" name="HR">
+        <bpmn:flowNodeRef>P09_hr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P09_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P09_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P09_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P09_agree</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P09_e</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P09_skip</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P09_s" name="Наступил второй месяц">
+      <bpmn:outgoing>P09_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="P09_g" name="Нужна практика?" default="P09_F03" gatewayDirection="Diverging">
+      <bpmn:incoming>P09_F01</bpmn:incoming>
+      <bpmn:outgoing>P09_F02</bpmn:outgoing>
+      <bpmn:outgoing>P09_F03</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="P09_hr" name="Передать памятку и контакт">
+      <bpmn:documentation>Лист 3, строка 25. Памятка об учебной практике
+Роль: HR
+Результат: У стажёра есть памятка, сроки и контакт по документам.
+Участие AI-buddy: Не участвует. Порядок оформления и документы разъясняет HR.</bpmn:documentation>
+      <bpmn:incoming>P09_F02</bpmn:incoming>
+      <bpmn:outgoing>P09_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P09_agree" name="Согласовать документы и сроки">
+      <bpmn:documentation>Лист 3, строка 26. План закрытия учебной практики
+Роль: Стажёр
+Результат: Понятно, какие документы нужны и когда их запросить.
+Участие AI-buddy: Не участвует. Сроки и документы стажёр согласует с HR.</bpmn:documentation>
+      <bpmn:incoming>P09_F04</bpmn:incoming>
+      <bpmn:outgoing>P09_F05</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P09_e" name="Порядок согласован">
+      <bpmn:incoming>P09_F05</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P09_skip" name="Шаг пропущен">
+      <bpmn:incoming>P09_F03</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P09_F01" sourceRef="P09_s" targetRef="P09_g"/>
+    <bpmn:sequenceFlow id="P09_F02" sourceRef="P09_g" targetRef="P09_hr" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">practiceNeeded</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P09_F03" sourceRef="P09_g" targetRef="P09_skip" name="Нет"/>
+    <bpmn:sequenceFlow id="P09_F04" sourceRef="P09_hr" targetRef="P09_agree"/>
+    <bpmn:sequenceFlow id="P09_F05" sourceRef="P09_agree" targetRef="P09_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P09_diagram" name="Учебная практика">
+    <bpmndi:BPMNPlane id="P09_plane" bpmnElement="P09_collab">
+      <bpmndi:BPMNShape id="P09_pool_di" bpmnElement="P09_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="978" height="408"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_lane_H_di" bpmnElement="P09_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="948" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_lane_I_di" bpmnElement="P09_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="948" height="264"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_hr_di" bpmnElement="P09_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="423" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_s_di" bpmnElement="P09_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="288" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="78" y="330" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_g_di" bpmnElement="P09_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="294" y="282" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="240" y="336" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_agree_di" bpmnElement="P09_agree" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_skip_di" bpmnElement="P09_skip" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="648" y="348" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="600" y="390" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P09_e_di" bpmnElement="P09_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="822" y="288" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="774" y="330" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P09_F01_di" bpmnElement="P09_F01">
+        <di:waypoint x="162" y="306"/>
+        <di:waypoint x="294" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P09_F02_di" bpmnElement="P09_F02">
+        <di:waypoint x="342" y="306"/>
+        <di:waypoint x="354" y="306"/>
+        <di:waypoint x="354" y="102"/>
+        <di:waypoint x="423" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="373" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P09_F03_di" bpmnElement="P09_F03">
+        <di:waypoint x="342" y="306"/>
+        <di:waypoint x="636" y="306"/>
+        <di:waypoint x="636" y="366"/>
+        <di:waypoint x="648" y="366"/>
+        <bpmndi:BPMNLabel labelStyle="P09_font">
+          <dc:Bounds x="473" y="281" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P09_F04_di" bpmnElement="P09_F04">
+        <di:waypoint x="561" y="102"/>
+        <di:waypoint x="570" y="102"/>
+        <di:waypoint x="570" y="246"/>
+        <di:waypoint x="597" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P09_F05_di" bpmnElement="P09_F05">
+        <di:waypoint x="735" y="246"/>
+        <di:waypoint x="744" y="246"/>
+        <di:waypoint x="744" y="306"/>
+        <di:waypoint x="822" y="306"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P09_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

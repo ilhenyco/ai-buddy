@@ -1,0 +1,395 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Journey" targetNamespace="https://ai-buddy.example/bpmn" exporter="AI-buddy analysis">
+  <bpmn:collaboration id="Collaboration_Journey">
+    <bpmn:participant id="Pool_Journey" name="AI-buddy · Весь путь стажировки" processRef="Process_Journey" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Journey" name="AI-buddy · Весь путь стажировки" isExecutable="false">
+    <bpmn:laneSet id="Lanes_Journey">
+      <bpmn:lane id="Journey_lead" name="Руководитель">
+        <bpmn:flowNodeRef>O01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O03</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O04</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O06</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O07</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O08</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O11A</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O14</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O17</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O20</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Journey_intern" name="Стажёр">
+        <bpmn:flowNodeRef>O10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O12</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O13</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O16</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O19</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O21</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Journey_buddy" name="Бадди">
+        <bpmn:flowNodeRef>O11</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O15</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O18</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Journey_ai" name="AI-buddy">
+        <bpmn:flowNodeRef>O05</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>O09</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="O01" name="Известен выход стажёра">
+      <bpmn:outgoing>Flow_O01_O02</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="O02" name="Выбрать стажёра и дату выхода">
+      <bpmn:incoming>Flow_O01_O02</bpmn:incoming>
+      <bpmn:outgoing>Flow_O02_O03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="O03" name="Назначить бадди">
+      <bpmn:incoming>Flow_O02_O03</bpmn:incoming>
+      <bpmn:outgoing>Flow_O03_O04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="O04" name="Выбрать шаблон на 6 или 9 месяцев">
+      <bpmn:incoming>Flow_O03_O04</bpmn:incoming>
+      <bpmn:outgoing>Flow_O04_O05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="O05" name="Предложить этапы и сроки">
+      <bpmn:documentation>Шаблон от даты выхода. Сроки ориентировочные.</bpmn:documentation>
+      <bpmn:incoming>Flow_O04_O05</bpmn:incoming>
+      <bpmn:outgoing>Flow_O05_O06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="O06" name="Настроить этапы плана">
+      <bpmn:documentation>Можно добавить, убрать и переставить любой этап. Уточнить срок, результат и того, кто помогает.</bpmn:documentation>
+      <bpmn:incoming>Flow_O05_O06</bpmn:incoming>
+      <bpmn:incoming>Flow_O08_O06</bpmn:incoming>
+      <bpmn:outgoing>Flow_O06_O07</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="O07" name="Проверить план глазами стажёра">
+      <bpmn:incoming>Flow_O06_O07</bpmn:incoming>
+      <bpmn:outgoing>Flow_O07_O08</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="O08" name="План готов?" gatewayDirection="Diverging">
+      <bpmn:incoming>Flow_O07_O08</bpmn:incoming>
+      <bpmn:outgoing>Flow_O08_O06</bpmn:outgoing>
+      <bpmn:outgoing>Flow_O08_O09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="O09" name="Опубликовать план и назначение">
+      <bpmn:documentation>Опубликованный план становится входом для первого входа стажёра.</bpmn:documentation>
+      <bpmn:incoming>Flow_O08_O09</bpmn:incoming>
+      <bpmn:outgoing>Flow_O09_O10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="O10" name="Открыть AI-buddy и увидеть первый шаг">
+      <bpmn:incoming>Flow_O09_O10</bpmn:incoming>
+      <bpmn:outgoing>Flow_O10_O11A</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="O11A" name="Согласовать цели и критерии успеха">
+      <bpmn:incoming>Flow_O10_O11A</bpmn:incoming>
+      <bpmn:outgoing>Flow_O11A_O11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O11" name="Познакомить с командой и помочь с задачами">
+      <bpmn:incoming>Flow_O11A_O11</bpmn:incoming>
+      <bpmn:outgoing>Flow_O11_O12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O12" name="Пройти адаптацию и начать работу">
+      <bpmn:documentation>Детализация первого входа и трёх сценариев в onboarding.bpmn.</bpmn:documentation>
+      <bpmn:incoming>Flow_O11_O12</bpmn:incoming>
+      <bpmn:outgoing>Flow_O12_O13</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O13" name="Собрать результаты к экватору">
+      <bpmn:incoming>Flow_O12_O13</bpmn:incoming>
+      <bpmn:outgoing>Flow_O13_O14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O14" name="Обсудить прогресс и приоритеты">
+      <bpmn:documentation>Срок из опубликованного плана. Для предложенного шаблона конец 3-го месяца или середина 5-го.</bpmn:documentation>
+      <bpmn:incoming>Flow_O13_O14</bpmn:incoming>
+      <bpmn:outgoing>Flow_O14_O15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O15" name="Разложить оставшиеся цели на задачи">
+      <bpmn:incoming>Flow_O14_O15</bpmn:incoming>
+      <bpmn:outgoing>Flow_O15_O16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O16" name="Продолжить работу по обновлённому плану">
+      <bpmn:incoming>Flow_O15_O16</bpmn:incoming>
+      <bpmn:outgoing>Flow_O16_O17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O17" name="Объяснить формат финала и сроки решения">
+      <bpmn:documentation>Ориентир за месяц до конца. Порядок обсуждения продолжения работы предложен командой.</bpmn:documentation>
+      <bpmn:incoming>Flow_O16_O17</bpmn:incoming>
+      <bpmn:outgoing>Flow_O17_O18</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O18" name="Помочь подготовить итоговое выступление">
+      <bpmn:incoming>Flow_O17_O18</bpmn:incoming>
+      <bpmn:outgoing>Flow_O18_O19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O19" name="Представить результаты и передать задачи">
+      <bpmn:incoming>Flow_O18_O19</bpmn:incoming>
+      <bpmn:outgoing>Flow_O19_O20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O20" name="Обсудить итог и дальнейшие шаги">
+      <bpmn:documentation>Если решение на согласовании, назвать ответственного и срок ответа.</bpmn:documentation>
+      <bpmn:incoming>Flow_O19_O20</bpmn:incoming>
+      <bpmn:outgoing>Flow_O20_O21</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="O21" name="Итоги и следующий шаг известны">
+      <bpmn:incoming>Flow_O20_O21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_O01_O02" sourceRef="O01" targetRef="O02" />
+    <bpmn:sequenceFlow id="Flow_O02_O03" sourceRef="O02" targetRef="O03" />
+    <bpmn:sequenceFlow id="Flow_O03_O04" sourceRef="O03" targetRef="O04" />
+    <bpmn:sequenceFlow id="Flow_O04_O05" sourceRef="O04" targetRef="O05" />
+    <bpmn:sequenceFlow id="Flow_O05_O06" sourceRef="O05" targetRef="O06" />
+    <bpmn:sequenceFlow id="Flow_O06_O07" sourceRef="O06" targetRef="O07" />
+    <bpmn:sequenceFlow id="Flow_O07_O08" sourceRef="O07" targetRef="O08" />
+    <bpmn:sequenceFlow id="Flow_O08_O06" sourceRef="O08" targetRef="O06" name="Уточнить" />
+    <bpmn:sequenceFlow id="Flow_O08_O09" sourceRef="O08" targetRef="O09" name="Опубликовать" />
+    <bpmn:sequenceFlow id="Flow_O09_O10" sourceRef="O09" targetRef="O10" />
+    <bpmn:sequenceFlow id="Flow_O10_O11A" sourceRef="O10" targetRef="O11A" />
+    <bpmn:sequenceFlow id="Flow_O11A_O11" sourceRef="O11A" targetRef="O11" />
+    <bpmn:sequenceFlow id="Flow_O11_O12" sourceRef="O11" targetRef="O12" />
+    <bpmn:sequenceFlow id="Flow_O12_O13" sourceRef="O12" targetRef="O13" />
+    <bpmn:sequenceFlow id="Flow_O13_O14" sourceRef="O13" targetRef="O14" />
+    <bpmn:sequenceFlow id="Flow_O14_O15" sourceRef="O14" targetRef="O15" />
+    <bpmn:sequenceFlow id="Flow_O15_O16" sourceRef="O15" targetRef="O16" />
+    <bpmn:sequenceFlow id="Flow_O16_O17" sourceRef="O16" targetRef="O17" />
+    <bpmn:sequenceFlow id="Flow_O17_O18" sourceRef="O17" targetRef="O18" />
+    <bpmn:sequenceFlow id="Flow_O18_O19" sourceRef="O18" targetRef="O19" />
+    <bpmn:sequenceFlow id="Flow_O19_O20" sourceRef="O19" targetRef="O20" />
+    <bpmn:sequenceFlow id="Flow_O20_O21" sourceRef="O20" targetRef="O21" />
+    <bpmn:textAnnotation id="Note_Overview_Scope">
+      <bpmn:text>Настройка руководителем описана на карте. В прототипе используется готовый опубликованный план.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Overview_Adaptation">
+      <bpmn:text>Подробный процесс первых дней — в onboarding.bpmn.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Overview_Milestones">
+      <bpmn:text>Экватор и финал показаны как этапы полного пути. Их сроки задаёт план стажировки.</bpmn:text>
+    </bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_Journey" name="AI-buddy · Весь путь стажировки">
+    <bpmndi:BPMNPlane id="Plane_Journey" bpmnElement="Collaboration_Journey">
+      <bpmndi:BPMNShape id="DI_Pool_Journey" bpmnElement="Pool_Journey" isHorizontal="true" bioc:fill="#ffffff" bioc:stroke="#40506a">
+        <dc:Bounds x="36" y="74" width="3870" height="644" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Journey_lead" bpmnElement="Journey_lead" isHorizontal="true" bioc:fill="#eff2fb" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="74" width="3840" height="176" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Journey_intern" bpmnElement="Journey_intern" isHorizontal="true" bioc:fill="#f5f9ff" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="250" width="3840" height="156" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Journey_buddy" bpmnElement="Journey_buddy" isHorizontal="true" bioc:fill="#eff9f3" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="406" width="3840" height="156" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Journey_ai" bpmnElement="Journey_ai" isHorizontal="true" bioc:fill="#f5f2ff" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="562" width="3840" height="156" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O01" bpmnElement="O01" bioc:fill="#d9f9e4" bioc:stroke="#334867">
+        <dc:Bounds x="121.0" y="153.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="66.5" y="193.0" width="145" height="33" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O02" bpmnElement="O02" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="214.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O03" bpmnElement="O03" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="394.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O04" bpmnElement="O04" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="574.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O05" bpmnElement="O05" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="754.0" y="600.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O06" bpmnElement="O06" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="934.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O07" bpmnElement="O07" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1114.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O08" bpmnElement="O08" bioc:fill="#fff4d2" bioc:stroke="#334867">
+        <dc:Bounds x="1312.0" y="148.0" width="46" height="46" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1257.5" y="198.0" width="155" height="33" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O09" bpmnElement="O09" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1414.0" y="600.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O10" bpmnElement="O10" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1594.0" y="290.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O11A" bpmnElement="O11A" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1774.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O11" bpmnElement="O11" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1954.0" y="448.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O12" bpmnElement="O12" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="2134.0" y="290.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O13" bpmnElement="O13" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="2314.0" y="290.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O14" bpmnElement="O14" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="2494.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O15" bpmnElement="O15" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="2674.0" y="448.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O16" bpmnElement="O16" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="2854.0" y="290.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O17" bpmnElement="O17" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="3034.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O18" bpmnElement="O18" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="3214.0" y="448.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O19" bpmnElement="O19" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="3394.0" y="290.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O20" bpmnElement="O20" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="3574.0" y="139.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_O21" bpmnElement="O21" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="3792.0" y="304.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3737.5" y="344.0" width="145" height="33" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Overview_Scope" bpmnElement="Note_Overview_Scope">
+        <dc:Bounds x="93" y="584" width="246" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Overview_Adaptation" bpmnElement="Note_Overview_Adaptation">
+        <dc:Bounds x="1820" y="584" width="246" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Note_Overview_Milestones" bpmnElement="Note_Overview_Milestones">
+        <dc:Bounds x="2510" y="584" width="246" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Flow_O01_O02" bpmnElement="Flow_O01_O02">
+        <di:waypoint x="157.0" y="171" />
+        <di:waypoint x="214.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O02_O03" bpmnElement="Flow_O02_O03">
+        <di:waypoint x="366.0" y="171" />
+        <di:waypoint x="394.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O03_O04" bpmnElement="Flow_O03_O04">
+        <di:waypoint x="546.0" y="171" />
+        <di:waypoint x="574.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O04_O05" bpmnElement="Flow_O04_O05">
+        <di:waypoint x="726.0" y="171" />
+        <di:waypoint x="740.0" y="171" />
+        <di:waypoint x="740.0" y="632" />
+        <di:waypoint x="754.0" y="632" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O05_O06" bpmnElement="Flow_O05_O06">
+        <di:waypoint x="906.0" y="632" />
+        <di:waypoint x="920.0" y="632" />
+        <di:waypoint x="920.0" y="171" />
+        <di:waypoint x="934.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O06_O07" bpmnElement="Flow_O06_O07">
+        <di:waypoint x="1086.0" y="171" />
+        <di:waypoint x="1114.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O07_O08" bpmnElement="Flow_O07_O08">
+        <di:waypoint x="1266.0" y="171" />
+        <di:waypoint x="1312.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O08_O06" bpmnElement="Flow_O08_O06">
+        <di:waypoint x="1335" y="148.0" />
+        <di:waypoint x="1335" y="101" />
+        <di:waypoint x="1010" y="101" />
+        <di:waypoint x="1010" y="139.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1110" y="82" width="125" height="18" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O08_O09" bpmnElement="Flow_O08_O09">
+        <di:waypoint x="1358.0" y="171" />
+        <di:waypoint x="1386.0" y="171" />
+        <di:waypoint x="1386.0" y="632" />
+        <di:waypoint x="1414.0" y="632" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1353" y="141" width="105" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O09_O10" bpmnElement="Flow_O09_O10">
+        <di:waypoint x="1566.0" y="632" />
+        <di:waypoint x="1580.0" y="632" />
+        <di:waypoint x="1580.0" y="322" />
+        <di:waypoint x="1594.0" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O10_O11A" bpmnElement="Flow_O10_O11A">
+        <di:waypoint x="1746.0" y="322" />
+        <di:waypoint x="1760.0" y="322" />
+        <di:waypoint x="1760.0" y="171" />
+        <di:waypoint x="1774.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O11A_O11" bpmnElement="Flow_O11A_O11">
+        <di:waypoint x="1926.0" y="171" />
+        <di:waypoint x="1940.0" y="171" />
+        <di:waypoint x="1940.0" y="480" />
+        <di:waypoint x="1954.0" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O11_O12" bpmnElement="Flow_O11_O12">
+        <di:waypoint x="2106.0" y="480" />
+        <di:waypoint x="2120.0" y="480" />
+        <di:waypoint x="2120.0" y="322" />
+        <di:waypoint x="2134.0" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O12_O13" bpmnElement="Flow_O12_O13">
+        <di:waypoint x="2286.0" y="322" />
+        <di:waypoint x="2314.0" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O13_O14" bpmnElement="Flow_O13_O14">
+        <di:waypoint x="2466.0" y="322" />
+        <di:waypoint x="2480.0" y="322" />
+        <di:waypoint x="2480.0" y="171" />
+        <di:waypoint x="2494.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O14_O15" bpmnElement="Flow_O14_O15">
+        <di:waypoint x="2646.0" y="171" />
+        <di:waypoint x="2660.0" y="171" />
+        <di:waypoint x="2660.0" y="480" />
+        <di:waypoint x="2674.0" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O15_O16" bpmnElement="Flow_O15_O16">
+        <di:waypoint x="2826.0" y="480" />
+        <di:waypoint x="2840.0" y="480" />
+        <di:waypoint x="2840.0" y="322" />
+        <di:waypoint x="2854.0" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O16_O17" bpmnElement="Flow_O16_O17">
+        <di:waypoint x="3006.0" y="322" />
+        <di:waypoint x="3020.0" y="322" />
+        <di:waypoint x="3020.0" y="171" />
+        <di:waypoint x="3034.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O17_O18" bpmnElement="Flow_O17_O18">
+        <di:waypoint x="3186.0" y="171" />
+        <di:waypoint x="3200.0" y="171" />
+        <di:waypoint x="3200.0" y="480" />
+        <di:waypoint x="3214.0" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O18_O19" bpmnElement="Flow_O18_O19">
+        <di:waypoint x="3366.0" y="480" />
+        <di:waypoint x="3380.0" y="480" />
+        <di:waypoint x="3380.0" y="322" />
+        <di:waypoint x="3394.0" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O19_O20" bpmnElement="Flow_O19_O20">
+        <di:waypoint x="3546.0" y="322" />
+        <di:waypoint x="3560.0" y="322" />
+        <di:waypoint x="3560.0" y="171" />
+        <di:waypoint x="3574.0" y="171" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_O20_O21" bpmnElement="Flow_O20_O21">
+        <di:waypoint x="3726.0" y="171" />
+        <di:waypoint x="3759.0" y="171" />
+        <di:waypoint x="3759.0" y="322" />
+        <di:waypoint x="3792.0" y="322" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,354 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P07" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P07_collab">
+    <bpmn:participant id="P07_pool" name="Готовность к первой задаче" processRef="P07_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P07_process" name="Готовность к первой задаче" isExecutable="false">
+    <bpmn:documentation>Область: Прототип и действия руководителя
+Старт: Руководитель согласовал постановку. Стажёр открыл карточку «Первая задача»
+Результат: Показан блокер либо сохранена отметка готовности к согласованной задаче.
+Приёмка: До одобрения нужного ресурса сервер не отдаёт закрытую постановку, а попытка отметить готовность получает 409. После одобрения отметка сохраняется.
+Утверждение задачи руководителем — предшествующее бизнес-действие. В прототипе постановка и зависимость уже находятся в опубликованном плане.
+PUT /steps/first_task_ready/completion проверяет ресурс на сервере. Если между показом и подтверждением условие не выполнено, вернуть 409 access_required и обновить блокер.</bpmn:documentation>
+    <bpmn:laneSet id="P07_lanes">
+      <bpmn:lane id="P07_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P07_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_lead</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P07_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P07_open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_stop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_choose</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_later</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P07_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P07_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_block</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_show</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_store</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_buddy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_saved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P07_rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P07_s" name="Подготовка задачи">
+      <bpmn:outgoing>P07_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="P07_lead" name="Утвердить задачу и критерии">
+      <bpmn:documentation>Лист 3, строка 14. План адаптации и первая задача
+Роль: Руководитель
+Результат: У стажёра есть цель, понятная задача и список зависимостей.
+Участие AI-buddy: Прототип. Показывает согласованную задачу, критерии и нужный доступ. Цели утверждает руководитель.</bpmn:documentation>
+      <bpmn:incoming>P07_F01</bpmn:incoming>
+      <bpmn:outgoing>P07_F02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="P07_open" name="Открыть карточку задачи">
+      <bpmn:documentation>Лист 3, строка 19. Старт первой задачи
+Роль: Стажёр
+Результат: Стажёр может начать задачу или знает, какой блокер снять.
+Участие AI-buddy: Прототип. Показывает постановку и критерии. Сохраняет отметку «Готов начать».</bpmn:documentation>
+      <bpmn:incoming>P07_F02</bpmn:incoming>
+      <bpmn:outgoing>P07_F03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P07_check" name="Проверить план и нужный доступ">
+      <bpmn:incoming>P07_F03</bpmn:incoming>
+      <bpmn:outgoing>P07_F04</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P07_g" name="Нужный доступ одобрен?" default="P07_F06" gatewayDirection="Diverging">
+      <bpmn:incoming>P07_F04</bpmn:incoming>
+      <bpmn:outgoing>P07_F05</bpmn:outgoing>
+      <bpmn:outgoing>P07_F06</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P07_block" name="Показать блокер и переход в «Доступы»">
+      <bpmn:documentation>Лист 3, строка 18. Подготовка первой задачи
+Роль: AI-buddy
+Результат: Стажёр видит следующий шаг. Готовность сохраняется в плане.
+Участие AI-buddy: Прототип. До одобрения доступа показывает блокер. После одобрения открывает материалы и сохраняет готовность.</bpmn:documentation>
+      <bpmn:incoming>P07_F06</bpmn:incoming>
+      <bpmn:outgoing>P07_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P07_show" name="Показать постановку и критерии">
+      <bpmn:documentation>Лист 3, строка 18. Подготовка первой задачи
+Роль: AI-buddy
+Результат: Стажёр видит следующий шаг. Готовность сохраняется в плане.
+Участие AI-buddy: Прототип. До одобрения доступа показывает блокер. После одобрения открывает материалы и сохраняет готовность.</bpmn:documentation>
+      <bpmn:incoming>P07_F05</bpmn:incoming>
+      <bpmn:outgoing>P07_F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P07_stop" name="Готовность не отмечена">
+      <bpmn:incoming>P07_F07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="P07_choose" name="Прочитать и выбрать действие">
+      <bpmn:documentation>Лист 3, строка 19. Старт первой задачи
+Роль: Стажёр
+Результат: Стажёр может начать задачу или знает, какой блокер снять.
+Участие AI-buddy: Прототип. Показывает постановку и критерии. Сохраняет отметку «Готов начать».</bpmn:documentation>
+      <bpmn:incoming>P07_F08</bpmn:incoming>
+      <bpmn:outgoing>P07_F09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="P07_ready" name="Что выбрано?" default="P07_F12" gatewayDirection="Diverging">
+      <bpmn:incoming>P07_F09</bpmn:incoming>
+      <bpmn:outgoing>P07_F10</bpmn:outgoing>
+      <bpmn:outgoing>P07_F11</bpmn:outgoing>
+      <bpmn:outgoing>P07_F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P07_store" name="Повторно проверить право и сохранить">
+      <bpmn:incoming>P07_F10</bpmn:incoming>
+      <bpmn:outgoing>P07_F14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P07_buddy" name="Показать контакт бадди">
+      <bpmn:incoming>P07_F11</bpmn:incoming>
+      <bpmn:outgoing>P07_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P07_saved" name="Готовность сохранена?" default="P07_F16" gatewayDirection="Diverging">
+      <bpmn:incoming>P07_F14</bpmn:incoming>
+      <bpmn:outgoing>P07_F15</bpmn:outgoing>
+      <bpmn:outgoing>P07_F16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P07_done" name="Готовность сохранена">
+      <bpmn:incoming>P07_F15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P07_rejected" name="Вернуть блокер">
+      <bpmn:incoming>P07_F16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P07_later" name="Можно вернуться позже">
+      <bpmn:incoming>P07_F12</bpmn:incoming>
+      <bpmn:incoming>P07_F13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P07_F01" sourceRef="P07_s" targetRef="P07_lead"/>
+    <bpmn:sequenceFlow id="P07_F02" sourceRef="P07_lead" targetRef="P07_open"/>
+    <bpmn:sequenceFlow id="P07_F03" sourceRef="P07_open" targetRef="P07_check"/>
+    <bpmn:sequenceFlow id="P07_F04" sourceRef="P07_check" targetRef="P07_g"/>
+    <bpmn:sequenceFlow id="P07_F05" sourceRef="P07_g" targetRef="P07_show" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">requiredResourceApproved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P07_F06" sourceRef="P07_g" targetRef="P07_block" name="Нет"/>
+    <bpmn:sequenceFlow id="P07_F07" sourceRef="P07_block" targetRef="P07_stop"/>
+    <bpmn:sequenceFlow id="P07_F08" sourceRef="P07_show" targetRef="P07_choose"/>
+    <bpmn:sequenceFlow id="P07_F09" sourceRef="P07_choose" targetRef="P07_ready"/>
+    <bpmn:sequenceFlow id="P07_F10" sourceRef="P07_ready" targetRef="P07_store" name="Готов начать">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">actionReady</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P07_F11" sourceRef="P07_ready" targetRef="P07_buddy" name="Контакт">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">actionContact</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P07_F12" sourceRef="P07_ready" targetRef="P07_later" name="Отложить"/>
+    <bpmn:sequenceFlow id="P07_F13" sourceRef="P07_buddy" targetRef="P07_later"/>
+    <bpmn:sequenceFlow id="P07_F14" sourceRef="P07_store" targetRef="P07_saved"/>
+    <bpmn:sequenceFlow id="P07_F15" sourceRef="P07_saved" targetRef="P07_done" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">readinessSaved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P07_F16" sourceRef="P07_saved" targetRef="P07_rejected" name="Нет"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P07_diagram" name="Готовность к первой задаче">
+    <bpmndi:BPMNPlane id="P07_plane" bpmnElement="P07_collab">
+      <bpmndi:BPMNShape id="P07_pool_di" bpmnElement="P07_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="2022" height="672"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_lane_L_di" bpmnElement="P07_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1992" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_lane_I_di" bpmnElement="P07_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="1992" height="264"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_lane_A_di" bpmnElement="P07_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="444" width="1992" height="264"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_s_di" bpmnElement="P07_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_lead_di" bpmnElement="P07_lead" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_open_di" bpmnElement="P07_open" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="423" y="258" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_stop_di" bpmnElement="P07_stop" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1170" y="228" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1122" y="270" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_choose_di" bpmnElement="P07_choose" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="1119" y="318" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_ready_di" bpmnElement="P07_ready" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1338" y="282" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1284" y="336" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_later_di" bpmnElement="P07_later" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1692" y="288" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1644" y="330" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_check_di" bpmnElement="P07_check" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="522" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_g_di" bpmnElement="P07_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="816" y="546" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="762" y="600" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_block_di" bpmnElement="P07_block" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="462" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_show_di" bpmnElement="P07_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="582" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_store_di" bpmnElement="P07_store" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1467" y="462" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_buddy_di" bpmnElement="P07_buddy" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1467" y="582" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_saved_di" bpmnElement="P07_saved" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1686" y="546" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1632" y="600" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_done_di" bpmnElement="P07_done" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1866" y="492" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1818" y="534" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P07_rejected_di" bpmnElement="P07_rejected" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1866" y="612" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1818" y="654" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P07_F01_di" bpmnElement="P07_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="249" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F02_di" bpmnElement="P07_F02">
+        <di:waypoint x="387" y="102"/>
+        <di:waypoint x="396" y="102"/>
+        <di:waypoint x="396" y="306"/>
+        <di:waypoint x="423" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F03_di" bpmnElement="P07_F03">
+        <di:waypoint x="561" y="306"/>
+        <di:waypoint x="570" y="306"/>
+        <di:waypoint x="570" y="570"/>
+        <di:waypoint x="597" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F04_di" bpmnElement="P07_F04">
+        <di:waypoint x="735" y="570"/>
+        <di:waypoint x="816" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F05_di" bpmnElement="P07_F05">
+        <di:waypoint x="864" y="570"/>
+        <di:waypoint x="930" y="570"/>
+        <di:waypoint x="930" y="630"/>
+        <di:waypoint x="945" y="630"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="900" y="545" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F06_di" bpmnElement="P07_F06">
+        <di:waypoint x="864" y="570"/>
+        <di:waypoint x="876" y="570"/>
+        <di:waypoint x="876" y="510"/>
+        <di:waypoint x="945" y="510"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="894" y="485" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F07_di" bpmnElement="P07_F07">
+        <di:waypoint x="1083" y="510"/>
+        <di:waypoint x="1092" y="510"/>
+        <di:waypoint x="1092" y="246"/>
+        <di:waypoint x="1170" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F08_di" bpmnElement="P07_F08">
+        <di:waypoint x="1083" y="630"/>
+        <di:waypoint x="1104" y="630"/>
+        <di:waypoint x="1104" y="366"/>
+        <di:waypoint x="1119" y="366"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F09_di" bpmnElement="P07_F09">
+        <di:waypoint x="1257" y="366"/>
+        <di:waypoint x="1266" y="366"/>
+        <di:waypoint x="1266" y="306"/>
+        <di:waypoint x="1338" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F10_di" bpmnElement="P07_F10">
+        <di:waypoint x="1386" y="306"/>
+        <di:waypoint x="1452" y="306"/>
+        <di:waypoint x="1452" y="510"/>
+        <di:waypoint x="1467" y="510"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1460" y="348" width="96" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F11_di" bpmnElement="P07_F11">
+        <di:waypoint x="1386" y="306"/>
+        <di:waypoint x="1398" y="306"/>
+        <di:waypoint x="1398" y="324"/>
+        <di:waypoint x="1446" y="324"/>
+        <di:waypoint x="1446" y="630"/>
+        <di:waypoint x="1467" y="630"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1377" y="391" width="61" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F12_di" bpmnElement="P07_F12">
+        <di:waypoint x="1386" y="306"/>
+        <di:waypoint x="1398" y="306"/>
+        <di:waypoint x="1398" y="300"/>
+        <di:waypoint x="1680" y="300"/>
+        <di:waypoint x="1680" y="306"/>
+        <di:waypoint x="1692" y="306"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1505" y="275" width="68" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F13_di" bpmnElement="P07_F13">
+        <di:waypoint x="1605" y="630"/>
+        <di:waypoint x="1614" y="630"/>
+        <di:waypoint x="1614" y="306"/>
+        <di:waypoint x="1692" y="306"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F14_di" bpmnElement="P07_F14">
+        <di:waypoint x="1605" y="510"/>
+        <di:waypoint x="1674" y="510"/>
+        <di:waypoint x="1674" y="570"/>
+        <di:waypoint x="1686" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F15_di" bpmnElement="P07_F15">
+        <di:waypoint x="1734" y="570"/>
+        <di:waypoint x="1746" y="570"/>
+        <di:waypoint x="1746" y="510"/>
+        <di:waypoint x="1866" y="510"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1791" y="485" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P07_F16_di" bpmnElement="P07_F16">
+        <di:waypoint x="1734" y="570"/>
+        <di:waypoint x="1806" y="570"/>
+        <di:waypoint x="1806" y="630"/>
+        <di:waypoint x="1866" y="630"/>
+        <bpmndi:BPMNLabel labelStyle="P07_font">
+          <dc:Bounds x="1754" y="545" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P07_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

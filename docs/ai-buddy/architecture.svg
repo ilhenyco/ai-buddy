@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 540" role="img" aria-labelledby="title desc">
+  <title id="title">Архитектура прототипа AI-buddy</title>
+  <desc id="desc">Стажёр работает в веб-интерфейсе. Go API проверяет права, обращается к PostgreSQL, локальной модели и тестовому сервису доступов. У тестового сервиса своя схема в PostgreSQL.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L8 4.5 L0 9 Z" fill="#516583"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", Arial, sans-serif; fill: #152642; }
+    .headline { font-size: 28px; font-weight: 700; }
+    .subtitle, .detail { font-size: 14px; fill: #435773; }
+    .boundary { fill: #f8fbff; stroke: #b5c9e8; stroke-width: 1.5; }
+    .boundary-label { font-size: 14px; font-weight: 650; fill: #395789; }
+    .card { fill: #fff; stroke: #b7c8e0; stroke-width: 1.4; }
+    .api { fill: #edf3ff; stroke: #7494cf; }
+    .optional { fill: #f7f3ff; stroke: #c2b3e5; }
+    .mock { fill: #f0faf5; stroke: #9ccbb2; }
+    .label { font-size: 17px; font-weight: 700; }
+    .wire { fill: none; stroke: #516583; stroke-width: 1.8; marker-end: url(#arrow); }
+    .wire-label { font-size: 12px; fill: #435773; }
+  </style>
+
+  <rect width="1120" height="540" fill="#fff"/>
+  <text x="38" y="51" class="headline">Архитектура прототипа AI-buddy</text>
+  <text x="38" y="77" class="subtitle">Стажёр работает в браузере. Сервер проверяет права и управляет всеми действиями.</text>
+
+  <rect x="206" y="103" width="873" height="400" rx="18" class="boundary"/>
+  <text x="228" y="130" class="boundary-label">Локальный стенд · Docker Compose</text>
+
+  <rect x="38" y="225" width="124" height="92" rx="12" class="card"/>
+  <text x="100" y="263" text-anchor="middle" class="label">Стажёр</text>
+  <text x="100" y="288" text-anchor="middle" class="detail">Браузер</text>
+
+  <rect x="232" y="225" width="202" height="92" rx="12" class="card"/>
+  <text x="333" y="251" text-anchor="middle" class="label">Веб-интерфейс</text>
+  <text x="333" y="274" text-anchor="middle" class="detail">React + TypeScript</text>
+  <text x="333" y="296" text-anchor="middle" class="detail">План, чат и карточки</text>
+
+  <rect x="534" y="207" width="201" height="128" rx="12" class="card api"/>
+  <text x="634" y="237" text-anchor="middle" class="label">Go API</text>
+  <text x="634" y="261" text-anchor="middle" class="detail">Сессия и права</text>
+  <text x="634" y="282" text-anchor="middle" class="detail">План, прогресс и источники</text>
+  <text x="634" y="303" text-anchor="middle" class="detail">Отправка и статус заявки</text>
+
+  <rect x="850" y="145" width="200" height="92" rx="12" class="card optional"/>
+  <text x="950" y="171" text-anchor="middle" class="label">Локальная модель</text>
+  <text x="950" y="194" text-anchor="middle" class="detail">Ollama · Qwen3 4B</text>
+  <text x="950" y="216" text-anchor="middle" class="detail">Ответ по источникам</text>
+
+  <rect x="850" y="280" width="200" height="92" rx="12" class="card mock"/>
+  <text x="950" y="306" text-anchor="middle" class="label">Тестовый сервис</text>
+  <text x="950" y="329" text-anchor="middle" class="detail">Корпоративные доступы</text>
+  <text x="950" y="351" text-anchor="middle" class="detail">Номер и статус заявки</text>
+
+  <rect x="534" y="403" width="516" height="76" rx="12" class="card"/>
+  <path d="M826 403 V479" stroke="#b7c8e0"/>
+  <text x="556" y="432" class="label">PostgreSQL · приложение</text>
+  <text x="556" y="454" class="detail">Планы, прогресс и попытки отправки</text>
+  <text x="849" y="432" class="label">Схема имитации</text>
+  <text x="849" y="454" class="detail">Заявки тестового сервиса</text>
+
+  <path class="wire" d="M162 272 H232"/>
+  <path class="wire" d="M434 272 H534"/>
+  <text x="484" y="260" text-anchor="middle" class="wire-label">JSON / HTTP</text>
+  <path class="wire" d="M735 238 H779 V191 H850"/>
+  <text x="789" y="177" class="wire-label">HTTP</text>
+  <path class="wire" d="M735 306 H779 V326 H850"/>
+  <text x="790" y="315" class="wire-label">HTTP</text>
+  <path class="wire" d="M634 335 V403"/>
+  <text x="645" y="376" class="wire-label">SQL</text>
+  <path class="wire" d="M950 372 V403"/>
+  <text x="960" y="392" class="wire-label">SQL</text>
+</svg>

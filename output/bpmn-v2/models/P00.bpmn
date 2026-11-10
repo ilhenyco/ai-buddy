@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P00" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P00_collab">
+    <bpmn:participant id="P00_pool" name="Весь путь стажировки" processRef="P00_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P00_process" name="Весь путь стажировки" isExecutable="false">
+    <bpmn:documentation>Область: Карта продукта
+Старт: Подтверждён выход стажёра
+Результат: Работа передана, итог или срок ответа зафиксирован. После решения HR выполняет оформление.
+Приёмка: Карта связывает подготовку, первые дни, развитие, экватор и финал. P09 запускается при необходимости. P03–P07 доступны из P02 независимо от порядка рекомендаций.
+P09 «Учебная практика» — независимый процесс второго месяца, если требуются документы. P14 «Ответ по источникам» — вспомогательный процесс на экране S1.
+На карте показаны контрольные точки программы. Первые дни могут включать несколько посещений и ожидание доступа. Ветка ожидания решения закрывает текущий просмотр, а P13 продолжается после фиксации решения.</bpmn:documentation>
+    <bpmn:laneSet id="P00_lanes">
+      <bpmn:lane id="P00_lane_R" name="Контрольные точки">
+        <bpmn:flowNodeRef>P00_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_prep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_learn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_mid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_close</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P00_s" name="Выход согласован">
+      <bpmn:outgoing>P00_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="P00_prep" name="P01 Подготовка до выхода">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F01</bpmn:incoming>
+      <bpmn:outgoing>P00_F02</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_start" name="P02–P07 Первые дни">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F02</bpmn:incoming>
+      <bpmn:outgoing>P00_F03</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_learn" name="P08 Цели и обучение">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F03</bpmn:incoming>
+      <bpmn:outgoing>P00_F04</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_mid" name="P10 Экватор">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F04</bpmn:incoming>
+      <bpmn:outgoing>P00_F05</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_ready" name="P11 Подготовка финала">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F05</bpmn:incoming>
+      <bpmn:outgoing>P00_F06</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_review" name="P12 Итог и передача">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F06</bpmn:incoming>
+      <bpmn:outgoing>P00_F07</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="P00_close" name="P13 Завершение">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F07</bpmn:incoming>
+      <bpmn:outgoing>P00_F08</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="P00_e" name="Стажировка закрыта">
+      <bpmn:incoming>P00_F08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P00_F01" sourceRef="P00_s" targetRef="P00_prep"/>
+    <bpmn:sequenceFlow id="P00_F02" sourceRef="P00_prep" targetRef="P00_start"/>
+    <bpmn:sequenceFlow id="P00_F03" sourceRef="P00_start" targetRef="P00_learn"/>
+    <bpmn:sequenceFlow id="P00_F04" sourceRef="P00_learn" targetRef="P00_mid"/>
+    <bpmn:sequenceFlow id="P00_F05" sourceRef="P00_mid" targetRef="P00_ready"/>
+    <bpmn:sequenceFlow id="P00_F06" sourceRef="P00_ready" targetRef="P00_review"/>
+    <bpmn:sequenceFlow id="P00_F07" sourceRef="P00_review" targetRef="P00_close"/>
+    <bpmn:sequenceFlow id="P00_F08" sourceRef="P00_close" targetRef="P00_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P00_diagram" name="Весь путь стажировки">
+    <bpmndi:BPMNPlane id="P00_plane" bpmnElement="P00_collab">
+      <bpmndi:BPMNShape id="P00_pool_di" bpmnElement="P00_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1674" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_lane_R_di" bpmnElement="P00_lane_R" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1644" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_s_di" bpmnElement="P00_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_prep_di" bpmnElement="P00_prep" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="249" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_start_di" bpmnElement="P00_start" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="423" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_learn_di" bpmnElement="P00_learn" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="597" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_mid_di" bpmnElement="P00_mid" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="771" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_ready_di" bpmnElement="P00_ready" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="945" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_review_di" bpmnElement="P00_review" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="1119" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_close_di" bpmnElement="P00_close" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="1293" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e_di" bpmnElement="P00_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1518" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="1470" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P00_F01_di" bpmnElement="P00_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="249" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F02_di" bpmnElement="P00_F02">
+        <di:waypoint x="387" y="102"/>
+        <di:waypoint x="423" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F03_di" bpmnElement="P00_F03">
+        <di:waypoint x="561" y="102"/>
+        <di:waypoint x="597" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F04_di" bpmnElement="P00_F04">
+        <di:waypoint x="735" y="102"/>
+        <di:waypoint x="771" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F05_di" bpmnElement="P00_F05">
+        <di:waypoint x="909" y="102"/>
+        <di:waypoint x="945" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F06_di" bpmnElement="P00_F06">
+        <di:waypoint x="1083" y="102"/>
+        <di:waypoint x="1119" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F07_di" bpmnElement="P00_F07">
+        <di:waypoint x="1257" y="102"/>
+        <di:waypoint x="1293" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F08_di" bpmnElement="P00_F08">
+        <di:waypoint x="1431" y="102"/>
+        <di:waypoint x="1518" y="102"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P00_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

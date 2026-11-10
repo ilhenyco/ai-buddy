@@ -1,0 +1,2737 @@
+{
+  "models": [
+    {
+      "id": "P00",
+      "title": "Весь путь стажировки",
+      "scope": "Карта продукта",
+      "trigger": "Подтверждён выход стажёра",
+      "result": "Работа передана, итог или срок ответа зафиксирован. После решения HR выполняет оформление.",
+      "acceptance": "Карта связывает подготовку, первые дни, развитие, экватор и финал. P09 запускается при необходимости. P03–P07 доступны из P02 независимо от порядка рекомендаций.",
+      "notes": [
+        "P09 «Учебная практика» — независимый процесс второго месяца, если требуются документы. P14 «Ответ по источникам» — вспомогательный процесс на экране S1.",
+        "На карте показаны контрольные точки программы. Первые дни могут включать несколько посещений и ожидание доступа. Ветка ожидания решения закрывает текущий просмотр, а P13 продолжается после фиксации решения."
+      ],
+      "nodes": {
+        "s": {
+          "role": "R",
+          "kind": "start",
+          "col": 0,
+          "name": "Выход согласован",
+          "rows": []
+        },
+        "prep": {
+          "role": "R",
+          "kind": "sub",
+          "col": 1,
+          "name": "P01 Подготовка до выхода",
+          "rows": []
+        },
+        "start": {
+          "role": "R",
+          "kind": "sub",
+          "col": 2,
+          "name": "P02–P07 Первые дни",
+          "rows": []
+        },
+        "learn": {
+          "role": "R",
+          "kind": "sub",
+          "col": 3,
+          "name": "P08 Цели и обучение",
+          "rows": []
+        },
+        "mid": {
+          "role": "R",
+          "kind": "sub",
+          "col": 4,
+          "name": "P10 Экватор",
+          "rows": []
+        },
+        "ready": {
+          "role": "R",
+          "kind": "sub",
+          "col": 5,
+          "name": "P11 Подготовка финала",
+          "rows": []
+        },
+        "review": {
+          "role": "R",
+          "kind": "sub",
+          "col": 6,
+          "name": "P12 Итог и передача",
+          "rows": []
+        },
+        "close": {
+          "role": "R",
+          "kind": "sub",
+          "col": 7,
+          "name": "P13 Завершение",
+          "rows": []
+        },
+        "e": {
+          "role": "R",
+          "kind": "end",
+          "col": 8,
+          "name": "Стажировка закрыта",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "prep",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "prep",
+          "dst": "start",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "start",
+          "dst": "learn",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "learn",
+          "dst": "mid",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "mid",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "ready",
+          "dst": "review",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "review",
+          "dst": "close",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "close",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        }
+      ]
+    },
+    {
+      "id": "P01",
+      "title": "Подготовка до выхода",
+      "scope": "Полная версия",
+      "trigger": "HR получил сведения о выходе стажёра",
+      "result": "Опубликован план с бадди. Стажёр получил приглашение и контакты.",
+      "acceptance": "До публикации черновик недоступен стажёру. Назначает бадди и публикует только руководитель. В прототипе эту границу воспроизводит опубликованный seed-план.",
+      "notes": [
+        "Модель предлагает этапы, сроки и контрольные точки. Руководитель может добавить, удалить или переставить этап, указать результат и помощника.",
+        "По запросу бадди продукт может проверить комплектность карточки. HR передаёт приглашение после публикации. Интерфейсы HR, бадди и руководителя для этого этапа в MVP не проектируются как рабочие экраны."
+      ],
+      "nodes": {
+        "s": {
+          "role": "H",
+          "kind": "start",
+          "col": 0,
+          "name": "Выход подтверждён",
+          "rows": []
+        },
+        "date": {
+          "role": "H",
+          "kind": "manual",
+          "col": 1,
+          "name": "Сверить дату и контакты",
+          "rows": [
+            2
+          ]
+        },
+        "owner": {
+          "role": "L",
+          "kind": "user",
+          "col": 2,
+          "name": "Назначить бадди и выбрать 6 или 9 месяцев",
+          "rows": [
+            3
+          ]
+        },
+        "pack": {
+          "role": "B",
+          "kind": "manual",
+          "col": 3,
+          "name": "Собрать материалы команды",
+          "rows": [
+            4
+          ]
+        },
+        "draft": {
+          "role": "M",
+          "kind": "service",
+          "col": 4,
+          "name": "Предложить черновик плана",
+          "rows": [
+            5
+          ]
+        },
+        "edit": {
+          "role": "L",
+          "kind": "user",
+          "col": 5,
+          "name": "Уточнить этапы и критерии",
+          "rows": []
+        },
+        "preview": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать вид стажёра",
+          "rows": []
+        },
+        "ok": {
+          "role": "L",
+          "kind": "xor",
+          "col": 7,
+          "name": "План готов?",
+          "rows": []
+        },
+        "publish": {
+          "role": "L",
+          "kind": "user",
+          "col": 8,
+          "name": "Подтвердить публикацию",
+          "rows": [
+            6
+          ]
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 9,
+          "name": "Открыть опубликованный план владельцу",
+          "rows": []
+        },
+        "invite": {
+          "role": "H",
+          "kind": "manual",
+          "col": 10,
+          "name": "Передать приглашение",
+          "rows": [
+            7
+          ]
+        },
+        "e": {
+          "role": "H",
+          "kind": "end",
+          "col": 11,
+          "name": "Стажёр приглашён",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "date",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "date",
+          "dst": "owner",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "owner",
+          "dst": "pack",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "pack",
+          "dst": "draft",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "draft",
+          "dst": "edit",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "edit",
+          "dst": "preview",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "preview",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "ok",
+          "dst": "publish",
+          "name": "Да",
+          "condition": "planReady",
+          "key": "F08"
+        },
+        {
+          "src": "ok",
+          "dst": "edit",
+          "name": "Доработать",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "publish",
+          "dst": "save",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "save",
+          "dst": "invite",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "invite",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Первый вход и следующий шаг",
+      "scope": "Прототип",
+      "trigger": "Стажёр открывает экран входа",
+      "result": "Показан свой план и вход в нужную карточку либо указан контакт руководителя.",
+      "acceptance": "Два тестовых пользователя видят разные планы. Ошибка входа возвращает 401. При отсутствии опубликованного плана карточки закрыты, виден контакт руководителя.",
+      "notes": [
+        "POST /demo/session, затем GET /onboarding. Контакт руководителя берётся из профиля, доступного по сессии.",
+        "Выбор карточки открывает P03, P04 или P07. Чат открывает P14. Пользователь может вернуться в P02 без потери прогресса."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Первый вход",
+          "rows": []
+        },
+        "login": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Войти под тестовым аккаунтом",
+          "rows": [
+            8
+          ]
+        },
+        "session": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Проверить данные входа",
+          "rows": []
+        },
+        "signed": {
+          "role": "A",
+          "kind": "xor",
+          "col": 3,
+          "name": "Сессия создана?",
+          "rows": []
+        },
+        "err": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Показать ошибку входа",
+          "rows": []
+        },
+        "load": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Загрузить свой опубликованный план",
+          "rows": []
+        },
+        "has": {
+          "role": "A",
+          "kind": "xor",
+          "col": 5,
+          "name": "План доступен?",
+          "rows": []
+        },
+        "contact": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать контакт руководителя",
+          "rows": []
+        },
+        "home": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать «Мой старт» и три карточки",
+          "rows": [
+            9
+          ]
+        },
+        "choose": {
+          "role": "I",
+          "kind": "user",
+          "col": 7,
+          "name": "Выбрать карточку или чат",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Открыт сценарий",
+          "rows": []
+        },
+        "blocked": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "План недоступен",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "login",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "login",
+          "dst": "session",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "session",
+          "dst": "signed",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "signed",
+          "dst": "load",
+          "name": "Да",
+          "condition": "sessionCreated",
+          "key": "F04"
+        },
+        {
+          "src": "signed",
+          "dst": "err",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F05"
+        },
+        {
+          "src": "err",
+          "dst": "login",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "load",
+          "dst": "has",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "has",
+          "dst": "home",
+          "name": "Да",
+          "condition": "publishedPlanVisible",
+          "key": "F08"
+        },
+        {
+          "src": "has",
+          "dst": "contact",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "contact",
+          "dst": "blocked",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "home",
+          "dst": "choose",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "choose",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "Знакомство с командой",
+      "scope": "Прототип и действия бадди",
+      "trigger": "Стажёр открыл карточку «Команда»",
+      "result": "Отметка знакомства сохранена либо шаг оставлен открытым.",
+      "acceptance": "Отметка создаётся только по явному действию стажёра и сохраняется после перезагрузки. Отложенный шаг и открытие контакта не завершают знакомство.",
+      "notes": [
+        "Личное знакомство может пройти до открытия карточки. Ветка «Уже было или позже» позволяет сразу отметить состоявшееся знакомство или отложить шаг.",
+        "PUT /steps/team_intro/completion сохраняет одну запись по плану и ключу шага. Другие карточки доступны и при открытом знакомстве."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыта «Команда»",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать участников и каналы",
+          "rows": [
+            11
+          ]
+        },
+        "meet": {
+          "role": "I",
+          "kind": "xor",
+          "col": 2,
+          "name": "Знакомство впереди?",
+          "rows": []
+        },
+        "intro": {
+          "role": "B",
+          "kind": "manual",
+          "col": 3,
+          "name": "Познакомить с командой",
+          "rows": [
+            10
+          ]
+        },
+        "mark": {
+          "role": "I",
+          "kind": "user",
+          "col": 4,
+          "name": "Выбрать действие в карточке",
+          "rows": [
+            12
+          ]
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 5,
+          "name": "Что выбрано?",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Сохранить отметку знакомства",
+          "rows": []
+        },
+        "buddy": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать контакт бадди",
+          "rows": []
+        },
+        "defer": {
+          "role": "I",
+          "kind": "end",
+          "col": 7,
+          "name": "Шаг открыт",
+          "rows": []
+        },
+        "done": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Знакомство отмечено",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "meet",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "meet",
+          "dst": "intro",
+          "name": "На встрече",
+          "condition": "teamMeetingHappens",
+          "key": "F03"
+        },
+        {
+          "src": "meet",
+          "dst": "mark",
+          "name": "Уже было или позже",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "intro",
+          "dst": "mark",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "mark",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "g",
+          "dst": "store",
+          "name": "Отметить",
+          "condition": "actionMark",
+          "key": "F07"
+        },
+        {
+          "src": "g",
+          "dst": "buddy",
+          "name": "Контакт",
+          "condition": "actionContact",
+          "key": "F08"
+        },
+        {
+          "src": "g",
+          "dst": "defer",
+          "name": "Отложить",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "buddy",
+          "dst": "defer",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "store",
+          "dst": "done",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Подготовка заявки на доступ",
+      "scope": "Прототип и поддержка бадди",
+      "trigger": "Стажёр открыл «Доступы» и выбрал ресурс",
+      "result": "Показан черновик с точным обоснованием, существующая попытка или отказ в доступе к ресурсу.",
+      "acceptance": "Чужой ресурс не раскрывается. Черновик не вызывает сервис. Редактирование сохраняет новый черновик с параметрами, которые видит и подтверждает стажёр.",
+      "notes": [
+        "Пояснение бадди проходит вне интерфейса. При необходимости стажёр уточняет ресурс до подготовки черновика.",
+        "POST /access-drafts создаёт черновик после валидации. При отсутствии подсказки стажёр вводит обоснование сам. Если попытка уже есть, показывается состояние. Для submitting доступен повтор в P05, для известного статуса — P06."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыты «Доступы»",
+          "rows": []
+        },
+        "pick": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Выбрать ресурс",
+          "rows": [
+            16
+          ]
+        },
+        "help": {
+          "role": "I",
+          "kind": "xor",
+          "col": 2,
+          "name": "Нужна подсказка бадди?",
+          "rows": []
+        },
+        "guide": {
+          "role": "B",
+          "kind": "manual",
+          "col": 3,
+          "name": "Пояснить нужные доступы",
+          "rows": [
+            15
+          ]
+        },
+        "auth": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Проверить ресурс и найти попытку",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "xor",
+          "col": 5,
+          "name": "Ресурс разрешён?",
+          "rows": []
+        },
+        "fail": {
+          "role": "A",
+          "kind": "end",
+          "col": 6,
+          "name": "Ресурс недоступен",
+          "rows": []
+        },
+        "exists": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Попытка есть?",
+          "rows": []
+        },
+        "prev": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Состояние сохранённой попытки",
+          "rows": []
+        },
+        "suggest": {
+          "role": "M",
+          "kind": "service",
+          "col": 7,
+          "name": "Предложить обоснование",
+          "rows": [
+            17
+          ]
+        },
+        "edit": {
+          "role": "I",
+          "kind": "user",
+          "col": 8,
+          "name": "Проверить или изменить обоснование",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 9,
+          "name": "Сохранить и показать точный черновик",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 10,
+          "name": "Черновик к подтверждению",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "pick",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "pick",
+          "dst": "help",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "help",
+          "dst": "guide",
+          "name": "Да",
+          "condition": "buddyHelpRequested",
+          "key": "F03"
+        },
+        {
+          "src": "help",
+          "dst": "auth",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "guide",
+          "dst": "auth",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "auth",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "ok",
+          "dst": "exists",
+          "name": "Да",
+          "condition": "resourceAllowed",
+          "key": "F07"
+        },
+        {
+          "src": "ok",
+          "dst": "fail",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F08"
+        },
+        {
+          "src": "exists",
+          "dst": "prev",
+          "name": "Да",
+          "condition": "attemptExists",
+          "key": "F09"
+        },
+        {
+          "src": "exists",
+          "dst": "suggest",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F10"
+        },
+        {
+          "src": "suggest",
+          "dst": "edit",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "edit",
+          "dst": "save",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        },
+        {
+          "src": "save",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Подтверждение и отправка заявки",
+      "scope": "Прототип",
+      "trigger": "Стажёр видит сохранённый черновик или предлагает повторить отправку",
+      "result": "Сохранены номер и статус сервиса либо показано восстанавливаемое состояние отправки.",
+      "acceptance": "Без явного подтверждения сервис не вызывается. Два подтверждения создают одну заявку. Повтор после потери ответа использует исходные параметры и operationId.",
+      "notes": [
+        "POST /access-drafts/{draftId}/confirm. Сервер ищет единственную попытку по planId + resourceId. При известном результате возвращает его без повторного создания. При неизвестном — восстанавливает ту же операцию.",
+        "Внутренний PUT /requests/{operationId} идемпотентен. 200 означает сохранённый результат. 202 означает submitting с confirmationDraftId. 503 до вызова означает, что попытка не сохранена. Сбой записи результата также оставляет восстанавливаемую попытку."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Черновик или повтор",
+          "rows": []
+        },
+        "confirm": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Выбрать отправку или отмену",
+          "rows": [
+            16
+          ]
+        },
+        "yes": {
+          "role": "I",
+          "kind": "xor",
+          "col": 2,
+          "name": "Подтверждено?",
+          "rows": []
+        },
+        "stop": {
+          "role": "I",
+          "kind": "end",
+          "col": 3,
+          "name": "Без отправки",
+          "rows": []
+        },
+        "ensure": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Проверить права и зафиксировать попытку",
+          "rows": []
+        },
+        "ready": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Итог проверки",
+          "rows": []
+        },
+        "denied": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Запрос недоступен",
+          "rows": []
+        },
+        "db": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Попытка не сохранена",
+          "rows": []
+        },
+        "known": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Возвращён прежний результат",
+          "rows": []
+        },
+        "call": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Вызвать сервис и сохранить ответ",
+          "rows": [
+            17
+          ]
+        },
+        "res": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Результат сохранён?",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать номер и статус",
+          "rows": []
+        },
+        "unknown": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать ожидание и повтор",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Номер и статус показаны",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Отправка не подтверждена",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "confirm",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "confirm",
+          "dst": "yes",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "yes",
+          "dst": "ensure",
+          "name": "Отправить",
+          "condition": "explicitConfirmation",
+          "key": "F03"
+        },
+        {
+          "src": "yes",
+          "dst": "stop",
+          "name": "Отмена",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "ensure",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "ready",
+          "dst": "denied",
+          "name": "Нет прав",
+          "condition": "notAllowed",
+          "key": "F06"
+        },
+        {
+          "src": "ready",
+          "dst": "db",
+          "name": "Сбой записи",
+          "condition": "writeFailed",
+          "key": "F07"
+        },
+        {
+          "src": "ready",
+          "dst": "known",
+          "name": "Результат уже есть",
+          "condition": "knownResult",
+          "key": "F08"
+        },
+        {
+          "src": "ready",
+          "dst": "call",
+          "name": "Готова к вызову",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "call",
+          "dst": "res",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "res",
+          "dst": "save",
+          "name": "Да",
+          "condition": "resultPersisted",
+          "key": "F11"
+        },
+        {
+          "src": "res",
+          "dst": "unknown",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "save",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "unknown",
+          "dst": "wait",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "Проверка статуса доступа",
+      "scope": "Прототип",
+      "trigger": "Стажёр явно нажал «Проверить статус»",
+      "result": "Отображён подтверждённый статус, последнее известное состояние при сбое либо предусмотренный следующий шаг.",
+      "acceptance": "Устаревший ответ не понижает ревизию. При отказе показан контакт бадди. Одобрение другого ресурса не открывает первую задачу.",
+      "notes": [
+        "GET /access-requests/{resourceId} вызывает GET /requests/{operationId}. При сбое serviceAvailable=false. GET /onboarding использует сохранённое состояние без внешнего вызова.",
+        "При pending стажёр может открыть другие карточки. При submitting интерфейс предлагает повтор P05. При approved возможность открыть P07 зависит от ID требуемого ресурса."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Статус запрошен",
+          "rows": []
+        },
+        "check": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Проверить права и попытку",
+          "rows": []
+        },
+        "try": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Есть попытка?",
+          "rows": []
+        },
+        "none": {
+          "role": "A",
+          "kind": "end",
+          "col": 3,
+          "name": "Нет доступной попытки",
+          "rows": []
+        },
+        "read": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Прочитать статус по operationId",
+          "rows": [
+            16
+          ]
+        },
+        "got": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Сервис ответил?",
+          "rows": []
+        },
+        "last": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Показать последнее состояние",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Сохранить только свежую ревизию",
+          "rows": [
+            17
+          ]
+        },
+        "status": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Статус заявки",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Ожидание или повтор",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Одобрение показано",
+          "rows": []
+        },
+        "no": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать отказ и контакт бадди",
+          "rows": [
+            15
+          ]
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Показан следующий шаг",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "check",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "check",
+          "dst": "try",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "try",
+          "dst": "read",
+          "name": "Да",
+          "condition": "attemptVisible",
+          "key": "F03"
+        },
+        {
+          "src": "try",
+          "dst": "none",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "read",
+          "dst": "got",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "got",
+          "dst": "store",
+          "name": "Да",
+          "condition": "serviceResponded",
+          "key": "F06"
+        },
+        {
+          "src": "got",
+          "dst": "last",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F07"
+        },
+        {
+          "src": "last",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "store",
+          "dst": "status",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "status",
+          "dst": "ok",
+          "name": "Одобрена",
+          "condition": "statusApproved",
+          "key": "F10"
+        },
+        {
+          "src": "status",
+          "dst": "no",
+          "name": "Отказ",
+          "condition": "statusDenied",
+          "key": "F11"
+        },
+        {
+          "src": "status",
+          "dst": "wait",
+          "name": "Ожидание",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "no",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Готовность к первой задаче",
+      "scope": "Прототип и действия руководителя",
+      "trigger": "Руководитель согласовал постановку. Стажёр открыл карточку «Первая задача»",
+      "result": "Показан блокер либо сохранена отметка готовности к согласованной задаче.",
+      "acceptance": "До одобрения нужного ресурса сервер не отдаёт закрытую постановку, а попытка отметить готовность получает 409. После одобрения отметка сохраняется.",
+      "notes": [
+        "Утверждение задачи руководителем — предшествующее бизнес-действие. В прототипе постановка и зависимость уже находятся в опубликованном плане.",
+        "PUT /steps/first_task_ready/completion проверяет ресурс на сервере. Если между показом и подтверждением условие не выполнено, вернуть 409 access_required и обновить блокер."
+      ],
+      "nodes": {
+        "s": {
+          "role": "L",
+          "kind": "start",
+          "col": 0,
+          "name": "Подготовка задачи",
+          "rows": []
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 1,
+          "name": "Утвердить задачу и критерии",
+          "rows": [
+            14
+          ]
+        },
+        "open": {
+          "role": "I",
+          "kind": "user",
+          "col": 2,
+          "name": "Открыть карточку задачи",
+          "rows": [
+            19
+          ]
+        },
+        "check": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Проверить план и нужный доступ",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Нужный доступ одобрен?",
+          "rows": []
+        },
+        "block": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Показать блокер и переход в «Доступы»",
+          "rows": [
+            18
+          ]
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Показать постановку и критерии",
+          "rows": [
+            18
+          ]
+        },
+        "stop": {
+          "role": "I",
+          "kind": "end",
+          "col": 6,
+          "name": "Готовность не отмечена",
+          "rows": []
+        },
+        "choose": {
+          "role": "I",
+          "kind": "user",
+          "col": 6,
+          "name": "Прочитать и выбрать действие",
+          "rows": [
+            19
+          ]
+        },
+        "ready": {
+          "role": "I",
+          "kind": "xor",
+          "col": 7,
+          "name": "Что выбрано?",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 8,
+          "name": "Повторно проверить право и сохранить",
+          "rows": []
+        },
+        "buddy": {
+          "role": "A",
+          "kind": "service",
+          "col": 8,
+          "name": "Показать контакт бадди",
+          "rows": []
+        },
+        "saved": {
+          "role": "A",
+          "kind": "xor",
+          "col": 9,
+          "name": "Готовность сохранена?",
+          "rows": []
+        },
+        "done": {
+          "role": "A",
+          "kind": "end",
+          "col": 10,
+          "name": "Готовность сохранена",
+          "rows": []
+        },
+        "rejected": {
+          "role": "A",
+          "kind": "end",
+          "col": 10,
+          "name": "Вернуть блокер",
+          "rows": []
+        },
+        "later": {
+          "role": "I",
+          "kind": "end",
+          "col": 9,
+          "name": "Можно вернуться позже",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "lead",
+          "dst": "open",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "open",
+          "dst": "check",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "check",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "g",
+          "dst": "show",
+          "name": "Да",
+          "condition": "requiredResourceApproved",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "block",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "block",
+          "dst": "stop",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "show",
+          "dst": "choose",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "choose",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "ready",
+          "dst": "store",
+          "name": "Готов начать",
+          "condition": "actionReady",
+          "key": "F10"
+        },
+        {
+          "src": "ready",
+          "dst": "buddy",
+          "name": "Контакт",
+          "condition": "actionContact",
+          "key": "F11"
+        },
+        {
+          "src": "ready",
+          "dst": "later",
+          "name": "Отложить",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "buddy",
+          "dst": "later",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "store",
+          "dst": "saved",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        },
+        {
+          "src": "saved",
+          "dst": "done",
+          "name": "Да",
+          "condition": "readinessSaved",
+          "key": "F15"
+        },
+        {
+          "src": "saved",
+          "dst": "rejected",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F16"
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Цели адаптации и обучение",
+      "scope": "Полная версия и справка прототипа",
+      "trigger": "Наступил срок этапа по опубликованному плану",
+      "result": "Согласованы цели, известны владельцы блокеров, открыт доступ к назначенным материалам, отмечено обучение.",
+      "acceptance": "Цели и обратную связь фиксирует человек. Ссылка из карточки задачи уже относится к MVP. Учёт общих курсов и сводка к встрече относятся к расширению.",
+      "notes": [
+        "Цели и обучение ведутся параллельно. Стажёр записывает цели после получения общего инструмента прогресса либо использует согласованный с руководителем способ фиксации.",
+        "AI по запросу помогает оформить согласованные цели или собрать сводку отмеченного прогресса. Отметка обучения поступает от стажёра или источника курса."
+      ],
+      "nodes": {
+        "s": {
+          "role": "H",
+          "kind": "start",
+          "col": 0,
+          "name": "Начат этап адаптации",
+          "rows": []
+        },
+        "org": {
+          "role": "H",
+          "kind": "manual",
+          "col": 1,
+          "name": "Проверить вводные материалы и контакты",
+          "rows": [
+            13
+          ]
+        },
+        "split": {
+          "role": "H",
+          "kind": "parallel",
+          "col": 2,
+          "name": "",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 3,
+          "name": "Передать курсы и инструмент прогресса",
+          "rows": [
+            23
+          ]
+        },
+        "buddy": {
+          "role": "B",
+          "kind": "manual",
+          "col": 3,
+          "name": "Дать инструкции и разобрать задачу",
+          "rows": [
+            21
+          ]
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Показать назначенные курсы и сроки",
+          "rows": []
+        },
+        "intern": {
+          "role": "I",
+          "kind": "manual",
+          "col": 4,
+          "name": "Записать цели и изучить материалы",
+          "rows": [
+            20
+          ]
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 5,
+          "name": "На 1:1 сверить прогресс и блокеры",
+          "rows": [
+            22
+          ]
+        },
+        "learn": {
+          "role": "I",
+          "kind": "manual",
+          "col": 5,
+          "name": "Изучить курсы и защиту данных",
+          "rows": [
+            24
+          ]
+        },
+        "goals": {
+          "role": "L",
+          "kind": "end",
+          "col": 6,
+          "name": "Цели уточнены",
+          "rows": []
+        },
+        "done": {
+          "role": "I",
+          "kind": "end",
+          "col": 6,
+          "name": "Обучение отмечено",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "org",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "org",
+          "dst": "split",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "split",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "split",
+          "dst": "buddy",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "hr",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "show",
+          "dst": "learn",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "learn",
+          "dst": "done",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "buddy",
+          "dst": "intern",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "intern",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "lead",
+          "dst": "goals",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "Учебная практика",
+      "scope": "Полная карта процесса вне AI-buddy",
+      "trigger": "Стажёру может понадобиться оформить учебную практику во втором месяце",
+      "result": "Согласованы список документов и срок либо шаг пропущен.",
+      "acceptance": "Шаг условный и не блокирует другие этапы. Владелец порядка оформления — HR. AI не обрабатывает документы.",
+      "notes": [
+        "Это организационный сценарий. Он описывает взаимодействие стажёра и HR вне продукта."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Наступил второй месяц",
+          "rows": []
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 1,
+          "name": "Нужна практика?",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 2,
+          "name": "Передать памятку и контакт",
+          "rows": [
+            25
+          ]
+        },
+        "agree": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Согласовать документы и сроки",
+          "rows": [
+            26
+          ]
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 4,
+          "name": "Порядок согласован",
+          "rows": []
+        },
+        "skip": {
+          "role": "I",
+          "kind": "end",
+          "col": 3,
+          "name": "Шаг пропущен",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "g",
+          "dst": "hr",
+          "name": "Да",
+          "condition": "practiceNeeded",
+          "key": "F02"
+        },
+        {
+          "src": "g",
+          "dst": "skip",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F03"
+        },
+        {
+          "src": "hr",
+          "dst": "agree",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "agree",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Экватор стажировки",
+      "scope": "Полная версия",
+      "trigger": "Наступила контрольная точка экватора по плану",
+      "result": "Руководитель дал обратную связь, приоритеты уточнены, стажёр и бадди согласовали ближайшие задачи.",
+      "acceptance": "AI показывает согласованные материалы и готовит черновик только по запросу. Оценку и обновлённые цели подтверждает руководитель.",
+      "notes": [
+        "Точная дата в опубликованном плане. Ориентир для 6 месяцев — конец 3-го, для 9 месяцев — середина 5-го. Репетиция проводится при необходимости."
+      ],
+      "nodes": {
+        "s": {
+          "role": "H",
+          "kind": "start",
+          "col": 0,
+          "name": "Экватор по плану",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 1,
+          "name": "Сообщить дату, формат и шаблон",
+          "rows": [
+            27
+          ]
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Показать точку и материалы",
+          "rows": [
+            29
+          ]
+        },
+        "collect": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Собрать результаты и вопросы",
+          "rows": [
+            28
+          ]
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 4,
+          "name": "Нужна помощь с повесткой?",
+          "rows": []
+        },
+        "ai": {
+          "role": "M",
+          "kind": "service",
+          "col": 5,
+          "name": "Собрать черновик повестки",
+          "rows": [
+            29
+          ]
+        },
+        "rehearse": {
+          "role": "B",
+          "kind": "manual",
+          "col": 6,
+          "name": "Помочь с примерами и репетицией",
+          "rows": [
+            30
+          ]
+        },
+        "review": {
+          "role": "L",
+          "kind": "manual",
+          "col": 7,
+          "name": "Обсудить итоги и согласовать цели",
+          "rows": [
+            31
+          ]
+        },
+        "plan": {
+          "role": "B",
+          "kind": "manual",
+          "col": 8,
+          "name": "Разложить цели на ближайшие задачи",
+          "rows": [
+            30
+          ]
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 9,
+          "name": "План до финала понятен",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "hr",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "show",
+          "dst": "collect",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "collect",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "g",
+          "dst": "ai",
+          "name": "Да",
+          "condition": "agendaRequested",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "rehearse",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "ai",
+          "dst": "rehearse",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "rehearse",
+          "dst": "review",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "review",
+          "dst": "plan",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "plan",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Подготовка финала",
+      "scope": "Полная версия",
+      "trigger": "До конца стажировки остаётся около месяца",
+      "result": "Стажёр знает критерии и срок ответа, собрал материалы и план передачи работы.",
+      "acceptance": "В продукте отображаются согласованные критерии и даты. Черновик выступления составляется по запросу из выбранных пользователем материалов.",
+      "notes": [
+        "HR согласует участников и порядок дальнейшего оформления. AI показывает только сведения, уже зафиксированные ответственными."
+      ],
+      "nodes": {
+        "s": {
+          "role": "L",
+          "kind": "start",
+          "col": 0,
+          "name": "Месяц до завершения",
+          "rows": []
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 1,
+          "name": "Уточнить формат и срок решения",
+          "rows": [
+            32
+          ]
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 2,
+          "name": "Сверить календарь и порядок оформления",
+          "rows": [
+            33
+          ]
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Показать требования и сроки",
+          "rows": [
+            35
+          ]
+        },
+        "buddy": {
+          "role": "B",
+          "kind": "manual",
+          "col": 4,
+          "name": "Помочь выбрать примеры работ",
+          "rows": [
+            34
+          ]
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 5,
+          "name": "Нужен черновик?",
+          "rows": []
+        },
+        "ai": {
+          "role": "M",
+          "kind": "service",
+          "col": 6,
+          "name": "Предложить структуру выступления",
+          "rows": [
+            35
+          ]
+        },
+        "ready": {
+          "role": "I",
+          "kind": "manual",
+          "col": 7,
+          "name": "Подготовить выступление и передачу",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Материалы готовы",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "lead",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "hr",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "show",
+          "dst": "buddy",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "buddy",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "ai",
+          "name": "Да",
+          "condition": "outlineRequested",
+          "key": "F06"
+        },
+        {
+          "src": "g",
+          "dst": "ready",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F07"
+        },
+        {
+          "src": "ai",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "ready",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Итог и передача задач",
+      "scope": "Полная карта процесса вне AI-buddy",
+      "trigger": "Наступила итоговая встреча",
+      "result": "Команда приняла задачи. Стажёру сообщён итог или дата следующего ответа.",
+      "acceptance": "Оценка, сообщение решения и проверка передачи принадлежат людям. При ожидании фиксируется ответственный и срок следующего ответа.",
+      "notes": [
+        "Модель не выставляет оценку и не принимает решение о переходе. Оба исхода передают в P13 только статус, зафиксированный ответственным."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Последняя неделя",
+          "rows": []
+        },
+        "result": {
+          "role": "I",
+          "kind": "manual",
+          "col": 1,
+          "name": "Представить результат и передать задачи",
+          "rows": [
+            36
+          ]
+        },
+        "handoff": {
+          "role": "B",
+          "kind": "manual",
+          "col": 2,
+          "name": "Проверить приём задач командой",
+          "rows": [
+            37
+          ]
+        },
+        "review": {
+          "role": "L",
+          "kind": "manual",
+          "col": 3,
+          "name": "Обсудить итоговую оценку",
+          "rows": [
+            38
+          ]
+        },
+        "g": {
+          "role": "L",
+          "kind": "xor",
+          "col": 4,
+          "name": "Решение согласовано?",
+          "rows": []
+        },
+        "yes": {
+          "role": "L",
+          "kind": "manual",
+          "col": 5,
+          "name": "Сообщить согласованный итог",
+          "rows": [
+            38
+          ]
+        },
+        "wait": {
+          "role": "L",
+          "kind": "manual",
+          "col": 5,
+          "name": "Назвать срок следующего ответа",
+          "rows": [
+            38
+          ]
+        },
+        "e": {
+          "role": "L",
+          "kind": "end",
+          "col": 6,
+          "name": "Итог зафиксирован",
+          "rows": []
+        },
+        "w": {
+          "role": "L",
+          "kind": "end",
+          "col": 6,
+          "name": "Ожидается решение",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "result",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "result",
+          "dst": "handoff",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "handoff",
+          "dst": "review",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "review",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "g",
+          "dst": "yes",
+          "name": "Да",
+          "condition": "decisionConfirmed",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "wait",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "yes",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "wait",
+          "dst": "w",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        }
+      ]
+    },
+    {
+      "id": "P13",
+      "title": "Завершение плана",
+      "scope": "Полная версия",
+      "trigger": "Ответственный зафиксировал итог или ожидаемую дату ответа",
+      "result": "Стажёр видит статус и следующий шаг. После решения HR запускает оформление, стажёр проверяет передачу и заполняет опрос.",
+      "acceptance": "Если решение ещё согласуется, показывается срок и контакт. Кадровые действия запускает HR после согласованного решения.",
+      "notes": [
+        "После согласования решения просмотр обновляется по факту записи нового статуса. Переход в штат и закрытие стажировки — варианты действия HR вне прототипа."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Статус зафиксирован",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать согласованный статус",
+          "rows": [
+            41
+          ]
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Решение принято?",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Показать срок и контакт",
+          "rows": [
+            41
+          ]
+        },
+        "w": {
+          "role": "A",
+          "kind": "end",
+          "col": 4,
+          "name": "Ожидание решения",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 3,
+          "name": "Запустить оформление и передать опрос",
+          "rows": [
+            39
+          ]
+        },
+        "i": {
+          "role": "I",
+          "kind": "manual",
+          "col": 4,
+          "name": "Проверить передачу и заполнить опрос",
+          "rows": [
+            40
+          ]
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 5,
+          "name": "Стажировка завершена",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "g",
+          "dst": "hr",
+          "name": "Да",
+          "condition": "decisionConfirmed",
+          "key": "F03"
+        },
+        {
+          "src": "g",
+          "dst": "wait",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "wait",
+          "dst": "w",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "hr",
+          "dst": "i",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "i",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        }
+      ]
+    },
+    {
+      "id": "P14",
+      "title": "Ответ по разрешённым источникам",
+      "scope": "Прототип и поддержка трёх сценариев",
+      "trigger": "Стажёр задал рабочий вопрос из «Моего старта» или карточки",
+      "result": "Получен ответ с источником и разрешённым переходом либо полезная подсказка при нехватке данных.",
+      "acceptance": "Чужие выдержки не попадают в модель и ответ. Тайм-аут, недостоверный ID или отсутствие источника приводят к уточнению или контакту. Карточки доступны в ожидании.",
+      "notes": [
+        "POST /chat получает вопрос и ключ текущей карточки. Сервер выбирает выдержки и проверяет reply, sourceIds и предложенный resourceId.",
+        "Деморежим и Ollama используют один контракт. Модель предлагает текст и переход. Запись прогресса и вызов сервиса происходят в отдельных процессах по действию стажёра."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыт чат",
+          "rows": []
+        },
+        "ask": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Задать вопрос о своём шаге",
+          "rows": [
+            12
+          ]
+        },
+        "filter": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Проверить сессию и выбрать источники",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 3,
+          "name": "Есть подходящий источник?",
+          "rows": []
+        },
+        "model": {
+          "role": "M",
+          "kind": "service",
+          "col": 4,
+          "name": "Сформировать ответ и ссылки",
+          "rows": []
+        },
+        "validate": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Проверить формат, источники и переход",
+          "rows": []
+        },
+        "valid": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Ответ пригоден?",
+          "rows": []
+        },
+        "answer": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать ответ и разрешённый переход",
+          "rows": []
+        },
+        "help": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Уточнить вопрос или показать контакт",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Следующий шаг понятен",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "ask",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "ask",
+          "dst": "filter",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "filter",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "g",
+          "dst": "model",
+          "name": "Да",
+          "condition": "allowedSourceFound",
+          "key": "F04"
+        },
+        {
+          "src": "g",
+          "dst": "help",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F05"
+        },
+        {
+          "src": "model",
+          "dst": "validate",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "validate",
+          "dst": "valid",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "valid",
+          "dst": "answer",
+          "name": "Да",
+          "condition": "replyValid",
+          "key": "F08"
+        },
+        {
+          "src": "valid",
+          "dst": "help",
+          "name": "Сбой или нет",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "answer",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "help",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        }
+      ]
+    }
+  ],
+  "rows": {
+    "2": [
+      "P01_date"
+    ],
+    "3": [
+      "P01_owner"
+    ],
+    "4": [
+      "P01_pack"
+    ],
+    "5": [
+      "P01_draft"
+    ],
+    "6": [
+      "P01_publish"
+    ],
+    "7": [
+      "P01_invite"
+    ],
+    "8": [
+      "P02_login"
+    ],
+    "9": [
+      "P02_home"
+    ],
+    "11": [
+      "P03_show"
+    ],
+    "10": [
+      "P03_intro"
+    ],
+    "12": [
+      "P03_mark",
+      "P14_ask"
+    ],
+    "16": [
+      "P04_pick",
+      "P05_confirm",
+      "P06_read"
+    ],
+    "15": [
+      "P04_guide",
+      "P06_no"
+    ],
+    "17": [
+      "P04_suggest",
+      "P05_call",
+      "P06_store"
+    ],
+    "14": [
+      "P07_lead"
+    ],
+    "19": [
+      "P07_open",
+      "P07_choose"
+    ],
+    "18": [
+      "P07_block",
+      "P07_show"
+    ],
+    "13": [
+      "P08_org"
+    ],
+    "23": [
+      "P08_hr"
+    ],
+    "21": [
+      "P08_buddy"
+    ],
+    "20": [
+      "P08_intern"
+    ],
+    "22": [
+      "P08_lead"
+    ],
+    "24": [
+      "P08_learn"
+    ],
+    "25": [
+      "P09_hr"
+    ],
+    "26": [
+      "P09_agree"
+    ],
+    "27": [
+      "P10_hr"
+    ],
+    "29": [
+      "P10_show",
+      "P10_ai"
+    ],
+    "28": [
+      "P10_collect"
+    ],
+    "30": [
+      "P10_rehearse",
+      "P10_plan"
+    ],
+    "31": [
+      "P10_review"
+    ],
+    "32": [
+      "P11_lead"
+    ],
+    "33": [
+      "P11_hr"
+    ],
+    "35": [
+      "P11_show",
+      "P11_ai"
+    ],
+    "34": [
+      "P11_buddy"
+    ],
+    "36": [
+      "P12_result"
+    ],
+    "37": [
+      "P12_handoff"
+    ],
+    "38": [
+      "P12_review",
+      "P12_yes",
+      "P12_wait"
+    ],
+    "41": [
+      "P13_show",
+      "P13_wait"
+    ],
+    "39": [
+      "P13_hr"
+    ],
+    "40": [
+      "P13_i"
+    ]
+  }
+}

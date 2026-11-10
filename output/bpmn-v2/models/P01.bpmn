@@ -1,0 +1,266 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P01" targetNamespace="urn:origination:ai-buddy:bpmn:v2" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P01_collab">
+    <bpmn:participant id="P01_pool" name="Подготовка до выхода" processRef="P01_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P01_process" name="Подготовка до выхода" isExecutable="false">
+    <bpmn:documentation>Область: Полная версия
+Старт: HR получил сведения о выходе стажёра
+Результат: Опубликован план с бадди. Стажёр получил приглашение и контакты.
+Приёмка: До публикации черновик недоступен стажёру. Назначает бадди и публикует только руководитель. В прототипе эту границу воспроизводит опубликованный seed-план.
+Модель предлагает этапы, сроки и контрольные точки. Руководитель может добавить, удалить или переставить этап, указать результат и помощника.
+По запросу бадди продукт может проверить комплектность карточки. HR передаёт приглашение после публикации. Интерфейсы HR, бадди и руководителя для этого этапа в MVP не проектируются как рабочие экраны.</bpmn:documentation>
+    <bpmn:laneSet id="P01_lanes">
+      <bpmn:lane id="P01_lane_H" name="HR">
+        <bpmn:flowNodeRef>P01_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_date</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_invite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P01_owner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_edit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_publish</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P01_pack</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P01_preview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_save</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_M" name="Модель AI">
+        <bpmn:flowNodeRef>P01_draft</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P01_s" name="Выход подтверждён">
+      <bpmn:outgoing>P01_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="P01_date" name="Сверить дату и контакты">
+      <bpmn:documentation>Лист 3, строка 2. Дата выхода и контакты
+Роль: HR
+Результат: Руководитель знает дату, контакты и обязательные организационные шаги.
+Участие AI-buddy: Не участвует. Дату и контакты сверяет HR.</bpmn:documentation>
+      <bpmn:incoming>P01_F01</bpmn:incoming>
+      <bpmn:outgoing>P01_F02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="P01_owner" name="Назначить бадди и выбрать 6 или 9 месяцев">
+      <bpmn:documentation>Лист 3, строка 3. Назначение бадди и выбор шаблона
+Роль: Руководитель
+Результат: Есть бадди, дата начала и выбранный шаблон.
+Участие AI-buddy: Не участвует. Руководитель назначает бадди и выбирает длительность плана.</bpmn:documentation>
+      <bpmn:incoming>P01_F02</bpmn:incoming>
+      <bpmn:outgoing>P01_F03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="P01_pack" name="Собрать материалы команды">
+      <bpmn:documentation>Лист 3, строка 4. Материалы команды
+Роль: Бадди
+Результат: Руководитель получил ссылки, список ресурсов и предложение по задаче.
+Участие AI-buddy: По запросу · полная версия. Проверяет, указаны ли ссылки и список нужных доступов в карточке команды.</bpmn:documentation>
+      <bpmn:incoming>P01_F03</bpmn:incoming>
+      <bpmn:outgoing>P01_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:serviceTask id="P01_draft" name="Предложить черновик плана">
+      <bpmn:documentation>Лист 3, строка 5. Черновик плана
+Роль: AI-buddy
+Результат: Руководитель видит черновик и может изменить его.
+Участие AI-buddy: Полная версия. Предлагает этапы и контрольные точки на 6 или 9 месяцев. Показывает пропуски.</bpmn:documentation>
+      <bpmn:incoming>P01_F04</bpmn:incoming>
+      <bpmn:outgoing>P01_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="P01_edit" name="Уточнить этапы и критерии">
+      <bpmn:incoming>P01_F05</bpmn:incoming>
+      <bpmn:incoming>P01_F09</bpmn:incoming>
+      <bpmn:outgoing>P01_F06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P01_preview" name="Показать вид стажёра">
+      <bpmn:incoming>P01_F06</bpmn:incoming>
+      <bpmn:outgoing>P01_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P01_ok" name="План готов?" default="P01_F09" gatewayDirection="Diverging">
+      <bpmn:incoming>P01_F07</bpmn:incoming>
+      <bpmn:outgoing>P01_F08</bpmn:outgoing>
+      <bpmn:outgoing>P01_F09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="P01_publish" name="Подтвердить публикацию">
+      <bpmn:documentation>Лист 3, строка 6. Публикация плана
+Роль: Руководитель
+Результат: Стажёру доступна опубликованная версия с бадди и ближайшим шагом.
+Участие AI-buddy: Полная версия. Показывает, как стажёр увидит план. Публикует руководитель.</bpmn:documentation>
+      <bpmn:incoming>P01_F08</bpmn:incoming>
+      <bpmn:outgoing>P01_F10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P01_save" name="Открыть опубликованный план владельцу">
+      <bpmn:incoming>P01_F10</bpmn:incoming>
+      <bpmn:outgoing>P01_F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P01_invite" name="Передать приглашение">
+      <bpmn:documentation>Лист 3, строка 7. Приглашение к старту
+Роль: HR
+Результат: У стажёра есть инструкция, контакты и ссылка на старт.
+Участие AI-buddy: Не участвует. HR отправляет приглашение и инструкции.</bpmn:documentation>
+      <bpmn:incoming>P01_F11</bpmn:incoming>
+      <bpmn:outgoing>P01_F12</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P01_e" name="Стажёр приглашён">
+      <bpmn:incoming>P01_F12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P01_F01" sourceRef="P01_s" targetRef="P01_date"/>
+    <bpmn:sequenceFlow id="P01_F02" sourceRef="P01_date" targetRef="P01_owner"/>
+    <bpmn:sequenceFlow id="P01_F03" sourceRef="P01_owner" targetRef="P01_pack"/>
+    <bpmn:sequenceFlow id="P01_F04" sourceRef="P01_pack" targetRef="P01_draft"/>
+    <bpmn:sequenceFlow id="P01_F05" sourceRef="P01_draft" targetRef="P01_edit"/>
+    <bpmn:sequenceFlow id="P01_F06" sourceRef="P01_edit" targetRef="P01_preview"/>
+    <bpmn:sequenceFlow id="P01_F07" sourceRef="P01_preview" targetRef="P01_ok"/>
+    <bpmn:sequenceFlow id="P01_F08" sourceRef="P01_ok" targetRef="P01_publish" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">planReady</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F09" sourceRef="P01_ok" targetRef="P01_edit" name="Доработать"/>
+    <bpmn:sequenceFlow id="P01_F10" sourceRef="P01_publish" targetRef="P01_save"/>
+    <bpmn:sequenceFlow id="P01_F11" sourceRef="P01_save" targetRef="P01_invite"/>
+    <bpmn:sequenceFlow id="P01_F12" sourceRef="P01_invite" targetRef="P01_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P01_diagram" name="Подготовка до выхода">
+    <bpmndi:BPMNPlane id="P01_plane" bpmnElement="P01_collab">
+      <bpmndi:BPMNShape id="P01_pool_di" bpmnElement="P01_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="2196" height="720"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_H_di" bpmnElement="P01_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="2166" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_L_di" bpmnElement="P01_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="180" width="2166" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_B_di" bpmnElement="P01_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="324" width="2166" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_A_di" bpmnElement="P01_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="2166" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_M_di" bpmnElement="P01_lane_M" isHorizontal="true">
+        <dc:Bounds x="60" y="612" width="2166" height="144"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_s_di" bpmnElement="P01_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="126" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="78" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_date_di" bpmnElement="P01_date" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="249" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_invite_di" bpmnElement="P01_invite" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="1815" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_e_di" bpmnElement="P01_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="2040" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1992" y="126" width="132" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_owner_di" bpmnElement="P01_owner" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="423" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_edit_di" bpmnElement="P01_edit" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="945" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_ok_di" bpmnElement="P01_ok" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1338" y="222" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1284" y="276" width="156" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_publish_di" bpmnElement="P01_publish" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1467" y="198" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_pack_di" bpmnElement="P01_pack" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="597" y="342" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_preview_di" bpmnElement="P01_preview" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1119" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_save_di" bpmnElement="P01_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1641" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_draft_di" bpmnElement="P01_draft" bioc:fill="#EDE8FF" bioc:stroke="#243448">
+        <dc:Bounds x="771" y="630" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P01_F01_di" bpmnElement="P01_F01">
+        <di:waypoint x="162" y="102"/>
+        <di:waypoint x="249" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F02_di" bpmnElement="P01_F02">
+        <di:waypoint x="387" y="102"/>
+        <di:waypoint x="396" y="102"/>
+        <di:waypoint x="396" y="246"/>
+        <di:waypoint x="423" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F03_di" bpmnElement="P01_F03">
+        <di:waypoint x="561" y="246"/>
+        <di:waypoint x="570" y="246"/>
+        <di:waypoint x="570" y="390"/>
+        <di:waypoint x="597" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F04_di" bpmnElement="P01_F04">
+        <di:waypoint x="735" y="390"/>
+        <di:waypoint x="744" y="390"/>
+        <di:waypoint x="744" y="678"/>
+        <di:waypoint x="771" y="678"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F05_di" bpmnElement="P01_F05">
+        <di:waypoint x="909" y="678"/>
+        <di:waypoint x="918" y="678"/>
+        <di:waypoint x="918" y="246"/>
+        <di:waypoint x="945" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F06_di" bpmnElement="P01_F06">
+        <di:waypoint x="1083" y="246"/>
+        <di:waypoint x="1092" y="246"/>
+        <di:waypoint x="1092" y="534"/>
+        <di:waypoint x="1119" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F07_di" bpmnElement="P01_F07">
+        <di:waypoint x="1257" y="534"/>
+        <di:waypoint x="1266" y="534"/>
+        <di:waypoint x="1266" y="246"/>
+        <di:waypoint x="1338" y="246"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F08_di" bpmnElement="P01_F08">
+        <di:waypoint x="1386" y="246"/>
+        <di:waypoint x="1467" y="246"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1411" y="221" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F09_di" bpmnElement="P01_F09">
+        <di:waypoint x="1362" y="222"/>
+        <di:waypoint x="1362" y="186"/>
+        <di:waypoint x="1014" y="186"/>
+        <di:waypoint x="1014" y="198"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1147" y="193" width="82" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F10_di" bpmnElement="P01_F10">
+        <di:waypoint x="1605" y="246"/>
+        <di:waypoint x="1614" y="246"/>
+        <di:waypoint x="1614" y="534"/>
+        <di:waypoint x="1641" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F11_di" bpmnElement="P01_F11">
+        <di:waypoint x="1779" y="534"/>
+        <di:waypoint x="1788" y="534"/>
+        <di:waypoint x="1788" y="102"/>
+        <di:waypoint x="1815" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F12_di" bpmnElement="P01_F12">
+        <di:waypoint x="1953" y="102"/>
+        <di:waypoint x="2040" y="102"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P01_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
