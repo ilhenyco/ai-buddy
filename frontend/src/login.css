@@ -1,0 +1,17 @@
+/* Demo login screen, Origination tokens: flat white, 2px ink lines, no rounded corners. */
+.login-page{min-height:100vh;display:grid;place-items:center;padding:32px 16px;background:var(--origin-paper)}
+.login-card{width:min(560px,100%);border:2px solid var(--origin-line);padding:32px;background:var(--origin-paper)}
+.login-card h1{font-size:40px;line-height:1.1;font-weight:500;margin:4px 0 12px}
+.login-card .eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0}
+.login-mascot{width:96px;height:96px;object-fit:contain;display:block;margin-bottom:12px}
+.login-card .muted{color:var(--origin-gray700);margin:0 0 20px}
+.login-users{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.login-user{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:2px solid var(--origin-line);background:var(--origin-paper);color:var(--origin-ink);font:inherit;text-align:left;cursor:pointer}
+.login-user:hover:not(:disabled){background:var(--origin-green)}
+.login-user:disabled{opacity:.6;cursor:wait}
+.login-user span{display:grid}
+.login-user small{font-size:13px;color:var(--origin-gray700)}
+.login-loading{padding:16px 0}
+.login-card .error-banner{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.review-user{display:flex;align-items:center;gap:10px}
+@media (max-width:480px){.login-card{padding:20px}.login-card h1{font-size:30px}}
