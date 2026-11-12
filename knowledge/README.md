@@ -136,7 +136,8 @@ uv run pytest
 
 Для интеграционных тестов задать `TEST_DATABASE_URL` на PostgreSQL с pgvector и правом CREATE
 DATABASE. Каждый тест получает отдельную БД; без переменной они явно skipped. CI проверяет
-реальные SQL/ACL, MCP initialize/list_tools/call_tool, Go identity bridge, Compose и Docker build.
+реальные SQL/ACL, MCP initialize/list_tools/call_tool, Go identity bridge, Docker build и
+Compose smoke: реальный Playbook → Go ACL → поиск/ответ → сетевой MCP.
 Модель в CI заменена тестовым адаптером.
 
 Retrieval benchmark после ingestion и запуска Go:

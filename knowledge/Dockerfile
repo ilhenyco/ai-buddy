@@ -7,6 +7,7 @@ COPY pyproject.toml uv.lock ./
 COPY homych_knowledge ./homych_knowledge
 RUN uv sync --frozen --no-dev
 COPY data ./data
+COPY smoke.py ./smoke.py
 USER 65532:65532
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8090

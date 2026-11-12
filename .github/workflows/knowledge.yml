@@ -53,6 +53,20 @@ jobs:
           RAG_SERVICE_TOKEN=ci-only-service-token-at-least-24 docker compose -f docker-compose.yml -f docker-compose.rag.yml config --quiet
       - name: Python image build
         run: docker build -t homych-knowledge:test knowledge
+      - name: Compose smoke with real Playbook and deterministic model
+        env:
+          RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
+          RAG_PROVIDER: deterministic
+          RAG_MCP_TOKENS: '{"ci-mcp-token-with-at-least-24-characters":"u-sasha"}'
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml up -d --build --wait db api knowledge
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python -m homych_knowledge.ingest playbook
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python smoke.py
+      - name: Stop smoke services
+        if: always()
+        env:
+          RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
+        run: docker compose -f docker-compose.yml -f docker-compose.rag.yml down
       - uses: actions/upload-artifact@v4
         with:
           name: knowledge-coverage
