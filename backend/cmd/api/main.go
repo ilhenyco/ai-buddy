@@ -16,6 +16,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
+	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 )
 
 func env(key, def string) string {
@@ -58,6 +59,12 @@ func run(log *slog.Logger) error {
 	defer d.Close()
 	if err := app.Prepare(ctx, d, demo); err != nil {
 		return err
+	}
+	if demo {
+		// demo scenarios for Саша, Маша and Кирилл, only into an empty database
+		if err := scenarios.SeedDemo(ctx, d, clock.System{}, loc); err != nil {
+			return err
+		}
 	}
 
 	a := app.New(d, clock.System{}, app.Config{

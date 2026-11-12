@@ -1,5 +1,9 @@
 # Prototype Instructions
 
+## Server mode, 12 November 2026
+
+`VITE_API=on` connects the prototype to the Go backend through `src/api.ts`; without it everything stays in localStorage and must keep working. Server mode shows the demo login (`src/Login.tsx`) and takes roles from the server, never from the review switcher. Scenarios (list, create, draft autosave with If-Match, publish with replacement) go through the API and are mapped into AppState by `src/serverScenarios.ts`; other screens stay local until their backend modules exist. Add new calls to `api` and keep server-only behaviour behind `API_ENABLED`.
+
 ## Accepted stage-question suggestions, 12 November 2026
 
 Suggestions are product-owned, never configured by the lead. Show three unique randomly chosen questions from the current stage's built-in pool, changing only when the stage changes. Persist the selection per intern in optional v3 runtime.suggestions; reloads, answers, checks, scrolling history and same-stage publications must retain it. Determine the current stage by actual dates of the active published plan, not the latest old delivery snapshot or a draft. Before the first date use startup questions; with no published plan hide them. New library blocks carry internal stageKind; legacy blocks/copies infer the type from IDs (match final-prep before final). Keep the existing mobile horizontal chip scroll and send handler. If a leave/time-off instruction is unavailable, use the existing honest missing-source response and HR contact guidance, never invent corporate policy. The separate QA origin on port 4174 may be used to test future dates without changing the user's history on 4173.
