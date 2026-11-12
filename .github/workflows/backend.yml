@@ -1,0 +1,50 @@
+name: Backend
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: homych
+          POSTGRES_PASSWORD: homych
+          POSTGRES_DB: homych
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U homych" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://homych:homych@localhost:5432/postgres?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Format and vet
+        run: |
+          test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+          go vet ./...
+      - name: Tests with race detector
+        run: go test -race -count=1 ./...
+      - name: Coverage of application code (> 80%)
+        run: |
+          go test -count=1 -coverpkg=./internal/... -coverprofile=coverage.out ./...
+          total=$(go tool cover -func=coverage.out | awk '/^total:/ {print $3}' | tr -d '%')
+          echo "Coverage: ${total}%"
+          awk -v t="$total" 'BEGIN { exit !(t > 80) }'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
