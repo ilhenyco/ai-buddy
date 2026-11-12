@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -18,11 +19,10 @@ import (
 
 const base = "/api/v1"
 
-var keyN int
+var keyN atomic.Int64 // used from several goroutines in the concurrency test
 
 func key() map[string]string {
-	keyN++
-	return map[string]string{"Idempotency-Key": fmt.Sprintf("k-%d-%d", time.Now().UnixNano(), keyN)}
+	return map[string]string{"Idempotency-Key": fmt.Sprintf("k-%d-%d", time.Now().UnixNano(), keyN.Add(1))}
 }
 
 func with(h map[string]string, k, v string) map[string]string {
