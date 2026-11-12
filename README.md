@@ -1,19 +1,40 @@
-# AI-buddy (Хомыч)
+# AI-buddy — Хомыч
 
-Помощник стажёра от команды Origination для Avito Hack&Change. Прототип начинается с опубликованного плана. Стажёр знакомится с командой, подтверждает заявку на доступ и после одобрения готовится к первой задаче.
+Бот от команды Origination для Avito Hack&Change. Стажёр получает сообщения-чек-листы по календарю и задаёт личные вопросы; бадди и руководитель получают отдельные действия помощи. Отметки не блокируют этапы. Актуально: **12 ноября 2026**.
 
-## Материалы проекта
+## Начать здесь
 
-| Материал | Что в нём |
-|---|---|
-| [Концепция продукта](docs/ai-buddy/product-context.md) | Роли, путь стажировки, объём прототипа и требования кейса |
-| [BPMN P00–P14](docs/ai-buddy/bpmn-v2/README.md) | Каталог процессов и связи с чек-листом |
-| [Редактируемые модели](output/bpmn-v2/models/) и [сборник в Word](output/ai-buddy-product-bpmn.docx) | Файлы BPMN и визуальный обзор для команды |
-| [Системная спецификация](docs/ai-buddy/system-design.md) и [OpenAPI](docs/ai-buddy/system-analysis/openapi.yaml) | React, Go API, PostgreSQL, локальный Qwen через Ollama и тестовый сервис доступов |
-| [Задания и приёмка](docs/ai-buddy/handoff.md) | T1–T5, экраны, контракты и ожидаемые результаты для QA |
+1. [Полная спецификация в Word](output/ai-buddy-team-specification.docx) — самостоятельный документ для команды.
+2. [Каноническая концепция](docs/ai-buddy/team-specification.md), [97 карточек функций](docs/ai-buddy/frontend-functional-specification.md), [матрица связей](docs/ai-buddy/traceability.csv).
+3. [Подключение сервера](docs/ai-buddy/server-handoff.md), [OpenAPI — проект 23 операций](docs/ai-buddy/system-analysis/openapi.yaml).
+4. [BPMN P00–P17](docs/ai-buddy/bpmn-v3/README.md), [редактируемые модели](output/bpmn-v3/models/), [изображения и увеличенные фрагменты](docs/ai-buddy/bpmn-current/images/).
+5. [47 продуктовых требований 0.4](docs/ai-buddy/functional-requirements.md), [Q&A](docs/ai-buddy/avito-qa.md), [расшифровка](docs/ai-buddy/avito-qa-transcript.md).
 
-## Старт разработки
+## Запуск FRONT
 
-Начинаем с **T1**, входа и чтения опубликованного плана. Следующий шаг — **T2**, заявка на доступ от черновика до сохранённого статуса. Для работы с Codex используйте ID задачи из плана передачи и связанные критерии приёмки. Изменения обсуждаем в pull request к `main`.
+Node **22.18+**, npm. После клонирования:
 
-В текущей версии репозитория собраны материалы для разработки прототипа.
+```sh
+cd frontend
+npm ci
+npm run dev -- --host 127.0.0.1 --port 4173
+```
+
+Открыть http://127.0.0.1:4173 . Внешний ключ не нужен. Роли, стажёры и дата переключаются в панели проверки макета. Для списка сценариев выбрать руководителя и вкладку «Сценарий». Данные — browser localStorage `homych.frontend.bot.v3`; сброс удаляет локальную демонстрацию.
+
+```sh
+npm run check
+npm test
+npm run build
+npm run test:sites
+```
+
+Сборка — `frontend/dist/client`; worker сохранён для существующей упаковки Sites. [Инструкция FRONT](frontend/README.md). CI выполняет эти проверки и структурную проверку передачи.
+
+## Границы готовности
+
+Готов локальный FRONT. **Backend отсутствует**: auth, PostgreSQL, scheduler, реальный RAG, Qwen/DeepSeek, MCP и HTTP-мок предстоят. Контакты и заявка условные. Контракт API — проект реализации. Панель HR не утверждает права HR. Количество тестов не является отчётом >80% покрытия.
+
+Канонические данные: `team-specification.md`, `frontend-functions.json`, `system-analysis/openapi.yaml`, `bpmn-v3/processes.py`. Скрипты сборки в tools; [сборка и рендер Word](docs/ai-buddy/document-build.md). Структурная проверка: `python tools/verify_team_handoff.py`.
+
+История сохранена: [прежний общий Word](output/ai-buddy-product-bpmn.docx), [прежние семь операций](docs/ai-buddy/system-analysis/openapi-legacy.yaml), старые схемы и T1–T5. Актуальная передача заменяет их в качестве основания новой разработки. Онлайн-лист представлен локальным снимком; более поздние изменения не подтверждены. PR в main не сливается автоматически. Доступы команде выдаёт владелец.

@@ -1,0 +1,516 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P01" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P01_collab">
+    <bpmn:participant id="P01_pool" name="Настройка сценария из готовых блоков" processRef="P01_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P01_process" name="Настройка сценария из готовых блоков" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и предложения
+Старт: Руководитель создаёт или меняет сценарий
+Результат: Опубликован сценарий с сообщениями по ролям и расписанием
+Приёмка: Предпросмотр показывает стажёра, бадди и руководителя. Черновик не запускает рассылку. AI не обязателен для сборки.
+Функциональные требования 0.4: FR-PL-01, FR-PL-02, FR-PL-03, FR-PL-04, FR-PL-05, FR-PL-06, FR-PL-07, FR-PL-08, FR-PL-09, FR-PL-10, FR-PL-11, FR-CY-04, FR-AC-01, FR-HR-01, FR-HR-02
+Руководитель настраивает действия стажёра и соответствующие сообщения помощникам. Получатели привязаны к конкретной стажировке. Общий шаблон и конкретный сценарий различаются; массовое назначение — OQ06.
+HR и бадди передают исходные сведения вне приложения, а не при каждой правке. Собственные интерфейсы HR не согласованы. Полнота и версии согласованы 12 ноября; неполный draft можно сохранить. Способ загрузки материалов — OQ07.
+Открытые вопросы: OQ04, OQ05, OQ06, OQ07. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P01_lanes">
+      <bpmn:lane id="P01_lane_H" name="HR">
+        <bpmn:flowNodeRef>P01_date</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_invite</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P01_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_pick</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_owner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_draft</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_edit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_next</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_replacement</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_publish</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P01_pack</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P01_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P01_auth</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_list</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_new</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_resume</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_autosave</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_saved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_preview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_save</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P01_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P01_s" name="Открыть Сценарий">
+      <bpmn:outgoing>P01_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P01_auth" name="Проверить права руководителя">
+      <bpmn:documentation>Текущие требования: FR-AC-01</bpmn:documentation>
+      <bpmn:incoming>P01_F01</bpmn:incoming>
+      <bpmn:outgoing>P01_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P01_list" name="Список, поиск и фильтры">
+      <bpmn:documentation>Текущие требования: FR-PL-08</bpmn:documentation>
+      <bpmn:incoming>P01_F02</bpmn:incoming>
+      <bpmn:incoming>P01_F19</bpmn:incoming>
+      <bpmn:outgoing>P01_F03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P01_pick" name="Новый или существующий?" default="P01_F05" gatewayDirection="Diverging">
+      <bpmn:incoming>P01_F03</bpmn:incoming>
+      <bpmn:outgoing>P01_F04</bpmn:outgoing>
+      <bpmn:outgoing>P01_F05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P01_new" name="Создать черновик на 6 месяцев">
+      <bpmn:documentation>Текущие требования: FR-PL-09</bpmn:documentation>
+      <bpmn:incoming>P01_F04</bpmn:incoming>
+      <bpmn:outgoing>P01_F06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P01_resume" name="Открыть сохранённую редакцию">
+      <bpmn:documentation>Текущие требования: FR-PL-08</bpmn:documentation>
+      <bpmn:incoming>P01_F05</bpmn:incoming>
+      <bpmn:outgoing>P01_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P01_date" name="Передать дату и контакты">
+      <bpmn:documentation>Текущие требования: FR-HR-01</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 2. Дата выхода и контакты. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F06</bpmn:incoming>
+      <bpmn:outgoing>P01_F08</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="P01_owner" name="Участники, название, 6 или 9 месяцев">
+      <bpmn:documentation>Текущие требования: FR-PL-01, FR-PL-02</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 3. Назначение бадди и выбор шаблона. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F08</bpmn:incoming>
+      <bpmn:outgoing>P01_F09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="P01_pack" name="Передать материалы команды">
+      <bpmn:documentation>Текущие требования: FR-HR-02</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 4. Материалы команды. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F09</bpmn:incoming>
+      <bpmn:outgoing>P01_F10</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="P01_draft" name="Добавить и расположить блоки">
+      <bpmn:documentation>Текущие требования: FR-PL-03</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 5. Черновик плана. Роль источника: AI-buddy.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F10</bpmn:incoming>
+      <bpmn:outgoing>P01_F11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="P01_edit" name="Даты, пункты и действия по ролям">
+      <bpmn:documentation>Текущие требования: FR-PL-03, FR-PL-04, FR-CY-04</bpmn:documentation>
+      <bpmn:incoming>P01_F07</bpmn:incoming>
+      <bpmn:incoming>P01_F11</bpmn:incoming>
+      <bpmn:incoming>P01_F17</bpmn:incoming>
+      <bpmn:incoming>P01_F22</bpmn:incoming>
+      <bpmn:incoming>P01_F24</bpmn:incoming>
+      <bpmn:outgoing>P01_F12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P01_autosave" name="Сохранить отдельный черновик">
+      <bpmn:documentation>Текущие требования: FR-PL-10</bpmn:documentation>
+      <bpmn:incoming>P01_F12</bpmn:incoming>
+      <bpmn:incoming>P01_F16</bpmn:incoming>
+      <bpmn:outgoing>P01_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P01_saved" name="Запись успешна?" default="P01_F15" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-PL-10</bpmn:documentation>
+      <bpmn:incoming>P01_F13</bpmn:incoming>
+      <bpmn:outgoing>P01_F14</bpmn:outgoing>
+      <bpmn:outgoing>P01_F15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="P01_error" name="Сохранить ввод и повторить">
+      <bpmn:documentation>Текущие требования: FR-PL-10</bpmn:documentation>
+      <bpmn:incoming>P01_F14</bpmn:incoming>
+      <bpmn:outgoing>P01_F16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="P01_next" name="Продолжить или вернуться?" default="P01_F19" gatewayDirection="Diverging">
+      <bpmn:incoming>P01_F15</bpmn:incoming>
+      <bpmn:outgoing>P01_F17</bpmn:outgoing>
+      <bpmn:outgoing>P01_F18</bpmn:outgoing>
+      <bpmn:outgoing>P01_F19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P01_preview" name="Предпросмотр трёх ролей">
+      <bpmn:documentation>Текущие требования: FR-PL-05, FR-PL-06</bpmn:documentation>
+      <bpmn:documentation>Проверка полей согласована FR-PL-06. Ошибки возвращаются в редактор. Обязательная AI генерация исключена.</bpmn:documentation>
+      <bpmn:incoming>P01_F18</bpmn:incoming>
+      <bpmn:outgoing>P01_F20</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P01_ok" name="Поля допустимы?" default="P01_F22" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-PL-06</bpmn:documentation>
+      <bpmn:incoming>P01_F20</bpmn:incoming>
+      <bpmn:outgoing>P01_F21</bpmn:outgoing>
+      <bpmn:outgoing>P01_F22</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="P01_replacement" name="Подтвердить публикацию и замену?" default="P01_F24" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-PL-09</bpmn:documentation>
+      <bpmn:incoming>P01_F21</bpmn:incoming>
+      <bpmn:outgoing>P01_F23</bpmn:outgoing>
+      <bpmn:outgoing>P01_F24</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="P01_publish" name="Подтвердить активный вариант">
+      <bpmn:documentation>Текущие требования: FR-PL-05</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 6. Публикация плана. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F23</bpmn:incoming>
+      <bpmn:outgoing>P01_F25</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P01_save" name="Новая версия, active и cutoff">
+      <bpmn:documentation>Текущие требования: FR-PL-07, FR-PL-09, FR-PL-11</bpmn:documentation>
+      <bpmn:documentation>Согласовано 12.11: один active на стажёра. Замена сохраняет историю, отсечение дат &lt;= дня замены; прежний вариант остаётся опубликованным и не используется. Правки до публикации не влияют на рассылку.</bpmn:documentation>
+      <bpmn:incoming>P01_F25</bpmn:incoming>
+      <bpmn:outgoing>P01_F26</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P01_invite" name="Передать ссылку и инструкции">
+      <bpmn:documentation>Исторический источник: лист 3, строка 7. Приглашение к старту. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P01_F26</bpmn:incoming>
+      <bpmn:outgoing>P01_F27</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P01_e" name="Версия активна, история сохранена">
+      <bpmn:incoming>P01_F27</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P01_F01" sourceRef="P01_s" targetRef="P01_auth"/>
+    <bpmn:sequenceFlow id="P01_F02" sourceRef="P01_auth" targetRef="P01_list"/>
+    <bpmn:sequenceFlow id="P01_F03" sourceRef="P01_list" targetRef="P01_pick"/>
+    <bpmn:sequenceFlow id="P01_F04" sourceRef="P01_pick" targetRef="P01_new" name="Новый">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">newVariant</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F05" sourceRef="P01_pick" targetRef="P01_resume" name="Существующий"/>
+    <bpmn:sequenceFlow id="P01_F06" sourceRef="P01_new" targetRef="P01_date"/>
+    <bpmn:sequenceFlow id="P01_F07" sourceRef="P01_resume" targetRef="P01_edit"/>
+    <bpmn:sequenceFlow id="P01_F08" sourceRef="P01_date" targetRef="P01_owner"/>
+    <bpmn:sequenceFlow id="P01_F09" sourceRef="P01_owner" targetRef="P01_pack"/>
+    <bpmn:sequenceFlow id="P01_F10" sourceRef="P01_pack" targetRef="P01_draft"/>
+    <bpmn:sequenceFlow id="P01_F11" sourceRef="P01_draft" targetRef="P01_edit"/>
+    <bpmn:sequenceFlow id="P01_F12" sourceRef="P01_edit" targetRef="P01_autosave"/>
+    <bpmn:sequenceFlow id="P01_F13" sourceRef="P01_autosave" targetRef="P01_saved"/>
+    <bpmn:sequenceFlow id="P01_F14" sourceRef="P01_saved" targetRef="P01_error" name="Сбой">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">storageFailed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F15" sourceRef="P01_saved" targetRef="P01_next" name="Да"/>
+    <bpmn:sequenceFlow id="P01_F16" sourceRef="P01_error" targetRef="P01_autosave"/>
+    <bpmn:sequenceFlow id="P01_F17" sourceRef="P01_next" targetRef="P01_edit" name="Редактировать">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">continueEditing</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F18" sourceRef="P01_next" targetRef="P01_preview" name="Публиковать">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">publishRequested</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F19" sourceRef="P01_next" targetRef="P01_list" name="К списку"/>
+    <bpmn:sequenceFlow id="P01_F20" sourceRef="P01_preview" targetRef="P01_ok"/>
+    <bpmn:sequenceFlow id="P01_F21" sourceRef="P01_ok" targetRef="P01_replacement" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">validFields</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F22" sourceRef="P01_ok" targetRef="P01_edit" name="Исправить"/>
+    <bpmn:sequenceFlow id="P01_F23" sourceRef="P01_replacement" targetRef="P01_publish" name="Подтвердить">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">confirmed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P01_F24" sourceRef="P01_replacement" targetRef="P01_edit" name="Отмена"/>
+    <bpmn:sequenceFlow id="P01_F25" sourceRef="P01_publish" targetRef="P01_save"/>
+    <bpmn:sequenceFlow id="P01_F26" sourceRef="P01_save" targetRef="P01_invite"/>
+    <bpmn:sequenceFlow id="P01_F27" sourceRef="P01_invite" targetRef="P01_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P01_diagram" name="Настройка сценария из готовых блоков">
+    <bpmndi:BPMNPlane id="P01_plane" bpmnElement="P01_collab">
+      <bpmndi:BPMNShape id="P01_pool_di" bpmnElement="P01_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="3612" height="864"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_H_di" bpmnElement="P01_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="3582" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_L_di" bpmnElement="P01_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="3582" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_B_di" bpmnElement="P01_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="3582" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_lane_A_di" bpmnElement="P01_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="624" width="3582" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_date_di" bpmnElement="P01_date" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_invite_di" bpmnElement="P01_invite" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="3231" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_s_di" bpmnElement="P01_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="300" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="102" y="342" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_pick_di" bpmnElement="P01_pick" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="666" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="612" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_owner_di" bpmnElement="P01_owner" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1143" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_draft_di" bpmnElement="P01_draft" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1491" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_edit_di" bpmnElement="P01_edit" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1665" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_error_di" bpmnElement="P01_error" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="2187" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_next_di" bpmnElement="P01_next" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="2232" y="354" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2178" y="408" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_replacement_di" bpmnElement="P01_replacement" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="2754" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2700" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_publish_di" bpmnElement="P01_publish" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="2883" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_pack_di" bpmnElement="P01_pack" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="1317" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_auth_di" bpmnElement="P01_auth" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="702" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_list_di" bpmnElement="P01_list" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="702" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_new_di" bpmnElement="P01_new" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="642" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_resume_di" bpmnElement="P01_resume" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="762" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_autosave_di" bpmnElement="P01_autosave" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1839" y="702" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_saved_di" bpmnElement="P01_saved" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="2058" y="726" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2004" y="780" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_preview_di" bpmnElement="P01_preview" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="2361" y="702" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_ok_di" bpmnElement="P01_ok" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="2580" y="726" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2526" y="780" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_save_di" bpmnElement="P01_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="3057" y="702" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P01_e_di" bpmnElement="P01_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="3456" y="732" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="3408" y="774" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P01_F01_di" bpmnElement="P01_F01">
+        <di:waypoint x="186" y="318"/>
+        <di:waypoint x="258" y="318"/>
+        <di:waypoint x="258" y="750"/>
+        <di:waypoint x="273" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F02_di" bpmnElement="P01_F02">
+        <di:waypoint x="411" y="750"/>
+        <di:waypoint x="447" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F03_di" bpmnElement="P01_F03">
+        <di:waypoint x="585" y="750"/>
+        <di:waypoint x="594" y="750"/>
+        <di:waypoint x="594" y="318"/>
+        <di:waypoint x="666" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F04_di" bpmnElement="P01_F04">
+        <di:waypoint x="714" y="318"/>
+        <di:waypoint x="780" y="318"/>
+        <di:waypoint x="780" y="690"/>
+        <di:waypoint x="795" y="690"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="724" y="293" width="47" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F05_di" bpmnElement="P01_F05">
+        <di:waypoint x="714" y="318"/>
+        <di:waypoint x="726" y="318"/>
+        <di:waypoint x="726" y="336"/>
+        <di:waypoint x="774" y="336"/>
+        <di:waypoint x="774" y="810"/>
+        <di:waypoint x="795" y="810"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="670" y="564" width="96" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F06_di" bpmnElement="P01_F06">
+        <di:waypoint x="933" y="690"/>
+        <di:waypoint x="942" y="690"/>
+        <di:waypoint x="942" y="102"/>
+        <di:waypoint x="969" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F07_di" bpmnElement="P01_F07">
+        <di:waypoint x="933" y="810"/>
+        <di:waypoint x="1650" y="810"/>
+        <di:waypoint x="1650" y="318"/>
+        <di:waypoint x="1665" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F08_di" bpmnElement="P01_F08">
+        <di:waypoint x="1107" y="102"/>
+        <di:waypoint x="1116" y="102"/>
+        <di:waypoint x="1116" y="318"/>
+        <di:waypoint x="1143" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F09_di" bpmnElement="P01_F09">
+        <di:waypoint x="1281" y="318"/>
+        <di:waypoint x="1290" y="318"/>
+        <di:waypoint x="1290" y="534"/>
+        <di:waypoint x="1317" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F10_di" bpmnElement="P01_F10">
+        <di:waypoint x="1455" y="534"/>
+        <di:waypoint x="1464" y="534"/>
+        <di:waypoint x="1464" y="318"/>
+        <di:waypoint x="1491" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F11_di" bpmnElement="P01_F11">
+        <di:waypoint x="1629" y="318"/>
+        <di:waypoint x="1665" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F12_di" bpmnElement="P01_F12">
+        <di:waypoint x="1803" y="318"/>
+        <di:waypoint x="1812" y="318"/>
+        <di:waypoint x="1812" y="750"/>
+        <di:waypoint x="1839" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F13_di" bpmnElement="P01_F13">
+        <di:waypoint x="1977" y="750"/>
+        <di:waypoint x="2058" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F14_di" bpmnElement="P01_F14">
+        <di:waypoint x="2106" y="750"/>
+        <di:waypoint x="2118" y="750"/>
+        <di:waypoint x="2118" y="258"/>
+        <di:waypoint x="2187" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2132" y="233" width="40" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F15_di" bpmnElement="P01_F15">
+        <di:waypoint x="2106" y="750"/>
+        <di:waypoint x="2166" y="750"/>
+        <di:waypoint x="2166" y="378"/>
+        <di:waypoint x="2232" y="378"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2174" y="555" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F16_di" bpmnElement="P01_F16">
+        <di:waypoint x="2256" y="306"/>
+        <di:waypoint x="2256" y="318"/>
+        <di:waypoint x="1908" y="318"/>
+        <di:waypoint x="1908" y="702"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F17_di" bpmnElement="P01_F17">
+        <di:waypoint x="2256" y="354"/>
+        <di:waypoint x="2256" y="342"/>
+        <di:waypoint x="1818" y="342"/>
+        <di:waypoint x="1818" y="318"/>
+        <di:waypoint x="1803" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1986" y="349" width="103" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F18_di" bpmnElement="P01_F18">
+        <di:waypoint x="2280" y="378"/>
+        <di:waypoint x="2346" y="378"/>
+        <di:waypoint x="2346" y="750"/>
+        <di:waypoint x="2361" y="750"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2354" y="555" width="89" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F19_di" bpmnElement="P01_F19">
+        <di:waypoint x="2232" y="378"/>
+        <di:waypoint x="2220" y="378"/>
+        <di:waypoint x="2220" y="372"/>
+        <di:waypoint x="1470" y="372"/>
+        <di:waypoint x="1470" y="750"/>
+        <di:waypoint x="585" y="750"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="1829" y="379" width="68" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F20_di" bpmnElement="P01_F20">
+        <di:waypoint x="2499" y="750"/>
+        <di:waypoint x="2580" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F21_di" bpmnElement="P01_F21">
+        <di:waypoint x="2628" y="750"/>
+        <di:waypoint x="2640" y="750"/>
+        <di:waypoint x="2640" y="318"/>
+        <di:waypoint x="2754" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2682" y="293" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F22_di" bpmnElement="P01_F22">
+        <di:waypoint x="2604" y="726"/>
+        <di:waypoint x="2604" y="312"/>
+        <di:waypoint x="1812" y="312"/>
+        <di:waypoint x="1812" y="318"/>
+        <di:waypoint x="1803" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2530" y="287" width="75" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F23_di" bpmnElement="P01_F23">
+        <di:waypoint x="2802" y="318"/>
+        <di:waypoint x="2883" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2795" y="284" width="89" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F24_di" bpmnElement="P01_F24">
+        <di:waypoint x="2778" y="294"/>
+        <di:waypoint x="2778" y="198"/>
+        <di:waypoint x="1734" y="198"/>
+        <di:waypoint x="1734" y="270"/>
+        <bpmndi:BPMNLabel labelStyle="P01_font">
+          <dc:Bounds x="2229" y="164" width="54" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F25_di" bpmnElement="P01_F25">
+        <di:waypoint x="3021" y="318"/>
+        <di:waypoint x="3030" y="318"/>
+        <di:waypoint x="3030" y="750"/>
+        <di:waypoint x="3057" y="750"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F26_di" bpmnElement="P01_F26">
+        <di:waypoint x="3195" y="750"/>
+        <di:waypoint x="3204" y="750"/>
+        <di:waypoint x="3204" y="102"/>
+        <di:waypoint x="3231" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P01_F27_di" bpmnElement="P01_F27">
+        <di:waypoint x="3369" y="102"/>
+        <di:waypoint x="3378" y="102"/>
+        <di:waypoint x="3378" y="750"/>
+        <di:waypoint x="3456" y="750"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P01_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,211 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P08" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P08_collab">
+    <bpmn:participant id="P08_pool" name="Напоминания об адаптации и обучении" processRef="P08_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P08_process" name="Напоминания об адаптации и обучении" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и ручная работа
+Старт: Участники получили сообщения адаптации из P15
+Результат: Участники знают действия и выполняют работу во внешних инструментах
+Приёмка: Курсы, цели и обсуждения не требуют отчёта в боте для наступления следующего периода.
+Функциональные требования 0.4: FR-HR-02
+Две ветки показывают человеческую работу после уведомления. Они не входят в механизм календарного перехода и не отправляют в него условие завершения.
+Источник курсов и сведения HR могут передаваться вручную. Интерфейс HR и его рассылки — предложения и OQ05. Продукт не требует хранения результатов встреч.
+Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P08_lanes">
+      <bpmn:lane id="P08_lane_H" name="HR">
+        <bpmn:flowNodeRef>P08_org</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P08_hr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P08_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P08_lead</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P08_e2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P08_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P08_buddy</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P08_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P08_learn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P08_e1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P08_intern</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P08_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P08_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P08_fork</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P08_s" name="Сообщения этапа получены">
+      <bpmn:outgoing>P08_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="P08_fork" name="">
+      <bpmn:incoming>P08_F01</bpmn:incoming>
+      <bpmn:outgoing>P08_F02</bpmn:outgoing>
+      <bpmn:outgoing>P08_F06</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:manualTask id="P08_org" name="Разъяснить организационные вопросы">
+      <bpmn:documentation>Исторический источник: лист 3, строка 13. Организационные вопросы. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F02</bpmn:incoming>
+      <bpmn:outgoing>P08_F03</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P08_hr" name="Передать курсы и инструмент прогресса">
+      <bpmn:documentation>Текущие требования: FR-HR-02</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 23. Учёт прогресса и вводные материалы. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F03</bpmn:incoming>
+      <bpmn:outgoing>P08_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P08_learn" name="Пройти курсы по ссылкам">
+      <bpmn:documentation>Исторический источник: лист 3, строка 24. Защита данных и обучение. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F04</bpmn:incoming>
+      <bpmn:outgoing>P08_F05</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P08_e1" name="Обучение вне продукта">
+      <bpmn:incoming>P08_F05</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:manualTask id="P08_buddy" name="Разобрать задачу и инструкции">
+      <bpmn:documentation>Исторический источник: лист 3, строка 21. Командные материалы и разбор задачи. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F06</bpmn:incoming>
+      <bpmn:outgoing>P08_F07</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P08_intern" name="Подготовить вопросы и цели">
+      <bpmn:documentation>Исторический источник: лист 3, строка 20. Цели и ожидания. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F07</bpmn:incoming>
+      <bpmn:outgoing>P08_F08</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P08_lead" name="Обсудить адаптацию и препятствия">
+      <bpmn:documentation>Исторический источник: лист 3, строка 22. Проверка адаптации. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P08_F08</bpmn:incoming>
+      <bpmn:outgoing>P08_F09</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P08_e2" name="Договорённости вне продукта">
+      <bpmn:incoming>P08_F09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P08_F01" sourceRef="P08_s" targetRef="P08_fork"/>
+    <bpmn:sequenceFlow id="P08_F02" sourceRef="P08_fork" targetRef="P08_org"/>
+    <bpmn:sequenceFlow id="P08_F03" sourceRef="P08_org" targetRef="P08_hr"/>
+    <bpmn:sequenceFlow id="P08_F04" sourceRef="P08_hr" targetRef="P08_learn"/>
+    <bpmn:sequenceFlow id="P08_F05" sourceRef="P08_learn" targetRef="P08_e1"/>
+    <bpmn:sequenceFlow id="P08_F06" sourceRef="P08_fork" targetRef="P08_buddy"/>
+    <bpmn:sequenceFlow id="P08_F07" sourceRef="P08_buddy" targetRef="P08_intern"/>
+    <bpmn:sequenceFlow id="P08_F08" sourceRef="P08_intern" targetRef="P08_lead"/>
+    <bpmn:sequenceFlow id="P08_F09" sourceRef="P08_lead" targetRef="P08_e2"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P08_diagram" name="Напоминания об адаптации и обучении">
+    <bpmndi:BPMNPlane id="P08_plane" bpmnElement="P08_collab">
+      <bpmndi:BPMNShape id="P08_pool_di" bpmnElement="P08_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1176" height="780"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lane_H_di" bpmnElement="P08_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1146" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lane_L_di" bpmnElement="P08_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="1146" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lane_B_di" bpmnElement="P08_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="348" width="1146" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lane_I_di" bpmnElement="P08_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="504" width="1146" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lane_A_di" bpmnElement="P08_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="660" width="1146" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_org_di" bpmnElement="P08_org" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_hr_di" bpmnElement="P08_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_lead_di" bpmnElement="P08_lead" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_e2_di" bpmnElement="P08_e2" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P08_font">
+          <dc:Bounds x="972" y="282" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_buddy_di" bpmnElement="P08_buddy" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="366" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_learn_di" bpmnElement="P08_learn" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="522" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_e1_di" bpmnElement="P08_e1" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="552" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P08_font">
+          <dc:Bounds x="972" y="594" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_intern_di" bpmnElement="P08_intern" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="522" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_s_di" bpmnElement="P08_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="708" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P08_font">
+          <dc:Bounds x="102" y="750" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P08_fork_di" bpmnElement="P08_fork" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="318" y="702" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P08_font">
+          <dc:Bounds x="264" y="756" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P08_F01_di" bpmnElement="P08_F01">
+        <di:waypoint x="186" y="726"/>
+        <di:waypoint x="318" y="726"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F02_di" bpmnElement="P08_F02">
+        <di:waypoint x="366" y="726"/>
+        <di:waypoint x="378" y="726"/>
+        <di:waypoint x="378" y="102"/>
+        <di:waypoint x="447" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F03_di" bpmnElement="P08_F03">
+        <di:waypoint x="585" y="102"/>
+        <di:waypoint x="621" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F04_di" bpmnElement="P08_F04">
+        <di:waypoint x="759" y="102"/>
+        <di:waypoint x="768" y="102"/>
+        <di:waypoint x="768" y="570"/>
+        <di:waypoint x="795" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F05_di" bpmnElement="P08_F05">
+        <di:waypoint x="933" y="570"/>
+        <di:waypoint x="1020" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F06_di" bpmnElement="P08_F06">
+        <di:waypoint x="366" y="726"/>
+        <di:waypoint x="432" y="726"/>
+        <di:waypoint x="432" y="414"/>
+        <di:waypoint x="447" y="414"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F07_di" bpmnElement="P08_F07">
+        <di:waypoint x="585" y="414"/>
+        <di:waypoint x="594" y="414"/>
+        <di:waypoint x="594" y="570"/>
+        <di:waypoint x="621" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F08_di" bpmnElement="P08_F08">
+        <di:waypoint x="759" y="570"/>
+        <di:waypoint x="780" y="570"/>
+        <di:waypoint x="780" y="258"/>
+        <di:waypoint x="795" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P08_F09_di" bpmnElement="P08_F09">
+        <di:waypoint x="933" y="258"/>
+        <di:waypoint x="1020" y="258"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P08_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

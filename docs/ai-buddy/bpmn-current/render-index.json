@@ -1,0 +1,162 @@
+[
+  {
+    "id": "P00",
+    "image": "P00.png",
+    "width": 1246.0,
+    "height": 1072.0,
+    "panels": []
+  },
+  {
+    "id": "P01",
+    "image": "P01.png",
+    "width": 3682.0,
+    "height": 940.0,
+    "panels": [
+      "P01-detail-01.png",
+      "P01-detail-02.png",
+      "P01-detail-03.png"
+    ]
+  },
+  {
+    "id": "P02",
+    "image": "P02.png",
+    "width": 1768.0,
+    "height": 508.0,
+    "panels": [
+      "P02-detail-01.png",
+      "P02-detail-02.png"
+    ]
+  },
+  {
+    "id": "P03",
+    "image": "P03.png",
+    "width": 1594.0,
+    "height": 664.0,
+    "panels": [
+      "P03-detail-01.png",
+      "P03-detail-02.png"
+    ]
+  },
+  {
+    "id": "P04",
+    "image": "P04.png",
+    "width": 2116.0,
+    "height": 820.0,
+    "panels": [
+      "P04-detail-01.png",
+      "P04-detail-02.png"
+    ]
+  },
+  {
+    "id": "P05",
+    "image": "P05.png",
+    "width": 1768.0,
+    "height": 892.0,
+    "panels": [
+      "P05-detail-01.png",
+      "P05-detail-02.png"
+    ]
+  },
+  {
+    "id": "P06",
+    "image": "P06.png",
+    "width": 1768.0,
+    "height": 772.0,
+    "panels": [
+      "P06-detail-01.png",
+      "P06-detail-02.png"
+    ]
+  },
+  {
+    "id": "P07",
+    "image": "P07.png",
+    "width": 2290.0,
+    "height": 784.0,
+    "panels": [
+      "P07-detail-01.png",
+      "P07-detail-02.png"
+    ]
+  },
+  {
+    "id": "P08",
+    "image": "P08.png",
+    "width": 1246.0,
+    "height": 856.0,
+    "panels": []
+  },
+  {
+    "id": "P09",
+    "image": "P09.png",
+    "width": 1072.0,
+    "height": 508.0,
+    "panels": []
+  },
+  {
+    "id": "P10",
+    "image": "P10.png",
+    "width": 1768.0,
+    "height": 856.0,
+    "panels": [
+      "P10-detail-01.png",
+      "P10-detail-02.png"
+    ]
+  },
+  {
+    "id": "P11",
+    "image": "P11.png",
+    "width": 1420.0,
+    "height": 856.0,
+    "panels": []
+  },
+  {
+    "id": "P12",
+    "image": "P12.png",
+    "width": 1420.0,
+    "height": 664.0,
+    "panels": []
+  },
+  {
+    "id": "P13",
+    "image": "P13.png",
+    "width": 1072.0,
+    "height": 544.0,
+    "panels": []
+  },
+  {
+    "id": "P14",
+    "image": "P14.png",
+    "width": 2638.0,
+    "height": 664.0,
+    "panels": [
+      "P14-detail-01.png",
+      "P14-detail-02.png"
+    ]
+  },
+  {
+    "id": "P15",
+    "image": "P15.png",
+    "width": 1768.0,
+    "height": 376.0,
+    "panels": [
+      "P15-detail-01.png",
+      "P15-detail-02.png"
+    ]
+  },
+  {
+    "id": "P16",
+    "image": "P16.png",
+    "width": 1420.0,
+    "height": 550.0,
+    "panels": []
+  },
+  {
+    "id": "P17",
+    "image": "P17.png",
+    "width": 1594.0,
+    "height": 574.0,
+    "panels": [
+      "P17-detail-01.png",
+      "P17-detail-02.png"
+    ]
+  }
+]

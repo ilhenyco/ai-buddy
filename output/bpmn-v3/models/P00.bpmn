@@ -1,0 +1,498 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P00" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P00_collab">
+    <bpmn:participant id="P00_pool" name="Весь путь и независимые периоды" processRef="P00_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P00_process" name="Весь путь и независимые периоды" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция
+Старт: Выход согласован, руководитель настраивает сценарий
+Результат: Календарные сообщения обработаны независимо от отметок и выполнения внешней работы
+Приёмка: Незаполненный чек-лист и незавершённая встреча не задерживают рассылку следующего периода.
+Функциональные требования 0.4: FR-CY-01, FR-CY-02
+Каждая ветка календаря запускается независимо. Задачи отправки не ожидают выполнения чек-листов, курсов или встреч. Конечные события относятся к рассылке, а не к кадровому закрытию стажировки.
+Показаны восемь блоков исходного шаблона. Удалённый блок не создаёт таймер; практика условна по применимости. Даты — параметры активной публикации. Действия P03–P14 запускаются по сообщениям и запросам участников.
+Открытые вопросы: OQ04. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P00_lanes">
+      <bpmn:lane id="P00_lane_R" name="Календарь программы">
+        <bpmn:flowNodeRef>P00_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_prep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_fork</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_first</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_week</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_adapt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_practice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_mid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_final</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_last</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_after</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendfirst</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendweek</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendadapt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendpractice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendmid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendfinal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendlast</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_sendafter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P00_e8</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P00_s" name="Выход согласован">
+      <bpmn:outgoing>P00_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="P00_prep" name="P01 Опубликовать сценарий">
+      <bpmn:documentation>Обзорная свёртка. Детали находятся в моделях с указанными идентификаторами.</bpmn:documentation>
+      <bpmn:incoming>P00_F01</bpmn:incoming>
+      <bpmn:outgoing>P00_F02</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:parallelGateway id="P00_fork" name="">
+      <bpmn:documentation>Текущие требования: FR-CY-01, FR-CY-02</bpmn:documentation>
+      <bpmn:incoming>P00_F02</bpmn:incoming>
+      <bpmn:outgoing>P00_F03</bpmn:outgoing>
+      <bpmn:outgoing>P00_F04</bpmn:outgoing>
+      <bpmn:outgoing>P00_F05</bpmn:outgoing>
+      <bpmn:outgoing>P00_F06</bpmn:outgoing>
+      <bpmn:outgoing>P00_F07</bpmn:outgoing>
+      <bpmn:outgoing>P00_F08</bpmn:outgoing>
+      <bpmn:outgoing>P00_F09</bpmn:outgoing>
+      <bpmn:outgoing>P00_F10</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:intermediateCatchEvent id="P00_first" name="Дата старта">
+      <bpmn:incoming>P00_F03</bpmn:incoming>
+      <bpmn:outgoing>P00_F11</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_first_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.startAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_week" name="Дата первой недели">
+      <bpmn:incoming>P00_F04</bpmn:incoming>
+      <bpmn:outgoing>P00_F12</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_week_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.firstWeekAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_adapt" name="Дата адаптации">
+      <bpmn:incoming>P00_F05</bpmn:incoming>
+      <bpmn:outgoing>P00_F13</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_adapt_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.adaptationAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_practice" name="Дата практики при наличии блока">
+      <bpmn:incoming>P00_F06</bpmn:incoming>
+      <bpmn:outgoing>P00_F14</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_practice_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.practiceAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_mid" name="Дата экватора">
+      <bpmn:incoming>P00_F07</bpmn:incoming>
+      <bpmn:outgoing>P00_F15</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_mid_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.midpointAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_final" name="Месяц до финала">
+      <bpmn:incoming>P00_F08</bpmn:incoming>
+      <bpmn:outgoing>P00_F16</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_final_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.finalPreparationAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_last" name="Последняя неделя">
+      <bpmn:incoming>P00_F09</bpmn:incoming>
+      <bpmn:outgoing>P00_F17</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_last_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.finalWeekAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="P00_after" name="После окончания">
+      <bpmn:incoming>P00_F10</bpmn:incoming>
+      <bpmn:outgoing>P00_F18</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P00_after_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${plan.afterEndAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="P00_sendfirst" name="P15 Сообщения старта P02">
+      <bpmn:incoming>P00_F11</bpmn:incoming>
+      <bpmn:outgoing>P00_F19</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendweek" name="P15 Первая неделя P03–P07">
+      <bpmn:incoming>P00_F12</bpmn:incoming>
+      <bpmn:outgoing>P00_F20</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendadapt" name="P15 Сообщения адаптации P08">
+      <bpmn:incoming>P00_F13</bpmn:incoming>
+      <bpmn:outgoing>P00_F21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendpractice" name="P15 Памятка по практике P09">
+      <bpmn:incoming>P00_F14</bpmn:incoming>
+      <bpmn:outgoing>P00_F22</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendmid" name="P15 Сообщения экватора P10">
+      <bpmn:incoming>P00_F15</bpmn:incoming>
+      <bpmn:outgoing>P00_F23</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendfinal" name="P15 Подготовка финала P11">
+      <bpmn:incoming>P00_F16</bpmn:incoming>
+      <bpmn:outgoing>P00_F24</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendlast" name="P15 Напоминания финала P12">
+      <bpmn:incoming>P00_F17</bpmn:incoming>
+      <bpmn:outgoing>P00_F25</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P00_sendafter" name="P15 Следующие шаги P13">
+      <bpmn:incoming>P00_F18</bpmn:incoming>
+      <bpmn:outgoing>P00_F26</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P00_e1" name="Старт разослан">
+      <bpmn:incoming>P00_F19</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e2" name="Адаптация разослана">
+      <bpmn:incoming>P00_F21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e3" name="Экватор разослан">
+      <bpmn:incoming>P00_F23</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e4" name="Подготовка разослана">
+      <bpmn:incoming>P00_F24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e5" name="Финал разослан">
+      <bpmn:incoming>P00_F25</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e6" name="Завершение разослано">
+      <bpmn:incoming>P00_F26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e7" name="Неделя разослана">
+      <bpmn:incoming>P00_F20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P00_e8" name="Практика разослана">
+      <bpmn:incoming>P00_F22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P00_F01" sourceRef="P00_s" targetRef="P00_prep"/>
+    <bpmn:sequenceFlow id="P00_F02" sourceRef="P00_prep" targetRef="P00_fork"/>
+    <bpmn:sequenceFlow id="P00_F03" sourceRef="P00_fork" targetRef="P00_first"/>
+    <bpmn:sequenceFlow id="P00_F04" sourceRef="P00_fork" targetRef="P00_week"/>
+    <bpmn:sequenceFlow id="P00_F05" sourceRef="P00_fork" targetRef="P00_adapt"/>
+    <bpmn:sequenceFlow id="P00_F06" sourceRef="P00_fork" targetRef="P00_practice"/>
+    <bpmn:sequenceFlow id="P00_F07" sourceRef="P00_fork" targetRef="P00_mid"/>
+    <bpmn:sequenceFlow id="P00_F08" sourceRef="P00_fork" targetRef="P00_final"/>
+    <bpmn:sequenceFlow id="P00_F09" sourceRef="P00_fork" targetRef="P00_last"/>
+    <bpmn:sequenceFlow id="P00_F10" sourceRef="P00_fork" targetRef="P00_after"/>
+    <bpmn:sequenceFlow id="P00_F11" sourceRef="P00_first" targetRef="P00_sendfirst"/>
+    <bpmn:sequenceFlow id="P00_F12" sourceRef="P00_week" targetRef="P00_sendweek"/>
+    <bpmn:sequenceFlow id="P00_F13" sourceRef="P00_adapt" targetRef="P00_sendadapt"/>
+    <bpmn:sequenceFlow id="P00_F14" sourceRef="P00_practice" targetRef="P00_sendpractice"/>
+    <bpmn:sequenceFlow id="P00_F15" sourceRef="P00_mid" targetRef="P00_sendmid"/>
+    <bpmn:sequenceFlow id="P00_F16" sourceRef="P00_final" targetRef="P00_sendfinal"/>
+    <bpmn:sequenceFlow id="P00_F17" sourceRef="P00_last" targetRef="P00_sendlast"/>
+    <bpmn:sequenceFlow id="P00_F18" sourceRef="P00_after" targetRef="P00_sendafter"/>
+    <bpmn:sequenceFlow id="P00_F19" sourceRef="P00_sendfirst" targetRef="P00_e1"/>
+    <bpmn:sequenceFlow id="P00_F20" sourceRef="P00_sendweek" targetRef="P00_e7"/>
+    <bpmn:sequenceFlow id="P00_F21" sourceRef="P00_sendadapt" targetRef="P00_e2"/>
+    <bpmn:sequenceFlow id="P00_F22" sourceRef="P00_sendpractice" targetRef="P00_e8"/>
+    <bpmn:sequenceFlow id="P00_F23" sourceRef="P00_sendmid" targetRef="P00_e3"/>
+    <bpmn:sequenceFlow id="P00_F24" sourceRef="P00_sendfinal" targetRef="P00_e4"/>
+    <bpmn:sequenceFlow id="P00_F25" sourceRef="P00_sendlast" targetRef="P00_e5"/>
+    <bpmn:sequenceFlow id="P00_F26" sourceRef="P00_sendafter" targetRef="P00_e6"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P00_diagram" name="Весь путь и независимые периоды">
+    <bpmndi:BPMNPlane id="P00_plane" bpmnElement="P00_collab">
+      <bpmndi:BPMNShape id="P00_pool_di" bpmnElement="P00_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1176" height="996"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_lane_R_di" bpmnElement="P00_lane_R" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1146" height="996"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_s_di" bpmnElement="P00_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="504" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="102" y="546" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_prep_di" bpmnElement="P00_prep" bioc:fill="#EEF2F8" bioc:stroke="#243448" isExpanded="false">
+        <dc:Bounds x="273" y="474" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_fork_di" bpmnElement="P00_fork" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="498" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="438" y="552" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_first_di" bpmnElement="P00_first" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_week_di" bpmnElement="P00_week" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="204" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="246" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_adapt_di" bpmnElement="P00_adapt" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="324" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="366" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_practice_di" bpmnElement="P00_practice" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="444" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="486" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_mid_di" bpmnElement="P00_mid" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="564" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="606" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_final_di" bpmnElement="P00_final" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="684" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="726" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_last_di" bpmnElement="P00_last" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="804" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="846" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_after_di" bpmnElement="P00_after" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="924" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="624" y="966" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendfirst_di" bpmnElement="P00_sendfirst" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendweek_di" bpmnElement="P00_sendweek" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendadapt_di" bpmnElement="P00_sendadapt" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="294" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendpractice_di" bpmnElement="P00_sendpractice" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="414" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendmid_di" bpmnElement="P00_sendmid" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="534" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendfinal_di" bpmnElement="P00_sendfinal" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="654" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendlast_di" bpmnElement="P00_sendlast" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="774" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_sendafter_di" bpmnElement="P00_sendafter" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="894" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e1_di" bpmnElement="P00_e1" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e2_di" bpmnElement="P00_e2" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="204" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="246" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e3_di" bpmnElement="P00_e3" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="324" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="366" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e4_di" bpmnElement="P00_e4" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="444" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="486" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e5_di" bpmnElement="P00_e5" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="564" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="606" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e6_di" bpmnElement="P00_e6" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="684" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="726" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e7_di" bpmnElement="P00_e7" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="804" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="846" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P00_e8_di" bpmnElement="P00_e8" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="924" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P00_font">
+          <dc:Bounds x="972" y="966" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P00_F01_di" bpmnElement="P00_F01">
+        <di:waypoint x="186" y="522"/>
+        <di:waypoint x="273" y="522"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F02_di" bpmnElement="P00_F02">
+        <di:waypoint x="411" y="522"/>
+        <di:waypoint x="492" y="522"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F03_di" bpmnElement="P00_F03">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="552" y="522"/>
+        <di:waypoint x="552" y="102"/>
+        <di:waypoint x="672" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F04_di" bpmnElement="P00_F04">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="612" y="522"/>
+        <di:waypoint x="612" y="222"/>
+        <di:waypoint x="672" y="222"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F05_di" bpmnElement="P00_F05">
+        <di:waypoint x="516" y="498"/>
+        <di:waypoint x="516" y="342"/>
+        <di:waypoint x="672" y="342"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F06_di" bpmnElement="P00_F06">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="558" y="522"/>
+        <di:waypoint x="558" y="462"/>
+        <di:waypoint x="672" y="462"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F07_di" bpmnElement="P00_F07">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="552" y="522"/>
+        <di:waypoint x="552" y="540"/>
+        <di:waypoint x="660" y="540"/>
+        <di:waypoint x="660" y="582"/>
+        <di:waypoint x="672" y="582"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F08_di" bpmnElement="P00_F08">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="552" y="522"/>
+        <di:waypoint x="552" y="528"/>
+        <di:waypoint x="612" y="528"/>
+        <di:waypoint x="612" y="702"/>
+        <di:waypoint x="672" y="702"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F09_di" bpmnElement="P00_F09">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="552" y="522"/>
+        <di:waypoint x="552" y="534"/>
+        <di:waypoint x="606" y="534"/>
+        <di:waypoint x="606" y="822"/>
+        <di:waypoint x="672" y="822"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F10_di" bpmnElement="P00_F10">
+        <di:waypoint x="540" y="522"/>
+        <di:waypoint x="552" y="522"/>
+        <di:waypoint x="552" y="516"/>
+        <di:waypoint x="600" y="516"/>
+        <di:waypoint x="600" y="942"/>
+        <di:waypoint x="672" y="942"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F11_di" bpmnElement="P00_F11">
+        <di:waypoint x="708" y="102"/>
+        <di:waypoint x="795" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F12_di" bpmnElement="P00_F12">
+        <di:waypoint x="708" y="222"/>
+        <di:waypoint x="795" y="222"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F13_di" bpmnElement="P00_F13">
+        <di:waypoint x="708" y="342"/>
+        <di:waypoint x="795" y="342"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F14_di" bpmnElement="P00_F14">
+        <di:waypoint x="708" y="462"/>
+        <di:waypoint x="795" y="462"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F15_di" bpmnElement="P00_F15">
+        <di:waypoint x="708" y="582"/>
+        <di:waypoint x="795" y="582"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F16_di" bpmnElement="P00_F16">
+        <di:waypoint x="708" y="702"/>
+        <di:waypoint x="795" y="702"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F17_di" bpmnElement="P00_F17">
+        <di:waypoint x="708" y="822"/>
+        <di:waypoint x="795" y="822"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F18_di" bpmnElement="P00_F18">
+        <di:waypoint x="708" y="942"/>
+        <di:waypoint x="795" y="942"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F19_di" bpmnElement="P00_F19">
+        <di:waypoint x="933" y="102"/>
+        <di:waypoint x="1020" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F20_di" bpmnElement="P00_F20">
+        <di:waypoint x="933" y="222"/>
+        <di:waypoint x="942" y="222"/>
+        <di:waypoint x="942" y="822"/>
+        <di:waypoint x="1020" y="822"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F21_di" bpmnElement="P00_F21">
+        <di:waypoint x="933" y="342"/>
+        <di:waypoint x="960" y="342"/>
+        <di:waypoint x="960" y="222"/>
+        <di:waypoint x="1020" y="222"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F22_di" bpmnElement="P00_F22">
+        <di:waypoint x="933" y="462"/>
+        <di:waypoint x="960" y="462"/>
+        <di:waypoint x="960" y="942"/>
+        <di:waypoint x="1020" y="942"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F23_di" bpmnElement="P00_F23">
+        <di:waypoint x="933" y="582"/>
+        <di:waypoint x="954" y="582"/>
+        <di:waypoint x="954" y="348"/>
+        <di:waypoint x="1008" y="348"/>
+        <di:waypoint x="1008" y="342"/>
+        <di:waypoint x="1020" y="342"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F24_di" bpmnElement="P00_F24">
+        <di:waypoint x="933" y="702"/>
+        <di:waypoint x="948" y="702"/>
+        <di:waypoint x="948" y="468"/>
+        <di:waypoint x="1008" y="468"/>
+        <di:waypoint x="1008" y="462"/>
+        <di:waypoint x="1020" y="462"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F25_di" bpmnElement="P00_F25">
+        <di:waypoint x="933" y="822"/>
+        <di:waypoint x="954" y="822"/>
+        <di:waypoint x="954" y="582"/>
+        <di:waypoint x="1020" y="582"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P00_F26_di" bpmnElement="P00_F26">
+        <di:waypoint x="933" y="942"/>
+        <di:waypoint x="948" y="942"/>
+        <di:waypoint x="948" y="702"/>
+        <di:waypoint x="1020" y="702"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P00_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,623 @@
+openapi: 3.1.0
+info:
+  title: AI-buddy API прототипа
+  version: 1.0.0
+  description: Контракт UI и Go API для P02–P07 и P14. Внутренние вызовы модели и имитации описаны в системной спецификации.
+servers:
+  - url: /api/v1
+security:
+  - DemoSession: []
+paths:
+  /demo/session:
+    post:
+      operationId: createDemoSession
+      summary: A01 Вход стажёра
+      security: []
+      x-bpmn: [P02_login, P02_session]
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Login' }
+      responses:
+        '200':
+          description: Профиль стажёра и новая сессия
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: 'sid, HttpOnly, SameSite=Lax, Path=/api/v1, срок 8 часов, Secure при HTTPS'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /onboarding:
+    get:
+      operationId: getOnboarding
+      summary: A02 Снимок опубликованного плана
+      x-bpmn: [P02_load, P02_home, P03_show, P04_prev, P07_block, P07_show]
+      responses:
+        '200':
+          description: Сохранённое состояние плана без внешнего вызова
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Onboarding' }
+              example:
+                plan:
+                  id: plan-alpha
+                  startDate: '2026-11-10'
+                  durationMonths: 6
+                  stage: Первые дни
+                  buddy: {name: Алексей, contact: '@buddy-alpha'}
+                  milestone: {title: Проверка адаптации, date: '2026-11-24'}
+                team:
+                  name: Команда Альфа
+                  members: [{name: Алексей, contact: '@buddy-alpha'}]
+                  channels: [{title: Чат команды, url: 'https://example.com/teams/alpha'}]
+                  sources: [{id: team-alpha, title: Старт в команде, excerpt: Начните с канала команды.}]
+                progress: {team_intro: null, first_task_ready: null}
+                resources:
+                  - name: Jira
+                    access: {resourceId: jira-alpha, status: not_requested}
+                firstTask:
+                  state: locked
+                  requiredResourceId: jira-alpha
+                  blocker: Нужен одобренный доступ к Jira.
+                nextStep: {key: team_intro}
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/PlanUnavailable' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /chat:
+    post:
+      operationId: answerQuestion
+      summary: A03 Ответ по доступным источникам
+      x-bpmn: [P14_ask, P14_filter, P14_answer, P14_help, P04_suggest]
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Question' }
+            example: { question: 'Как запросить доступ к Jira?', cardKey: access }
+      responses:
+        '200':
+          description: Проверенный ответ или безопасное уточнение
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatReply' }
+              examples:
+                answer:
+                  value:
+                    kind: answer
+                    reply: Открой карточку «Доступы», проверь обоснование и подтверди заявку.
+                    sources: [{id: jira-guide, title: Доступ к Jira, excerpt: Заявка создаётся после подтверждения.}]
+                    action: {cardKey: access, resourceId: jira-alpha}
+                    suggestion: {resourceId: jira-alpha, reason: Нужен доступ для первой задачи команды.}
+                timeout:
+                  value:
+                    kind: fallback
+                    reply: Ответ задерживается. Можно открыть «Доступы» или обратиться к бадди.
+                    sources: []
+                    action: {cardKey: access}
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/PlanUnavailable' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /steps/{stepKey}/completion:
+    put:
+      operationId: completeStep
+      summary: A04 Отметка знакомства или готовности
+      x-bpmn: [P03_store, P07_store, P07_rejected]
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+        - name: stepKey
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/CompletionKey' }
+      responses:
+        '200':
+          description: Первая отметка и новый рекомендуемый шаг
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CompletionResult' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/Missing' }
+        '409':
+          description: Для готовности ещё требуется одобрение нужного доступа
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessRequired' }
+              example: {code: access_required, message: Нужен одобренный доступ к Jira., requiredResourceId: jira-alpha}
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /access-drafts:
+    post:
+      operationId: createAccessDraft
+      summary: A05 Новый черновик заявки
+      x-bpmn: [P04_auth, P04_edit, P04_save]
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftInput' }
+            example: {resourceId: jira-alpha, reason: Нужен доступ для первой задачи команды.}
+      responses:
+        '201':
+          description: Сохранён точный предпросмотр. Заявки в сервисе ещё нет
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Draft' }
+              example: {draftId: draft-1, resourceId: jira-alpha, resourceName: Jira, reason: Нужен доступ для первой задачи команды.}
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/Missing' }
+        '409':
+          description: Для ресурса уже создана попытка
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptExists' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /access-drafts/{draftId}/confirm:
+    post:
+      operationId: confirmAccessDraft
+      summary: A06 Подтверждение или повтор исходной попытки
+      x-bpmn: [P05_confirm, P05_ensure, P05_call, P05_save, P05_unknown]
+      parameters:
+        - $ref: '#/components/parameters/Origin'
+        - name: draftId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              additionalProperties: false
+              properties:
+                action: { type: string, enum: [submit, retry] }
+            examples:
+              submit: {value: {action: submit}}
+              retry: {value: {action: retry}}
+      responses:
+        '200':
+          description: Сохранённый результат новой или существующей попытки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KnownAccess' }
+              example: {resourceId: jira-alpha, status: pending, requestNumber: ACC-101, revision: 1}
+        '202':
+          description: Попытка зафиксирована, результат пока неизвестен
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubmittingAccess' }
+              example: {resourceId: jira-alpha, status: submitting, confirmationDraftId: draft-1}
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/Missing' }
+        '409':
+          description: Повтор возможен только для уже подтверждённого исходного черновика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                properties:
+                  code: {const: retry_not_available}
+              example: {code: retry_not_available, message: Сначала открой сохранённую попытку.}
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /access-requests/{resourceId}:
+    get:
+      operationId: refreshAccessStatus
+      summary: A07 Явная проверка статуса
+      x-bpmn: [P06_check, P06_read, P06_store, P06_last, P06_no]
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: Актуальное или последнее сохранённое состояние
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StatusRefresh' }
+              examples:
+                approved:
+                  value: {access: {resourceId: jira-alpha, status: approved, requestNumber: ACC-101, revision: 2}, serviceAvailable: true}
+                serviceDown:
+                  value: {access: {resourceId: jira-alpha, status: pending, requestNumber: ACC-101, revision: 1}, serviceAvailable: false}
+                noAttempt:
+                  value: {access: {resourceId: jira-alpha, status: not_requested}, serviceAvailable: null}
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/Missing' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  securitySchemes:
+    DemoSession:
+      type: apiKey
+      in: cookie
+      name: sid
+  parameters:
+    Origin:
+      name: Origin
+      in: header
+      required: true
+      description: Точное совпадение с настроенным origin веб-интерфейса.
+      schema: {type: string}
+  responses:
+    BadRequest:
+      description: Некорректный JSON
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            properties:
+              code: {const: malformed_json}
+          example: {code: malformed_json, message: Проверь формат запроса.}
+    Unauthenticated:
+      description: Неверные учётные данные или нет действующей сессии
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            properties:
+              code: {enum: [invalid_credentials, session_required]}
+    Forbidden:
+      description: Роль не разрешена или origin не совпадает
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            properties:
+              code: {enum: [forbidden_role, origin_mismatch]}
+    Missing:
+      description: Чужой или отсутствующий объект либо отсутствует свой опубликованный план
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/NotFound'
+              - $ref: '#/components/schemas/PlanUnavailable'
+    PlanUnavailable:
+      description: Опубликованный план стажёра недоступен
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PlanUnavailable' }
+    Invalid:
+      description: Недопустимое значение в запросе
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            properties:
+              code: {const: invalid_input}
+          example: {code: invalid_input, message: Заполни обоснование заявки.}
+    Unavailable:
+      description: Операция недоступна. Для A06 этот вызов не отправлял заявку в сервис
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            properties:
+              code: {const: unavailable}
+          example: {code: unavailable, message: Действие не удалось. Попробуй ещё раз.}
+  schemas:
+    Id: { type: string, pattern: '^[a-zA-Z0-9_-]{1,80}$' }
+    Text: { type: string, minLength: 1 }
+    Reason:
+      type: string
+      minLength: 1
+      maxLength: 500
+      pattern: '\S'
+      description: Сервер удаляет пробелы по краям перед сохранением.
+    Login:
+      type: object
+      required: [login, password]
+      additionalProperties: false
+      properties:
+        login: { type: string, minLength: 1, maxLength: 80 }
+        password: { type: string, minLength: 1, maxLength: 128 }
+    Profile:
+      type: object
+      required: [id, name, teamId, role, lead]
+      additionalProperties: false
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { $ref: '#/components/schemas/Text' }
+        teamId: { $ref: '#/components/schemas/Id' }
+        role: { const: intern }
+        lead:
+          anyOf: [{ $ref: '#/components/schemas/Contact' }, {type: 'null'}]
+    Contact:
+      type: object
+      required: [name, contact]
+      additionalProperties: false
+      properties:
+        name: { $ref: '#/components/schemas/Text' }
+        contact: { $ref: '#/components/schemas/Text' }
+    Plan:
+      type: object
+      required: [id, startDate, durationMonths, stage, buddy, milestone]
+      additionalProperties: false
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        startDate: { type: string, format: date }
+        durationMonths: { type: integer, enum: [6, 9] }
+        stage: { $ref: '#/components/schemas/Text' }
+        buddy: { $ref: '#/components/schemas/Contact' }
+        milestone:
+          type: object
+          required: [title, date]
+          additionalProperties: false
+          properties:
+            title: { $ref: '#/components/schemas/Text' }
+            date: { type: string, format: date }
+    TeamCard:
+      type: object
+      required: [name, members, channels, sources]
+      additionalProperties: false
+      properties:
+        name: { $ref: '#/components/schemas/Text' }
+        members: { type: array, items: { $ref: '#/components/schemas/Contact' } }
+        channels: { type: array, items: { $ref: '#/components/schemas/Link' } }
+        sources: { type: array, items: { $ref: '#/components/schemas/SourceExcerpt' } }
+    Link:
+      type: object
+      required: [title, url]
+      additionalProperties: false
+      properties:
+        title: { $ref: '#/components/schemas/Text' }
+        url: { type: string, format: uri, pattern: '^https://' }
+    SourceExcerpt:
+      type: object
+      required: [id, title, excerpt]
+      additionalProperties: false
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { $ref: '#/components/schemas/Text' }
+        excerpt: { $ref: '#/components/schemas/Text' }
+        url: { type: string, format: uri, pattern: '^https://' }
+    FirstTask:
+      oneOf:
+        - $ref: '#/components/schemas/LockedTask'
+        - $ref: '#/components/schemas/OpenTask'
+    LockedTask:
+      type: object
+      required: [state, requiredResourceId, blocker]
+      additionalProperties: false
+      properties:
+        state: { const: locked }
+        requiredResourceId: { $ref: '#/components/schemas/Id' }
+        blocker: { $ref: '#/components/schemas/Text' }
+    OpenTask:
+      type: object
+      required: [state, requiredResourceId, title, description, criteria, materials]
+      additionalProperties: false
+      properties:
+        state: { const: open }
+        requiredResourceId: { $ref: '#/components/schemas/Id' }
+        title: { $ref: '#/components/schemas/Text' }
+        description: { $ref: '#/components/schemas/Text' }
+        criteria: { type: array, minItems: 1, items: { $ref: '#/components/schemas/Text' } }
+        materials: { type: array, items: { $ref: '#/components/schemas/SourceExcerpt' } }
+    CompletionKey: {type: string, enum: [team_intro, first_task_ready]}
+    Timestamp:
+      type: string
+      format: date-time
+    Progress:
+      type: object
+      required: [team_intro, first_task_ready]
+      additionalProperties: false
+      properties:
+        team_intro:
+          anyOf: [{ $ref: '#/components/schemas/Timestamp' }, {type: 'null'}]
+        first_task_ready:
+          anyOf: [{ $ref: '#/components/schemas/Timestamp' }, {type: 'null'}]
+    NextStep:
+      oneOf:
+        - type: object
+          required: [key]
+          additionalProperties: false
+          properties:
+            key: {type: string, enum: [team_intro, first_task_ready, view_milestone]}
+        - type: object
+          required: [key, resourceId]
+          additionalProperties: false
+          properties:
+            key: {type: string, enum: [request_access, retry_access, check_access, contact_buddy]}
+            resourceId: { $ref: '#/components/schemas/Id' }
+    CompletionResult:
+      type: object
+      required: [stepKey, completedAt, nextStep]
+      additionalProperties: false
+      properties:
+        stepKey: { $ref: '#/components/schemas/CompletionKey' }
+        completedAt: { $ref: '#/components/schemas/Timestamp' }
+        nextStep: { $ref: '#/components/schemas/NextStep' }
+    DraftInput:
+      type: object
+      required: [resourceId, reason]
+      additionalProperties: false
+      properties:
+        resourceId: { $ref: '#/components/schemas/Id' }
+        reason: { $ref: '#/components/schemas/Reason' }
+    Draft:
+      type: object
+      required: [draftId, resourceId, resourceName, reason]
+      additionalProperties: false
+      properties:
+        draftId: { $ref: '#/components/schemas/Id' }
+        resourceId: { $ref: '#/components/schemas/Id' }
+        resourceName: { $ref: '#/components/schemas/Text' }
+        reason: { $ref: '#/components/schemas/Reason' }
+    AccessState:
+      oneOf:
+        - $ref: '#/components/schemas/UnrequestedAccess'
+        - $ref: '#/components/schemas/SubmittingAccess'
+        - $ref: '#/components/schemas/KnownAccess'
+    UnrequestedAccess:
+      type: object
+      required: [resourceId, status]
+      additionalProperties: false
+      properties:
+        resourceId: { $ref: '#/components/schemas/Id' }
+        status: { const: not_requested }
+    SubmittingAccess:
+      type: object
+      required: [resourceId, status, confirmationDraftId]
+      additionalProperties: false
+      properties:
+        resourceId: { $ref: '#/components/schemas/Id' }
+        status: { const: submitting }
+        confirmationDraftId: { $ref: '#/components/schemas/Id' }
+    KnownAccess:
+      type: object
+      required: [resourceId, status, requestNumber, revision]
+      additionalProperties: false
+      properties:
+        resourceId: { $ref: '#/components/schemas/Id' }
+        status: { type: string, enum: [pending, approved, denied] }
+        requestNumber: { $ref: '#/components/schemas/Text' }
+        revision: { type: integer, minimum: 1 }
+        denialReason: { $ref: '#/components/schemas/Text' }
+      if:
+        required: [denialReason]
+      then:
+        properties:
+          status: {const: denied}
+    StatusRefresh:
+      type: object
+      required: [access, serviceAvailable]
+      additionalProperties: false
+      properties:
+        access: { $ref: '#/components/schemas/AccessState' }
+        serviceAvailable: { type: [boolean, 'null'] }
+      if:
+        properties:
+          access: { $ref: '#/components/schemas/UnrequestedAccess' }
+      then:
+        properties:
+          serviceAvailable: {type: 'null'}
+      else:
+        properties:
+          serviceAvailable: {type: boolean}
+    Onboarding:
+      type: object
+      required: [plan, team, progress, resources, firstTask, nextStep]
+      additionalProperties: false
+      properties:
+        plan: { $ref: '#/components/schemas/Plan' }
+        team: { $ref: '#/components/schemas/TeamCard' }
+        progress: { $ref: '#/components/schemas/Progress' }
+        resources:
+          type: array
+          items:
+            type: object
+            required: [name, access]
+            additionalProperties: false
+            properties:
+              name: { $ref: '#/components/schemas/Text' }
+              access: { $ref: '#/components/schemas/AccessState' }
+        firstTask: { $ref: '#/components/schemas/FirstTask' }
+        nextStep: { $ref: '#/components/schemas/NextStep' }
+    CardKey: {type: string, enum: [team, access, first_task]}
+    Question:
+      type: object
+      required: [question]
+      additionalProperties: false
+      properties:
+        question: { type: string, minLength: 1, maxLength: 1000, pattern: '\S' }
+        cardKey: { $ref: '#/components/schemas/CardKey' }
+    ChatAction:
+      type: object
+      required: [cardKey]
+      additionalProperties: false
+      properties:
+        cardKey: { $ref: '#/components/schemas/CardKey' }
+        resourceId: { $ref: '#/components/schemas/Id' }
+      if:
+        required: [resourceId]
+      then:
+        properties:
+          cardKey: {const: access}
+    ChatReply:
+      type: object
+      required: [kind, reply, sources]
+      additionalProperties: false
+      properties:
+        kind: {type: string, enum: [answer, fallback]}
+        reply: { $ref: '#/components/schemas/Text' }
+        sources: {type: array, items: { $ref: '#/components/schemas/SourceExcerpt' }}
+        action: { $ref: '#/components/schemas/ChatAction' }
+        suggestion: { $ref: '#/components/schemas/DraftInput' }
+      if:
+        properties:
+          kind: {const: fallback}
+      then:
+        properties:
+          sources: {maxItems: 0}
+        not:
+          required: [suggestion]
+      else:
+        properties:
+          sources: {minItems: 1}
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code: { $ref: '#/components/schemas/Text' }
+        message: { $ref: '#/components/schemas/Text' }
+    NotFound:
+      type: object
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code: {const: not_found}
+        message: { $ref: '#/components/schemas/Text' }
+    PlanUnavailable:
+      type: object
+      required: [code, message, lead]
+      additionalProperties: false
+      properties:
+        code: {const: plan_unavailable}
+        message: { $ref: '#/components/schemas/Text' }
+        lead:
+          anyOf: [{ $ref: '#/components/schemas/Contact' }, {type: 'null'}]
+    AccessRequired:
+      type: object
+      required: [code, message, requiredResourceId]
+      additionalProperties: false
+      properties:
+        code: {const: access_required}
+        message: { $ref: '#/components/schemas/Text' }
+        requiredResourceId: { $ref: '#/components/schemas/Id' }
+    AttemptExists:
+      type: object
+      required: [code, message, access]
+      additionalProperties: false
+      properties:
+        code: {const: attempt_exists}
+        message: { $ref: '#/components/schemas/Text' }
+        access:
+          oneOf:
+            - $ref: '#/components/schemas/SubmittingAccess'
+            - $ref: '#/components/schemas/KnownAccess'

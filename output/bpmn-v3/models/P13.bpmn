@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P13" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P13_collab">
+    <bpmn:participant id="P13_pool" name="Напоминания после окончания" processRef="P13_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P13_process" name="Напоминания после окончания" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и ручная работа
+Старт: P15 отправил сообщения блока после окончания
+Результат: Стажёр получил ссылки и контакты для дальнейших действий
+Приёмка: Сообщение приходит по расписанию независимо от наличия решения о трудоустройстве. Бот не придумывает итог.
+Функциональные требования 0.4: 
+Это окончание календарной рассылки, а не доказательство завершения оформления или найма. Решение о дальнейшем сотрудничестве сообщается людьми.
+Автоматическое чтение кадрового статуса и показ сохранённого итогового решения из прежней P13 исключены. HR действия остаются ручным контекстом.
+Открытые вопросы: OQ04, OQ05. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P13_lanes">
+      <bpmn:lane id="P13_lane_H" name="HR">
+        <bpmn:flowNodeRef>P13_hr</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_e1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P13_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P13_i</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_e2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P13_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P13_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_show</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P13_fork</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P13_s" name="Сообщение после окончания получено">
+      <bpmn:outgoing>P13_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P13_show" name="Показать памятку и контакты">
+      <bpmn:documentation>Исторический источник: лист 3, строка 41. Завершение плана. Роль источника: AI-buddy.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P13_F01</bpmn:incoming>
+      <bpmn:outgoing>P13_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="P13_fork" name="">
+      <bpmn:incoming>P13_F02</bpmn:incoming>
+      <bpmn:outgoing>P13_F03</bpmn:outgoing>
+      <bpmn:outgoing>P13_F05</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:manualTask id="P13_hr" name="Обсудить документы и опрос по ситуации">
+      <bpmn:documentation>Исторический источник: лист 3, строка 39. Документы, опрос и переход. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P13_F03</bpmn:incoming>
+      <bpmn:outgoing>P13_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P13_e1" name="Кадровые действия вне продукта">
+      <bpmn:incoming>P13_F04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:manualTask id="P13_i" name="Проверить передачу и обратиться в HR">
+      <bpmn:documentation>Исторический источник: лист 3, строка 40. Личный итог и обратная связь. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P13_F05</bpmn:incoming>
+      <bpmn:outgoing>P13_F06</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P13_e2" name="Дальнейшие шаги вне продукта">
+      <bpmn:incoming>P13_F06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P13_F01" sourceRef="P13_s" targetRef="P13_show"/>
+    <bpmn:sequenceFlow id="P13_F02" sourceRef="P13_show" targetRef="P13_fork"/>
+    <bpmn:sequenceFlow id="P13_F03" sourceRef="P13_fork" targetRef="P13_hr"/>
+    <bpmn:sequenceFlow id="P13_F04" sourceRef="P13_hr" targetRef="P13_e1"/>
+    <bpmn:sequenceFlow id="P13_F05" sourceRef="P13_fork" targetRef="P13_i"/>
+    <bpmn:sequenceFlow id="P13_F06" sourceRef="P13_i" targetRef="P13_e2"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P13_diagram" name="Напоминания после окончания">
+    <bpmndi:BPMNPlane id="P13_plane" bpmnElement="P13_collab">
+      <bpmndi:BPMNShape id="P13_pool_di" bpmnElement="P13_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1002" height="468"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_H_di" bpmnElement="P13_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="972" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_I_di" bpmnElement="P13_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="972" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_lane_A_di" bpmnElement="P13_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="348" width="972" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_hr_di" bpmnElement="P13_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_e1_di" bpmnElement="P13_e1" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="846" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="798" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_i_di" bpmnElement="P13_i" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_e2_di" bpmnElement="P13_e2" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="846" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="798" y="282" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_s_di" bpmnElement="P13_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="396" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="102" y="438" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_show_di" bpmnElement="P13_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="366" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P13_fork_di" bpmnElement="P13_fork" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="390" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P13_font">
+          <dc:Bounds x="438" y="444" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P13_F01_di" bpmnElement="P13_F01">
+        <di:waypoint x="186" y="414"/>
+        <di:waypoint x="273" y="414"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F02_di" bpmnElement="P13_F02">
+        <di:waypoint x="411" y="414"/>
+        <di:waypoint x="492" y="414"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F03_di" bpmnElement="P13_F03">
+        <di:waypoint x="540" y="414"/>
+        <di:waypoint x="552" y="414"/>
+        <di:waypoint x="552" y="102"/>
+        <di:waypoint x="621" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F04_di" bpmnElement="P13_F04">
+        <di:waypoint x="759" y="102"/>
+        <di:waypoint x="846" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F05_di" bpmnElement="P13_F05">
+        <di:waypoint x="540" y="414"/>
+        <di:waypoint x="606" y="414"/>
+        <di:waypoint x="606" y="258"/>
+        <di:waypoint x="621" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P13_F06_di" bpmnElement="P13_F06">
+        <di:waypoint x="759" y="258"/>
+        <di:waypoint x="846" y="258"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P13_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

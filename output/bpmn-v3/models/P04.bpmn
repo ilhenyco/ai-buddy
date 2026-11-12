@@ -1,0 +1,330 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P04" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P04_collab">
+    <bpmn:participant id="P04_pool" name="Доступы по ссылке и помощь бадди" processRef="P04_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P04_process" name="Доступы по ссылке и помощь бадди" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и условная интеграция OQ08
+Старт: Стажёр открыл сообщение о доступах
+Результат: Дана инструкция для внешнего действия либо подготовлен черновик условной интеграции
+Приёмка: Основной путь ведёт по ссылке с помощью бадди. Открытие ссылки и галочка не означают выдачу доступа.
+Функциональные требования 0.4: FR-IN-02, FR-IN-06, FR-EX-01
+Вызов сервиса внутри продукта показан как условное исключение, требующее решения OQ08. Он не является общим способом выполнения всех пунктов.
+Оба пути не управляют календарём. Результат внешнего действия может быть неизвестен боту. Сообщения бадди и руководителю отправляются независимо через P15.
+Открытые вопросы: OQ08. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P04_lanes">
+      <bpmn:lane id="P04_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P04_guide</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P04_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P04_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_link</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_outside</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_pick</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_help</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_edit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P04_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P04_show</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_mode</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_auth</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_existing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P04_save</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P04_lane_M" name="Модель AI">
+        <bpmn:flowNodeRef>P04_suggest</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P04_s" name="Открыто сообщение доступов">
+      <bpmn:outgoing>P04_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P04_show" name="Показать инструкцию, ссылку и бадди">
+      <bpmn:documentation>Текущие требования: FR-IN-02</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 15. Доступы и инструменты. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P04_F01</bpmn:incoming>
+      <bpmn:outgoing>P04_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P04_mode" name="Прямая интеграция включена?" default="P04_F04" gatewayDirection="Diverging">
+      <bpmn:incoming>P04_F02</bpmn:incoming>
+      <bpmn:outgoing>P04_F03</bpmn:outgoing>
+      <bpmn:outgoing>P04_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="P04_link" name="Открыть внешний инструмент">
+      <bpmn:documentation>Текущие требования: FR-IN-06, FR-EX-01</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 16. Заявка на доступ. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P04_F04</bpmn:incoming>
+      <bpmn:outgoing>P04_F05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="P04_guide" name="Помочь получить доступ">
+      <bpmn:documentation>Текущие требования: FR-EX-01</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 15. Доступы и инструменты. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P04_F05</bpmn:incoming>
+      <bpmn:outgoing>P04_F06</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P04_outside" name="Дальнейшее действие во внешнем сервисе">
+      <bpmn:incoming>P04_F06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="P04_pick" name="Выбрать разрешённый ресурс">
+      <bpmn:documentation>Исторический источник: лист 3, строка 16. Заявка на доступ. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P04_F03</bpmn:incoming>
+      <bpmn:outgoing>P04_F07</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P04_auth" name="Проверить ресурс и найти попытку">
+      <bpmn:incoming>P04_F07</bpmn:incoming>
+      <bpmn:outgoing>P04_F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P04_ok" name="Запрос разрешён и новый?" default="P04_F10" gatewayDirection="Diverging">
+      <bpmn:incoming>P04_F08</bpmn:incoming>
+      <bpmn:outgoing>P04_F09</bpmn:outgoing>
+      <bpmn:outgoing>P04_F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P04_existing" name="Показать состояние или отказ">
+      <bpmn:incoming>P04_F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="P04_help" name="Нужен AI черновик?" default="P04_F12" gatewayDirection="Diverging">
+      <bpmn:incoming>P04_F09</bpmn:incoming>
+      <bpmn:outgoing>P04_F11</bpmn:outgoing>
+      <bpmn:outgoing>P04_F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P04_suggest" name="Предложить обоснование">
+      <bpmn:documentation>Исторический источник: лист 3, строка 17. Черновик и статус заявки. Роль источника: AI-buddy.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P04_F11</bpmn:incoming>
+      <bpmn:outgoing>P04_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="P04_edit" name="Проверить или написать обоснование">
+      <bpmn:incoming>P04_F12</bpmn:incoming>
+      <bpmn:incoming>P04_F13</bpmn:incoming>
+      <bpmn:outgoing>P04_F14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P04_save" name="Сохранить точный предпросмотр">
+      <bpmn:incoming>P04_F14</bpmn:incoming>
+      <bpmn:outgoing>P04_F15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P04_e" name="Далее условный P05">
+      <bpmn:incoming>P04_F15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P04_F01" sourceRef="P04_s" targetRef="P04_show"/>
+    <bpmn:sequenceFlow id="P04_F02" sourceRef="P04_show" targetRef="P04_mode"/>
+    <bpmn:sequenceFlow id="P04_F03" sourceRef="P04_mode" targetRef="P04_pick" name="Да по OQ08">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">directIntegrationConfigured</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P04_F04" sourceRef="P04_mode" targetRef="P04_link" name="По ссылке"/>
+    <bpmn:sequenceFlow id="P04_F05" sourceRef="P04_link" targetRef="P04_guide"/>
+    <bpmn:sequenceFlow id="P04_F06" sourceRef="P04_guide" targetRef="P04_outside"/>
+    <bpmn:sequenceFlow id="P04_F07" sourceRef="P04_pick" targetRef="P04_auth"/>
+    <bpmn:sequenceFlow id="P04_F08" sourceRef="P04_auth" targetRef="P04_ok"/>
+    <bpmn:sequenceFlow id="P04_F09" sourceRef="P04_ok" targetRef="P04_help" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">allowedNewAttempt</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P04_F10" sourceRef="P04_ok" targetRef="P04_existing" name="Нет"/>
+    <bpmn:sequenceFlow id="P04_F11" sourceRef="P04_help" targetRef="P04_suggest" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">draftHelpRequested</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P04_F12" sourceRef="P04_help" targetRef="P04_edit" name="Нет"/>
+    <bpmn:sequenceFlow id="P04_F13" sourceRef="P04_suggest" targetRef="P04_edit"/>
+    <bpmn:sequenceFlow id="P04_F14" sourceRef="P04_edit" targetRef="P04_save"/>
+    <bpmn:sequenceFlow id="P04_F15" sourceRef="P04_save" targetRef="P04_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P04_diagram" name="Доступы по ссылке и помощь бадди">
+    <bpmndi:BPMNPlane id="P04_plane" bpmnElement="P04_collab">
+      <bpmndi:BPMNShape id="P04_pool_di" bpmnElement="P04_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="2046" height="744"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_lane_B_di" bpmnElement="P04_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="2016" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_lane_I_di" bpmnElement="P04_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="2016" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_lane_A_di" bpmnElement="P04_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="2016" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_lane_M_di" bpmnElement="P04_lane_M" isHorizontal="true">
+        <dc:Bounds x="60" y="624" width="2016" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_guide_di" bpmnElement="P04_guide" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_s_di" bpmnElement="P04_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="300" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="102" y="342" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_link_di" bpmnElement="P04_link" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_pick_di" bpmnElement="P04_pick" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="330" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_outside_di" bpmnElement="P04_outside" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="300" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="972" y="342" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_help_di" bpmnElement="P04_help" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1188" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1134" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_edit_di" bpmnElement="P04_edit" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="1491" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_e_di" bpmnElement="P04_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1890" y="300" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1842" y="342" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_show_di" bpmnElement="P04_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_mode_di" bpmnElement="P04_mode" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="510" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="438" y="564" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_auth_di" bpmnElement="P04_auth" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_ok_di" bpmnElement="P04_ok" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1014" y="510" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="960" y="564" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_existing_di" bpmnElement="P04_existing" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="516" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1146" y="558" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_save_di" bpmnElement="P04_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1665" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P04_suggest_di" bpmnElement="P04_suggest" bioc:fill="#EDE8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1317" y="642" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P04_F01_di" bpmnElement="P04_F01">
+        <di:waypoint x="186" y="318"/>
+        <di:waypoint x="258" y="318"/>
+        <di:waypoint x="258" y="534"/>
+        <di:waypoint x="273" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F02_di" bpmnElement="P04_F02">
+        <di:waypoint x="411" y="534"/>
+        <di:waypoint x="492" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F03_di" bpmnElement="P04_F03">
+        <di:waypoint x="540" y="534"/>
+        <di:waypoint x="552" y="534"/>
+        <di:waypoint x="552" y="378"/>
+        <di:waypoint x="621" y="378"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="560" y="486" width="82" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F04_di" bpmnElement="P04_F04">
+        <di:waypoint x="516" y="510"/>
+        <di:waypoint x="516" y="258"/>
+        <di:waypoint x="621" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="531" y="233" width="75" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F05_di" bpmnElement="P04_F05">
+        <di:waypoint x="759" y="258"/>
+        <di:waypoint x="768" y="258"/>
+        <di:waypoint x="768" y="102"/>
+        <di:waypoint x="795" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F06_di" bpmnElement="P04_F06">
+        <di:waypoint x="933" y="102"/>
+        <di:waypoint x="942" y="102"/>
+        <di:waypoint x="942" y="318"/>
+        <di:waypoint x="1020" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F07_di" bpmnElement="P04_F07">
+        <di:waypoint x="759" y="378"/>
+        <di:waypoint x="768" y="378"/>
+        <di:waypoint x="768" y="534"/>
+        <di:waypoint x="795" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F08_di" bpmnElement="P04_F08">
+        <di:waypoint x="933" y="534"/>
+        <di:waypoint x="1014" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F09_di" bpmnElement="P04_F09">
+        <di:waypoint x="1062" y="534"/>
+        <di:waypoint x="1122" y="534"/>
+        <di:waypoint x="1122" y="318"/>
+        <di:waypoint x="1188" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1077" y="509" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F10_di" bpmnElement="P04_F10">
+        <di:waypoint x="1062" y="534"/>
+        <di:waypoint x="1074" y="534"/>
+        <di:waypoint x="1074" y="540"/>
+        <di:waypoint x="1182" y="540"/>
+        <di:waypoint x="1182" y="534"/>
+        <di:waypoint x="1194" y="534"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1150" y="506" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F11_di" bpmnElement="P04_F11">
+        <di:waypoint x="1236" y="318"/>
+        <di:waypoint x="1302" y="318"/>
+        <di:waypoint x="1302" y="690"/>
+        <di:waypoint x="1317" y="690"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1254" y="284" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F12_di" bpmnElement="P04_F12">
+        <di:waypoint x="1236" y="318"/>
+        <di:waypoint x="1248" y="318"/>
+        <di:waypoint x="1248" y="312"/>
+        <di:waypoint x="1476" y="312"/>
+        <di:waypoint x="1476" y="318"/>
+        <di:waypoint x="1491" y="318"/>
+        <bpmndi:BPMNLabel labelStyle="P04_font">
+          <dc:Bounds x="1346" y="287" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F13_di" bpmnElement="P04_F13">
+        <di:waypoint x="1455" y="690"/>
+        <di:waypoint x="1464" y="690"/>
+        <di:waypoint x="1464" y="318"/>
+        <di:waypoint x="1491" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F14_di" bpmnElement="P04_F14">
+        <di:waypoint x="1629" y="318"/>
+        <di:waypoint x="1638" y="318"/>
+        <di:waypoint x="1638" y="534"/>
+        <di:waypoint x="1665" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P04_F15_di" bpmnElement="P04_F15">
+        <di:waypoint x="1803" y="534"/>
+        <di:waypoint x="1812" y="534"/>
+        <di:waypoint x="1812" y="318"/>
+        <di:waypoint x="1890" y="318"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P04_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

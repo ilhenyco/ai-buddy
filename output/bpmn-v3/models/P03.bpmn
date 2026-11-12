@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P03" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P03_collab">
+    <bpmn:participant id="P03_pool" name="Знакомство и формальная отметка" processRef="P03_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P03_process" name="Знакомство и формальная отметка" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция
+Старт: Стажёр открыл сообщение знакомства
+Результат: Стажёр получил контакты; собственная отметка изменена либо оставлена прежней
+Приёмка: Отметка и обращение к бадди не меняют период. Другие сообщения приходят по своим датам.
+Функциональные требования 0.4: FR-IN-04, FR-CY-03, FR-CY-05, FR-CY-06
+Ручное знакомство выполняется вне продукта. Обязательное подтверждение бадди или руководителя не требуется.
+Сохранение истории — предложение FR-IN-05. Изменение отметки прошедшего периода — предложение FR-CY-06; оно не запускает старые рассылки.</bpmn:documentation>
+    <bpmn:laneSet id="P03_lanes">
+      <bpmn:lane id="P03_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P03_intro</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P03_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P03_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_meet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_mark</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_defer</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P03_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P03_show</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_store</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_buddy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P03_done</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P03_s" name="Открыто сообщение">
+      <bpmn:outgoing>P03_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P03_show" name="Показать контакты и каналы">
+      <bpmn:documentation>Исторический источник: лист 3, строка 11. Карточка «Команда». Роль источника: AI-buddy.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P03_F01</bpmn:incoming>
+      <bpmn:outgoing>P03_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P03_meet" name="Нужна помощь со знакомством?" default="P03_F04" gatewayDirection="Diverging">
+      <bpmn:incoming>P03_F02</bpmn:incoming>
+      <bpmn:outgoing>P03_F03</bpmn:outgoing>
+      <bpmn:outgoing>P03_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="P03_intro" name="Познакомить с командой">
+      <bpmn:documentation>Исторический источник: лист 3, строка 10. Знакомство с командой. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P03_F03</bpmn:incoming>
+      <bpmn:outgoing>P03_F05</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="P03_mark" name="Выбрать действие с пунктом">
+      <bpmn:documentation>Текущие требования: FR-IN-04</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 12. Знакомство и вопросы. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P03_F04</bpmn:incoming>
+      <bpmn:incoming>P03_F05</bpmn:incoming>
+      <bpmn:outgoing>P03_F06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="P03_g" name="Что выбрано?" default="P03_F09" gatewayDirection="Diverging">
+      <bpmn:incoming>P03_F06</bpmn:incoming>
+      <bpmn:outgoing>P03_F07</bpmn:outgoing>
+      <bpmn:outgoing>P03_F08</bpmn:outgoing>
+      <bpmn:outgoing>P03_F09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P03_store" name="Сохранить собственную отметку">
+      <bpmn:documentation>Текущие требования: FR-IN-04, FR-CY-03, FR-CY-05, FR-CY-06</bpmn:documentation>
+      <bpmn:incoming>P03_F07</bpmn:incoming>
+      <bpmn:outgoing>P03_F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P03_buddy" name="Показать контакт бадди">
+      <bpmn:incoming>P03_F08</bpmn:incoming>
+      <bpmn:outgoing>P03_F10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P03_defer" name="Отметка без изменений">
+      <bpmn:incoming>P03_F09</bpmn:incoming>
+      <bpmn:incoming>P03_F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P03_done" name="Отметка сохранена">
+      <bpmn:incoming>P03_F11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P03_F01" sourceRef="P03_s" targetRef="P03_show"/>
+    <bpmn:sequenceFlow id="P03_F02" sourceRef="P03_show" targetRef="P03_meet"/>
+    <bpmn:sequenceFlow id="P03_F03" sourceRef="P03_meet" targetRef="P03_intro" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">introHelpNeeded</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P03_F04" sourceRef="P03_meet" targetRef="P03_mark" name="Уже знаком или позже"/>
+    <bpmn:sequenceFlow id="P03_F05" sourceRef="P03_intro" targetRef="P03_mark"/>
+    <bpmn:sequenceFlow id="P03_F06" sourceRef="P03_mark" targetRef="P03_g"/>
+    <bpmn:sequenceFlow id="P03_F07" sourceRef="P03_g" targetRef="P03_store" name="Изменить отметку">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">changeMark</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P03_F08" sourceRef="P03_g" targetRef="P03_buddy" name="Контакт">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">contactRequested</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P03_F09" sourceRef="P03_g" targetRef="P03_defer" name="Позже"/>
+    <bpmn:sequenceFlow id="P03_F10" sourceRef="P03_buddy" targetRef="P03_defer"/>
+    <bpmn:sequenceFlow id="P03_F11" sourceRef="P03_store" targetRef="P03_done"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P03_diagram" name="Знакомство и формальная отметка">
+    <bpmndi:BPMNPlane id="P03_plane" bpmnElement="P03_collab">
+      <bpmndi:BPMNShape id="P03_pool_di" bpmnElement="P03_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1524" height="588"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_lane_B_di" bpmnElement="P03_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1494" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_lane_I_di" bpmnElement="P03_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="1494" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_lane_A_di" bpmnElement="P03_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="348" width="1494" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_intro_di" bpmnElement="P03_intro" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_s_di" bpmnElement="P03_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="102" y="282" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_meet_di" bpmnElement="P03_meet" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="234" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="438" y="288" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_mark_di" bpmnElement="P03_mark" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_g_di" bpmnElement="P03_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1014" y="234" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="960" y="288" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_defer_di" bpmnElement="P03_defer" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1368" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="1320" y="282" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_show_di" bpmnElement="P03_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="426" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_store_di" bpmnElement="P03_store" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1143" y="366" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_buddy_di" bpmnElement="P03_buddy" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1143" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P03_done_di" bpmnElement="P03_done" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1368" y="456" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="1320" y="498" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P03_F01_di" bpmnElement="P03_F01">
+        <di:waypoint x="186" y="258"/>
+        <di:waypoint x="258" y="258"/>
+        <di:waypoint x="258" y="474"/>
+        <di:waypoint x="273" y="474"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F02_di" bpmnElement="P03_F02">
+        <di:waypoint x="411" y="474"/>
+        <di:waypoint x="420" y="474"/>
+        <di:waypoint x="420" y="258"/>
+        <di:waypoint x="492" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F03_di" bpmnElement="P03_F03">
+        <di:waypoint x="540" y="258"/>
+        <di:waypoint x="552" y="258"/>
+        <di:waypoint x="552" y="102"/>
+        <di:waypoint x="621" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="571" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F04_di" bpmnElement="P03_F04">
+        <di:waypoint x="540" y="258"/>
+        <di:waypoint x="795" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="591" y="233" width="152" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F05_di" bpmnElement="P03_F05">
+        <di:waypoint x="759" y="102"/>
+        <di:waypoint x="768" y="102"/>
+        <di:waypoint x="768" y="258"/>
+        <di:waypoint x="795" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F06_di" bpmnElement="P03_F06">
+        <di:waypoint x="933" y="258"/>
+        <di:waypoint x="1014" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F07_di" bpmnElement="P03_F07">
+        <di:waypoint x="1062" y="258"/>
+        <di:waypoint x="1128" y="258"/>
+        <di:waypoint x="1128" y="414"/>
+        <di:waypoint x="1143" y="414"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="1136" y="288" width="124" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F08_di" bpmnElement="P03_F08">
+        <di:waypoint x="1062" y="258"/>
+        <di:waypoint x="1074" y="258"/>
+        <di:waypoint x="1074" y="276"/>
+        <di:waypoint x="1122" y="276"/>
+        <di:waypoint x="1122" y="534"/>
+        <di:waypoint x="1143" y="534"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="1053" y="396" width="61" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F09_di" bpmnElement="P03_F09">
+        <di:waypoint x="1062" y="258"/>
+        <di:waypoint x="1074" y="258"/>
+        <di:waypoint x="1074" y="252"/>
+        <di:waypoint x="1356" y="252"/>
+        <di:waypoint x="1356" y="258"/>
+        <di:waypoint x="1368" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P03_font">
+          <dc:Bounds x="1192" y="227" width="47" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F10_di" bpmnElement="P03_F10">
+        <di:waypoint x="1281" y="534"/>
+        <di:waypoint x="1290" y="534"/>
+        <di:waypoint x="1290" y="258"/>
+        <di:waypoint x="1368" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P03_F11_di" bpmnElement="P03_F11">
+        <di:waypoint x="1281" y="414"/>
+        <di:waypoint x="1356" y="414"/>
+        <di:waypoint x="1356" y="474"/>
+        <di:waypoint x="1368" y="474"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P03_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

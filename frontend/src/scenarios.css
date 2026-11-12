@@ -1,0 +1,55 @@
+.prototype-root .scenarios-page{background:var(--origin-paper);color:var(--origin-ink)}
+.prototype-root .scenarios-toolbar{display:flex;gap:28px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}
+.prototype-root .scenarios-toolbar .search-field{width:min(430px,100%);background:var(--origin-paper);border:2px solid var(--origin-line);border-radius:0;padding:0 14px;display:flex;gap:10px;align-items:center}
+.prototype-root .scenarios-toolbar .search-field input{border:0!important;min-width:0;width:100%;padding-left:0}
+.prototype-root .scenario-filters{margin:0;gap:20px}
+.prototype-root .scenario-filters button{display:flex;gap:8px;align-items:center;white-space:nowrap;font-size:14px}
+.prototype-root .scenario-filters button span{font-size:12px;color:var(--origin-gray700)}
+.prototype-root .scenario-list-note{margin:0 0 24px;line-height:1.6;max-width:960px}
+.prototype-root .scenario-table-heading,.prototype-root .scenario-row{display:grid;grid-template-columns:minmax(230px,1.5fr) minmax(155px,.8fr) minmax(220px,1fr) 125px 24px;gap:22px;align-items:center}
+.prototype-root .scenario-table-heading{font-size:13px;color:var(--origin-gray700);padding:14px 22px;background:var(--origin-gray100);border:2px solid var(--origin-line);border-bottom:0}
+.prototype-root .scenario-list{list-style:none;margin:0;padding:0;border:2px solid var(--origin-line)}
+.prototype-root .scenario-list li+li{border-top:2px solid var(--origin-line)}
+.prototype-root .scenario-row{width:100%;padding:24px 22px;min-height:128px;border:0;background:var(--origin-paper);color:var(--origin-ink);text-align:left;cursor:pointer}
+.prototype-root .scenario-row:hover{background:var(--origin-gray100)}
+.prototype-root .scenario-title,.prototype-root .scenario-period,.prototype-root .scenario-status{display:flex;flex-direction:column;gap:9px;min-width:0;align-items:flex-start}
+.prototype-root .scenario-title strong{font-size:20px;line-height:1.4;font-weight:600;overflow-wrap:anywhere}
+.prototype-root .scenario-title small{display:flex;align-items:center;gap:7px}
+.prototype-root .scenario-row small,.prototype-root .scenario-updated{font-size:13px;line-height:1.5;color:var(--origin-gray700)}
+.prototype-root .scenario-period strong{font-size:15px;font-weight:500}
+.prototype-root .scenario-active{font-weight:600;color:var(--origin-ink)!important}
+.prototype-root .scenario-back{margin-bottom:22px}
+.prototype-root .scenario-name-field{max-width:780px;margin:0 0 24px}
+.prototype-root .scenario-name-field input{width:100%;margin-top:9px}
+.prototype-root .save-status{font-size:13px!important;margin-top:9px!important}
+.prototype-root .plan-settings label small{display:block;margin-top:8px;color:var(--origin-gray700);font-weight:400;line-height:1.5}
+.prototype-root .persistence-error{margin:14px 24px;display:flex;gap:12px;align-items:center;flex-shrink:0}
+.prototype-root .persistence-error span{flex:1}
+.prototype-root .replacement-note{align-items:flex-start;margin:16px 0;line-height:1.6}
+.prototype-root .replacement-note svg{flex-shrink:0;margin-top:3px}
+.prototype-root .review-intern select{max-width:180px}
+.prototype-root .review-state{color:var(--origin-gray700)}
+@container prototype (max-width:1100px){
+ .prototype-root .scenario-table-heading{display:none}
+ .prototype-root .scenario-row{grid-template-columns:minmax(180px,1.3fr) 150px minmax(190px,1fr) 24px;gap:20px}
+ .prototype-root .scenario-updated{grid-column:1/-1}
+ .prototype-root .scenario-row>svg{grid-column:4;grid-row:1}
+ .prototype-root .review-bar{gap:14px}
+}
+@container prototype (max-width:760px){
+ .prototype-root .review-bar{height:auto;min-height:82px;padding:7px 12px;gap:5px 12px}
+ .prototype-root .review-intern{margin-left:0}
+ .prototype-root .review-intern select{font-size:11px!important;max-width:165px}
+ .prototype-root .scenarios-page{padding:24px 16px}
+ .prototype-root .scenarios-page .page-heading{flex-direction:column;gap:20px}
+ .prototype-root .scenarios-toolbar{gap:16px}
+ .prototype-root .scenario-filters{width:100%;gap:14px;overflow:auto}
+ .prototype-root .scenario-filters button{font-size:12px;gap:5px}
+ .prototype-root .scenario-row{grid-template-columns:minmax(0,1fr) 24px;padding:20px 16px;gap:16px}
+ .prototype-root .scenario-title{grid-column:1}
+ .prototype-root .scenario-title strong{font-size:19px}
+ .prototype-root .scenario-period,.prototype-root .scenario-status,.prototype-root .scenario-updated{grid-column:1}
+ .prototype-root .scenario-row>svg{grid-column:2;grid-row:1}
+ .prototype-root .persistence-error{margin:10px;flex-wrap:wrap;font-size:13px}
+ .prototype-root .scenario-name-field{margin-bottom:18px}
+}
