@@ -1,0 +1,39 @@
+# Opt-in local AI stack; existing frontend/backend startup remains unchanged.
+# RAG_SERVICE_TOKEN must be identical in Go and Python. MCP demo tokens are separate.
+services:
+  api:
+    environment:
+      RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
+
+  knowledge:
+    build: ./knowledge
+    environment:
+      RAG_DATABASE_URL: postgresql://homych:homych@db:5432/homych
+      RAG_GO_URL: http://api:8080
+      RAG_OLLAMA_URL: http://ollama:11434
+      RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
+      RAG_DEMO_MODE: "true"
+      RAG_PROVIDER: ${RAG_PROVIDER:-ollama}
+      RAG_MCP_TOKENS: ${RAG_MCP_TOKENS:-{}}
+      RAG_SYNTHETIC_SUBJECTS: ${RAG_SYNTHETIC_SUBJECTS:-[]}
+    ports:
+      - "127.0.0.1:${HOMYCH_RAG_PORT:-8090}:8090"
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:0.13.5
+    volumes:
+      - ollama-data:/root/.ollama
+    # CPU default; add a GPU override on a host with the appropriate runtime.
+
+volumes:
+  ollama-data:

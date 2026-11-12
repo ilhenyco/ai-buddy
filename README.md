@@ -14,6 +14,9 @@
 
 ## Запуск всего проекта
 
+Python RAG/MCP: [запуск, контракты и передача Go-разработчику](knowledge/README.md).
+Это отдельный opt-in стек `docker-compose.rag.yml`; базовый запуск ниже не требует модели.
+
 Нужен Docker. Из корня репозитория:
 
 ```sh
@@ -64,9 +67,10 @@ npm run test:sites
 | FRONT ↔ API: демо-вход, экран сценариев, весь проект в Docker, демо-сценарии | — | ✅ в `main` |
 | Планировщик, лента, отметки, уведомления | listMessages, setCheck, listNotifications | ⏳ не начато — без него лента стажёра и бадди пустая |
 | Подсказки вопросов | getSuggestions | ⏳ не начато |
-| Вопросы и ответы AI (RAG, модель) | askQuestion, getAnswer | ⏳ не начато |
+| Публичные вопросы и ответы AI | askQuestion, getAnswer | ⏳ Go AnswerJob и подключение FRONT; Python API реализован отдельно |
 | Источники знаний | listSources, createSource, getSource, updateSource, excludeSource, getSourceJob | ⏳ не начато |
-| Заявка на доступ (OQ08, HTTP-мок), MCP | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ⏳ не начато |
+| Python RAG и MCP поиска | внутренние search/answer, MCP search_knowledge, Go ai-context | Реализация в `knowledge/`; публичные askQuestion/getAnswer и FRONT ещё требуют подключения |
+| Заявка на доступ (OQ08, HTTP-мок) | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ⏳ не начато |
 
 Новый модуль добавляется в `backend/internal/<модуль>/` по образцу сценариев — см. [backend/README.md](backend/README.md). Обновляйте эту таблицу в своём PR.
 

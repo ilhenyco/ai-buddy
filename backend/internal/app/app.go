@@ -24,11 +24,12 @@ import (
 const APIPrefix = "/api/v1"
 
 type Config struct {
-	DemoLogin      bool
-	SessionSecret  []byte
-	AllowedOrigins []string
-	SecureCookie   bool
-	Location       *time.Location
+	RAGServiceToken string
+	DemoLogin       bool
+	SessionSecret   []byte
+	AllowedOrigins  []string
+	SecureCookie    bool
+	Location        *time.Location
 }
 
 type App struct {
@@ -75,6 +76,7 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 		return nil
 	}))
 	id.Routes(mux, APIPrefix, cfg.DemoLogin)
+	id.AIRoutes(mux, cfg.RAGServiceToken)
 	sc.Routes(mux, APIPrefix, id.Authenticate)
 	// Next modules: messages (Бэк-1), answers/knowledge (ML), access mock (Бэк-2).
 

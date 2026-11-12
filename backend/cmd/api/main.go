@@ -68,11 +68,12 @@ func run(log *slog.Logger) error {
 	}
 
 	a := app.New(d, clock.System{}, app.Config{
-		DemoLogin:      demo,
-		SessionSecret:  []byte(secret),
-		AllowedOrigins: strings.Split(env("ALLOWED_ORIGINS", "http://127.0.0.1:4173,http://localhost:4173"), ","),
-		SecureCookie:   env("SECURE_COOKIE", "false") == "true",
-		Location:       loc,
+		RAGServiceToken: os.Getenv("RAG_SERVICE_TOKEN"),
+		DemoLogin:       demo,
+		SessionSecret:   []byte(secret),
+		AllowedOrigins:  strings.Split(env("ALLOWED_ORIGINS", "http://127.0.0.1:4173,http://localhost:4173"), ","),
+		SecureCookie:    env("SECURE_COOKIE", "false") == "true",
+		Location:        loc,
 	}, log)
 
 	srv := &http.Server{Addr: env("HTTP_ADDR", ":8080"), Handler: a.Handler, ReadHeaderTimeout: 5 * time.Second}
