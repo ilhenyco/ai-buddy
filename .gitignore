@@ -3,6 +3,8 @@
 !.env.example
 
 node_modules/
+.npmrc
+tmp/
 __pycache__/
 *.py[cod]
 dist/
@@ -13,7 +15,16 @@ coverage/
 !/output/bpmn-v2/
 /output/bpmn-v2/*
 !/output/bpmn-v2/models/
+!/output/bpmn-v3/
+/output/bpmn-v3/*
+!/output/bpmn-v3/models/
+!/output/ai-buddy-bpmn-v3.docx
+!/output/ai-buddy-bpmn-v3.zip
+!/output/ai-buddy-frontend.zip
+!/output/ai-buddy-frontend-overview.png
+!/output/ai-buddy-functional-requirements.docx
 !/output/ai-buddy-product-bpmn.docx
+!/output/ai-buddy-team-specification.docx
 !/output/ai-buddy-editable-diagrams.zip
 !/output/pdf/
 /output/pdf/*

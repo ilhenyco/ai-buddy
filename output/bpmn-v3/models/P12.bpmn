@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P12" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P12_collab">
+    <bpmn:participant id="P12_pool" name="Итог и передача задач" processRef="P12_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P12_process" name="Итог и передача задач" isExecutable="false">
+    <bpmn:documentation>Область: Ручная работа вне продукта
+Старт: Получено напоминание последней недели; участники договорились о встрече
+Результат: Результаты представлены, задачи переданы; дальнейший шаг сообщён человеком вне продукта
+Приёмка: Бот напоминает о действиях, но не требует их загрузки или подтверждения для следующих сообщений.
+Функциональные требования 0.4: FR-EX-02
+Участники представляют результаты, передают задачи и обсуждают решение вне продукта. Ручные действия показаны для понимания бизнеса.
+Итог и ожидаемый срок ответа могут быть сообщены человеком. Сохранение кадрового решения и отчёта внутри бота в текущую концепцию не включено.</bpmn:documentation>
+    <bpmn:laneSet id="P12_lanes">
+      <bpmn:lane id="P12_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P12_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_yes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_e</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_w</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P12_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P12_handoff</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P12_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P12_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P12_result</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P12_s" name="Последняя неделя">
+      <bpmn:outgoing>P12_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="P12_result" name="Представить результат и передать задачи">
+      <bpmn:documentation>Текущие требования: FR-EX-02</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 36. Итоговое выступление и передача задач. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P12_F01</bpmn:incoming>
+      <bpmn:outgoing>P12_F02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P12_handoff" name="Проверить приём задач командой">
+      <bpmn:documentation>Исторический источник: лист 3, строка 37. Передача контекста. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P12_F02</bpmn:incoming>
+      <bpmn:outgoing>P12_F03</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P12_review" name="Обсудить итоговую оценку">
+      <bpmn:documentation>Исторический источник: лист 3, строка 38. Итоговая оценка и дальнейший шаг. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P12_F03</bpmn:incoming>
+      <bpmn:outgoing>P12_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="P12_g" name="Решение согласовано?" default="P12_F06" gatewayDirection="Diverging">
+      <bpmn:incoming>P12_F04</bpmn:incoming>
+      <bpmn:outgoing>P12_F05</bpmn:outgoing>
+      <bpmn:outgoing>P12_F06</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="P12_yes" name="Сообщить согласованный итог">
+      <bpmn:documentation>Исторический источник: лист 3, строка 38. Итоговая оценка и дальнейший шаг. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P12_F05</bpmn:incoming>
+      <bpmn:outgoing>P12_F07</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P12_wait" name="Назвать срок следующего ответа">
+      <bpmn:documentation>Исторический источник: лист 3, строка 38. Итоговая оценка и дальнейший шаг. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P12_F06</bpmn:incoming>
+      <bpmn:outgoing>P12_F08</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P12_e" name="Итог зафиксирован">
+      <bpmn:incoming>P12_F07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P12_w" name="Ожидается решение">
+      <bpmn:incoming>P12_F08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P12_F01" sourceRef="P12_s" targetRef="P12_result"/>
+    <bpmn:sequenceFlow id="P12_F02" sourceRef="P12_result" targetRef="P12_handoff"/>
+    <bpmn:sequenceFlow id="P12_F03" sourceRef="P12_handoff" targetRef="P12_review"/>
+    <bpmn:sequenceFlow id="P12_F04" sourceRef="P12_review" targetRef="P12_g"/>
+    <bpmn:sequenceFlow id="P12_F05" sourceRef="P12_g" targetRef="P12_yes" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">decisionConfirmed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P12_F06" sourceRef="P12_g" targetRef="P12_wait" name="Нет"/>
+    <bpmn:sequenceFlow id="P12_F07" sourceRef="P12_yes" targetRef="P12_e"/>
+    <bpmn:sequenceFlow id="P12_F08" sourceRef="P12_wait" targetRef="P12_w"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P12_diagram" name="Итог и передача задач">
+    <bpmndi:BPMNPlane id="P12_plane" bpmnElement="P12_collab">
+      <bpmndi:BPMNShape id="P12_pool_di" bpmnElement="P12_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1350" height="588"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_lane_L_di" bpmnElement="P12_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1320" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_lane_B_di" bpmnElement="P12_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="312" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_lane_I_di" bpmnElement="P12_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_review_di" bpmnElement="P12_review" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="114" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_g_di" bpmnElement="P12_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="840" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="786" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_yes_di" bpmnElement="P12_yes" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_wait_di" bpmnElement="P12_wait" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_e_di" bpmnElement="P12_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="1146" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_w_di" bpmnElement="P12_w" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="204" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="1146" y="246" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_handoff_di" bpmnElement="P12_handoff" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="330" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_s_di" bpmnElement="P12_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="516" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="102" y="558" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P12_result_di" bpmnElement="P12_result" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P12_F01_di" bpmnElement="P12_F01">
+        <di:waypoint x="186" y="534"/>
+        <di:waypoint x="273" y="534"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F02_di" bpmnElement="P12_F02">
+        <di:waypoint x="411" y="534"/>
+        <di:waypoint x="420" y="534"/>
+        <di:waypoint x="420" y="378"/>
+        <di:waypoint x="447" y="378"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F03_di" bpmnElement="P12_F03">
+        <di:waypoint x="585" y="378"/>
+        <di:waypoint x="594" y="378"/>
+        <di:waypoint x="594" y="162"/>
+        <di:waypoint x="621" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F04_di" bpmnElement="P12_F04">
+        <di:waypoint x="759" y="162"/>
+        <di:waypoint x="840" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F05_di" bpmnElement="P12_F05">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="900" y="162"/>
+        <di:waypoint x="900" y="102"/>
+        <di:waypoint x="969" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="919" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F06_di" bpmnElement="P12_F06">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="954" y="162"/>
+        <di:waypoint x="954" y="222"/>
+        <di:waypoint x="969" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P12_font">
+          <dc:Bounds x="922" y="137" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F07_di" bpmnElement="P12_F07">
+        <di:waypoint x="1107" y="102"/>
+        <di:waypoint x="1194" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P12_F08_di" bpmnElement="P12_F08">
+        <di:waypoint x="1107" y="222"/>
+        <di:waypoint x="1194" y="222"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P12_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

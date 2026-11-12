@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P11" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P11_collab">
+    <bpmn:participant id="P11_pool" name="Напоминание о подготовке финала" processRef="P11_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P11_process" name="Напоминание о подготовке финала" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и ручная работа
+Старт: P15 отправил сообщения о подготовке финала
+Результат: Участники получили напоминания о разговоре и подготовке
+Приёмка: Следующий период наступает независимо от готовности выступления и заполнения пунктов.
+Функциональные требования 0.4: FR-SU-05, FR-EX-02
+Дата берётся из опубликованного сценария. Формулировка «за месяц» требует согласования календарного расчёта в OQ04.
+Бот напоминает обсудить результаты и договориться о встрече. AI черновик выступления прежней версии не включён как обязательная функция. Наличие HR дорожки не означает интерфейс кадрового оформления.
+Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P11_lanes">
+      <bpmn:lane id="P11_lane_H" name="HR">
+        <bpmn:flowNodeRef>P11_hr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P11_lane_L" name="Руководитель">
+        <bpmn:flowNodeRef>P11_lead</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P11_lane_B" name="Бадди">
+        <bpmn:flowNodeRef>P11_buddy</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P11_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P11_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P11_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P11_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P11_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P11_show</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P11_s" name="Сообщения подготовки получены">
+      <bpmn:outgoing>P11_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P11_show" name="Показать действия и ссылки">
+      <bpmn:documentation>Текущие требования: FR-SU-05</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 35. Чек-лист подготовки к финалу. Роль источника: AI-buddy.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P11_F01</bpmn:incoming>
+      <bpmn:outgoing>P11_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:manualTask id="P11_lead" name="Обсудить формат, критерии и срок ответа">
+      <bpmn:documentation>Исторический источник: лист 3, строка 32. Формат финала и сроки решения. Роль источника: Руководитель.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P11_F02</bpmn:incoming>
+      <bpmn:outgoing>P11_F03</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P11_hr" name="При необходимости уточнить оформление">
+      <bpmn:documentation>Исторический источник: лист 3, строка 33. Организация финала. Роль источника: HR.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P11_F03</bpmn:incoming>
+      <bpmn:outgoing>P11_F04</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P11_buddy" name="Помочь выбрать примеры работ">
+      <bpmn:documentation>Исторический источник: лист 3, строка 34. Примеры работ для финала. Роль источника: Бадди.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P11_F04</bpmn:incoming>
+      <bpmn:outgoing>P11_F05</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="P11_ready" name="Подготовить результаты вне продукта">
+      <bpmn:documentation>Текущие требования: FR-EX-02</bpmn:documentation>
+      <bpmn:incoming>P11_F05</bpmn:incoming>
+      <bpmn:outgoing>P11_F06</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="P11_e" name="Подготовка вне продукта">
+      <bpmn:incoming>P11_F06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P11_F01" sourceRef="P11_s" targetRef="P11_show"/>
+    <bpmn:sequenceFlow id="P11_F02" sourceRef="P11_show" targetRef="P11_lead"/>
+    <bpmn:sequenceFlow id="P11_F03" sourceRef="P11_lead" targetRef="P11_hr"/>
+    <bpmn:sequenceFlow id="P11_F04" sourceRef="P11_hr" targetRef="P11_buddy"/>
+    <bpmn:sequenceFlow id="P11_F05" sourceRef="P11_buddy" targetRef="P11_ready"/>
+    <bpmn:sequenceFlow id="P11_F06" sourceRef="P11_ready" targetRef="P11_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P11_diagram" name="Напоминание о подготовке финала">
+    <bpmndi:BPMNPlane id="P11_plane" bpmnElement="P11_collab">
+      <bpmndi:BPMNShape id="P11_pool_di" bpmnElement="P11_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1350" height="780"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lane_H_di" bpmnElement="P11_lane_H" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lane_L_di" bpmnElement="P11_lane_L" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lane_B_di" bpmnElement="P11_lane_B" isHorizontal="true">
+        <dc:Bounds x="60" y="348" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lane_I_di" bpmnElement="P11_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="504" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lane_A_di" bpmnElement="P11_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="660" width="1320" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_hr_di" bpmnElement="P11_hr" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_lead_di" bpmnElement="P11_lead" bioc:fill="#F0E8FF" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_buddy_di" bpmnElement="P11_buddy" bioc:fill="#E7F5F0" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="366" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_ready_di" bpmnElement="P11_ready" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="522" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_e_di" bpmnElement="P11_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="552" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P11_font">
+          <dc:Bounds x="1146" y="594" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_s_di" bpmnElement="P11_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="708" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P11_font">
+          <dc:Bounds x="102" y="750" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P11_show_di" bpmnElement="P11_show" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="678" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P11_F01_di" bpmnElement="P11_F01">
+        <di:waypoint x="186" y="726"/>
+        <di:waypoint x="273" y="726"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P11_F02_di" bpmnElement="P11_F02">
+        <di:waypoint x="411" y="726"/>
+        <di:waypoint x="420" y="726"/>
+        <di:waypoint x="420" y="258"/>
+        <di:waypoint x="447" y="258"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P11_F03_di" bpmnElement="P11_F03">
+        <di:waypoint x="585" y="258"/>
+        <di:waypoint x="594" y="258"/>
+        <di:waypoint x="594" y="102"/>
+        <di:waypoint x="621" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P11_F04_di" bpmnElement="P11_F04">
+        <di:waypoint x="759" y="102"/>
+        <di:waypoint x="768" y="102"/>
+        <di:waypoint x="768" y="414"/>
+        <di:waypoint x="795" y="414"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P11_F05_di" bpmnElement="P11_F05">
+        <di:waypoint x="933" y="414"/>
+        <di:waypoint x="942" y="414"/>
+        <di:waypoint x="942" y="570"/>
+        <di:waypoint x="969" y="570"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P11_F06_di" bpmnElement="P11_F06">
+        <di:waypoint x="1107" y="570"/>
+        <di:waypoint x="1194" y="570"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P11_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

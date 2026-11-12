@@ -1,0 +1,270 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P15" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P15_collab">
+    <bpmn:participant id="P15_pool" name="Рассылка сообщений по периодам и ролям" processRef="P15_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P15_process" name="Рассылка сообщений по периодам и ролям" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция и предложения доставки
+Старт: Наступило время блока опубликованного сценария
+Результат: Созданы независимые доставки сообщений нужным участникам
+Приёмка: Незаполненный чек-лист не участвует в проверках. Для одного блока тексты по ролям имеют общий контекст стажёра.
+Функциональные требования 0.4: FR-PL-04, FR-PL-07, FR-IN-01, FR-IN-02, FR-PL-11, FR-CY-01, FR-CY-02, FR-CY-04, FR-SU-01, FR-SU-02, FR-SU-03, FR-SU-04, FR-KB-05, FR-NT-01, FR-NT-03, FR-AC-02, FR-HR-03
+Получатели — стажёр, назначенный бадди и руководитель с предусмотренными блоком сообщениями. Шаблон и ссылки задаёт руководитель. Генерация AI и состояние чек-листа для рассылки не требуются.
+Каждая доставка обрабатывается независимо по P16. Ошибка отправки бадди не мешает создать сообщение руководителю. Защита от повторов и хранение доставки — предложения FR-NT-03 и FR-NT-04.
+Рассылка HR добавляется только после решения OQ05; FR-HR-03 является предложением. Интервалы напоминаний и календарные расчёты остаются в OQ03–OQ04. Пересылка личных AI ответов в этот процесс не входит.
+Открытые вопросы: OQ03, OQ04, OQ05. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P15_lanes">
+      <bpmn:lane id="P15_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P15_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_load</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_stop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_targets</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_more</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_build</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_dedup</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_skip</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_save</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_next</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P15_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P15_s" name="Время сообщения блока">
+      <bpmn:documentation>Текущие требования: FR-CY-01, FR-CY-04, FR-SU-04, FR-NT-01</bpmn:documentation>
+      <bpmn:outgoing>P15_F01</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="P15_s_timer">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${block.sendAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P15_load" name="Прочитать active, версию и cutoff">
+      <bpmn:documentation>Текущие требования: FR-PL-07</bpmn:documentation>
+      <bpmn:incoming>P15_F01</bpmn:incoming>
+      <bpmn:outgoing>P15_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P15_g" name="Дата и вариант актуальны?" default="P15_F04" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-CY-02</bpmn:documentation>
+      <bpmn:incoming>P15_F02</bpmn:incoming>
+      <bpmn:outgoing>P15_F03</bpmn:outgoing>
+      <bpmn:outgoing>P15_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P15_stop" name="Рассылка не требуется">
+      <bpmn:incoming>P15_F04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="P15_targets" name="Определить назначенных получателей">
+      <bpmn:documentation>Текущие требования: FR-PL-11, FR-SU-01, FR-SU-02, FR-HR-03</bpmn:documentation>
+      <bpmn:incoming>P15_F03</bpmn:incoming>
+      <bpmn:outgoing>P15_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P15_more" name="Есть следующий получатель?" default="P15_F07" gatewayDirection="Mixed">
+      <bpmn:incoming>P15_F05</bpmn:incoming>
+      <bpmn:incoming>P15_F13</bpmn:incoming>
+      <bpmn:outgoing>P15_F06</bpmn:outgoing>
+      <bpmn:outgoing>P15_F07</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P15_build" name="Взять текст его роли и ссылки">
+      <bpmn:documentation>Текущие требования: FR-PL-04, FR-IN-01, FR-IN-02, FR-SU-01, FR-SU-02, FR-SU-03, FR-SU-04, FR-KB-05, FR-AC-02</bpmn:documentation>
+      <bpmn:incoming>P15_F06</bpmn:incoming>
+      <bpmn:outgoing>P15_F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P15_dedup" name="Сообщение уже создано?" default="P15_F10" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-NT-03</bpmn:documentation>
+      <bpmn:incoming>P15_F08</bpmn:incoming>
+      <bpmn:outgoing>P15_F09</bpmn:outgoing>
+      <bpmn:outgoing>P15_F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P15_skip" name="Оставить существующее сообщение">
+      <bpmn:incoming>P15_F09</bpmn:incoming>
+      <bpmn:outgoing>P15_F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P15_save" name="Сохранить сообщение и доставку P16">
+      <bpmn:incoming>P15_F10</bpmn:incoming>
+      <bpmn:outgoing>P15_F12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P15_next" name="Взять следующего получателя">
+      <bpmn:incoming>P15_F11</bpmn:incoming>
+      <bpmn:incoming>P15_F12</bpmn:incoming>
+      <bpmn:outgoing>P15_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P15_e" name="Все доставки созданы">
+      <bpmn:incoming>P15_F07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P15_F01" sourceRef="P15_s" targetRef="P15_load"/>
+    <bpmn:sequenceFlow id="P15_F02" sourceRef="P15_load" targetRef="P15_g"/>
+    <bpmn:sequenceFlow id="P15_F03" sourceRef="P15_g" targetRef="P15_targets" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">currentPublishedBlock</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P15_F04" sourceRef="P15_g" targetRef="P15_stop" name="Нет"/>
+    <bpmn:sequenceFlow id="P15_F05" sourceRef="P15_targets" targetRef="P15_more"/>
+    <bpmn:sequenceFlow id="P15_F06" sourceRef="P15_more" targetRef="P15_build" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">recipientAvailable</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P15_F07" sourceRef="P15_more" targetRef="P15_e" name="Нет"/>
+    <bpmn:sequenceFlow id="P15_F08" sourceRef="P15_build" targetRef="P15_dedup"/>
+    <bpmn:sequenceFlow id="P15_F09" sourceRef="P15_dedup" targetRef="P15_skip" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">messageExists</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P15_F10" sourceRef="P15_dedup" targetRef="P15_save" name="Нет"/>
+    <bpmn:sequenceFlow id="P15_F11" sourceRef="P15_skip" targetRef="P15_next"/>
+    <bpmn:sequenceFlow id="P15_F12" sourceRef="P15_save" targetRef="P15_next"/>
+    <bpmn:sequenceFlow id="P15_F13" sourceRef="P15_next" targetRef="P15_more"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P15_diagram" name="Рассылка сообщений по периодам и ролям">
+    <bpmndi:BPMNPlane id="P15_plane" bpmnElement="P15_collab">
+      <bpmndi:BPMNShape id="P15_pool_di" bpmnElement="P15_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1698" height="300"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_lane_A_di" bpmnElement="P15_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1668" height="300"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_s_di" bpmnElement="P15_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="144" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="102" y="186" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_load_di" bpmnElement="P15_load" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="114" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_g_di" bpmnElement="P15_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="438" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_stop_di" bpmnElement="P15_stop" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="624" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_targets_di" bpmnElement="P15_targets" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_more_di" bpmnElement="P15_more" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="840" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="786" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_build_di" bpmnElement="P15_build" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_e_di" bpmnElement="P15_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1020" y="204" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="972" y="246" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_dedup_di" bpmnElement="P15_dedup" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1188" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="1134" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_skip_di" bpmnElement="P15_skip" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1317" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_save_di" bpmnElement="P15_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1317" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P15_next_di" bpmnElement="P15_next" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1491" y="114" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P15_F01_di" bpmnElement="P15_F01">
+        <di:waypoint x="186" y="162"/>
+        <di:waypoint x="273" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F02_di" bpmnElement="P15_F02">
+        <di:waypoint x="411" y="162"/>
+        <di:waypoint x="492" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F03_di" bpmnElement="P15_F03">
+        <di:waypoint x="540" y="162"/>
+        <di:waypoint x="606" y="162"/>
+        <di:waypoint x="606" y="222"/>
+        <di:waypoint x="621" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="576" y="137" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F04_di" bpmnElement="P15_F04">
+        <di:waypoint x="540" y="162"/>
+        <di:waypoint x="552" y="162"/>
+        <di:waypoint x="552" y="102"/>
+        <di:waypoint x="672" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="596" y="77" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F05_di" bpmnElement="P15_F05">
+        <di:waypoint x="759" y="222"/>
+        <di:waypoint x="768" y="222"/>
+        <di:waypoint x="768" y="162"/>
+        <di:waypoint x="840" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F06_di" bpmnElement="P15_F06">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="900" y="162"/>
+        <di:waypoint x="900" y="102"/>
+        <di:waypoint x="969" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="919" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F07_di" bpmnElement="P15_F07">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="1008" y="162"/>
+        <di:waypoint x="1008" y="222"/>
+        <di:waypoint x="1020" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="914" y="137" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F08_di" bpmnElement="P15_F08">
+        <di:waypoint x="1107" y="102"/>
+        <di:waypoint x="1116" y="102"/>
+        <di:waypoint x="1116" y="162"/>
+        <di:waypoint x="1188" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F09_di" bpmnElement="P15_F09">
+        <di:waypoint x="1236" y="162"/>
+        <di:waypoint x="1248" y="162"/>
+        <di:waypoint x="1248" y="102"/>
+        <di:waypoint x="1317" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="1267" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F10_di" bpmnElement="P15_F10">
+        <di:waypoint x="1236" y="162"/>
+        <di:waypoint x="1302" y="162"/>
+        <di:waypoint x="1302" y="222"/>
+        <di:waypoint x="1317" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P15_font">
+          <dc:Bounds x="1270" y="137" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F11_di" bpmnElement="P15_F11">
+        <di:waypoint x="1455" y="102"/>
+        <di:waypoint x="1464" y="102"/>
+        <di:waypoint x="1464" y="162"/>
+        <di:waypoint x="1491" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F12_di" bpmnElement="P15_F12">
+        <di:waypoint x="1455" y="222"/>
+        <di:waypoint x="1476" y="222"/>
+        <di:waypoint x="1476" y="162"/>
+        <di:waypoint x="1491" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P15_F13_di" bpmnElement="P15_F13">
+        <di:waypoint x="1560" y="114"/>
+        <di:waypoint x="1560" y="42"/>
+        <di:waypoint x="864" y="42"/>
+        <di:waypoint x="864" y="138"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P15_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

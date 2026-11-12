@@ -1,0 +1,211 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P17" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P17_collab">
+    <bpmn:participant id="P17_pool" name="Обновление источников RAG" processRef="P17_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P17_process" name="Обновление источников RAG" isExecutable="false">
+    <bpmn:documentation>Область: Предложение и открытый владелец OQ07
+Старт: Уполномоченный владелец обновляет материалы
+Результат: Новая разрешённая версия доступна для поиска либо прежняя версия сохранена при ошибке
+Приёмка: Недоступные пользователю документы не попадают в поиск. Ошибка обновления не выдаёт непроверенный источник.
+Функциональные требования 0.4: FR-KB-06
+Владелец материалов, интерфейс загрузки и правила проверки источников ещё не выбраны. Дорожка владельца обозначает будущую роль по OQ07 и не назначает её автоматически HR.
+Модель конкретизирует предложение FR-KB-06. Механизм индекса и права на материалы согласуются до реализации.
+Открытые вопросы: OQ07. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P17_lanes">
+      <bpmn:lane id="P17_lane_K" name="Владелец материалов по OQ07">
+        <bpmn:flowNodeRef>P17_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_owner</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P17_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P17_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_bad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_build</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_save</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_fail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P17_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P17_s" name="Изменились материалы">
+      <bpmn:outgoing>P17_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="P17_owner" name="Передать источник и область доступа">
+      <bpmn:incoming>P17_F01</bpmn:incoming>
+      <bpmn:outgoing>P17_F02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P17_check" name="Проверить права и сведения источника">
+      <bpmn:incoming>P17_F02</bpmn:incoming>
+      <bpmn:outgoing>P17_F03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P17_ok" name="Изменение допустимо?" default="P17_F05" gatewayDirection="Diverging">
+      <bpmn:incoming>P17_F03</bpmn:incoming>
+      <bpmn:outgoing>P17_F04</bpmn:outgoing>
+      <bpmn:outgoing>P17_F05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P17_bad" name="Изменение отклонено">
+      <bpmn:incoming>P17_F05</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="P17_build" name="Подготовить версию поискового индекса">
+      <bpmn:documentation>Текущие требования: FR-KB-06</bpmn:documentation>
+      <bpmn:incoming>P17_F04</bpmn:incoming>
+      <bpmn:outgoing>P17_F06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P17_ready" name="Обновление успешно?" default="P17_F08" gatewayDirection="Diverging">
+      <bpmn:incoming>P17_F06</bpmn:incoming>
+      <bpmn:outgoing>P17_F07</bpmn:outgoing>
+      <bpmn:outgoing>P17_F08</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P17_save" name="Активировать разрешённую версию">
+      <bpmn:documentation>Текущие требования: FR-KB-06</bpmn:documentation>
+      <bpmn:incoming>P17_F07</bpmn:incoming>
+      <bpmn:outgoing>P17_F09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P17_fail" name="Прежняя версия сохранена">
+      <bpmn:incoming>P17_F08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P17_e" name="Источник обновлён">
+      <bpmn:incoming>P17_F09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P17_F01" sourceRef="P17_s" targetRef="P17_owner"/>
+    <bpmn:sequenceFlow id="P17_F02" sourceRef="P17_owner" targetRef="P17_check"/>
+    <bpmn:sequenceFlow id="P17_F03" sourceRef="P17_check" targetRef="P17_ok"/>
+    <bpmn:sequenceFlow id="P17_F04" sourceRef="P17_ok" targetRef="P17_build" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">sourceChangeAllowed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P17_F05" sourceRef="P17_ok" targetRef="P17_bad" name="Нет"/>
+    <bpmn:sequenceFlow id="P17_F06" sourceRef="P17_build" targetRef="P17_ready"/>
+    <bpmn:sequenceFlow id="P17_F07" sourceRef="P17_ready" targetRef="P17_save" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">indexReady</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P17_F08" sourceRef="P17_ready" targetRef="P17_fail" name="Нет"/>
+    <bpmn:sequenceFlow id="P17_F09" sourceRef="P17_save" targetRef="P17_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P17_diagram" name="Обновление источников RAG">
+    <bpmndi:BPMNPlane id="P17_plane" bpmnElement="P17_collab">
+      <bpmndi:BPMNShape id="P17_pool_di" bpmnElement="P17_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1524" height="498"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_lane_K_di" bpmnElement="P17_lane_K" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1494" height="222"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_lane_A_di" bpmnElement="P17_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="258" width="1494" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_s_di" bpmnElement="P17_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="102" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_owner_di" bpmnElement="P17_owner" bioc:fill="#FFF3DC" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_check_di" bpmnElement="P17_check" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="447" y="336" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_ok_di" bpmnElement="P17_ok" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="666" y="360" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="612" y="414" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_bad_di" bpmnElement="P17_bad" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="846" y="306" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="798" y="348" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_build_di" bpmnElement="P17_build" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="396" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_ready_di" bpmnElement="P17_ready" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1014" y="360" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="960" y="414" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_save_di" bpmnElement="P17_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1143" y="276" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_fail_di" bpmnElement="P17_fail" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="426" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="1146" y="468" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P17_e_di" bpmnElement="P17_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1368" y="366" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="1320" y="408" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P17_F01_di" bpmnElement="P17_F01">
+        <di:waypoint x="186" y="102"/>
+        <di:waypoint x="273" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F02_di" bpmnElement="P17_F02">
+        <di:waypoint x="411" y="102"/>
+        <di:waypoint x="420" y="102"/>
+        <di:waypoint x="420" y="384"/>
+        <di:waypoint x="447" y="384"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F03_di" bpmnElement="P17_F03">
+        <di:waypoint x="585" y="384"/>
+        <di:waypoint x="666" y="384"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F04_di" bpmnElement="P17_F04">
+        <di:waypoint x="714" y="384"/>
+        <di:waypoint x="780" y="384"/>
+        <di:waypoint x="780" y="444"/>
+        <di:waypoint x="795" y="444"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="750" y="359" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F05_di" bpmnElement="P17_F05">
+        <di:waypoint x="714" y="384"/>
+        <di:waypoint x="726" y="384"/>
+        <di:waypoint x="726" y="324"/>
+        <di:waypoint x="846" y="324"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="770" y="299" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F06_di" bpmnElement="P17_F06">
+        <di:waypoint x="933" y="444"/>
+        <di:waypoint x="942" y="444"/>
+        <di:waypoint x="942" y="384"/>
+        <di:waypoint x="1014" y="384"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F07_di" bpmnElement="P17_F07">
+        <di:waypoint x="1062" y="384"/>
+        <di:waypoint x="1074" y="384"/>
+        <di:waypoint x="1074" y="324"/>
+        <di:waypoint x="1143" y="324"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="1093" y="299" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F08_di" bpmnElement="P17_F08">
+        <di:waypoint x="1062" y="384"/>
+        <di:waypoint x="1182" y="384"/>
+        <di:waypoint x="1182" y="444"/>
+        <di:waypoint x="1194" y="444"/>
+        <bpmndi:BPMNLabel labelStyle="P17_font">
+          <dc:Bounds x="1088" y="359" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P17_F09_di" bpmnElement="P17_F09">
+        <di:waypoint x="1281" y="324"/>
+        <di:waypoint x="1290" y="324"/>
+        <di:waypoint x="1290" y="384"/>
+        <di:waypoint x="1368" y="384"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P17_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

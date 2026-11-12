@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P16" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P16_collab">
+    <bpmn:participant id="P16_pool" name="Доставка одного сообщения и обработка сбоя" processRef="P16_process"/>
+    <bpmn:participant id="P16_accessService" name="Канал уведомлений по OQ02"/>
+    <bpmn:messageFlow id="P16_request" name="Отправка сообщения" sourceRef="P16_call" targetRef="P16_accessService"/>
+    <bpmn:messageFlow id="P16_response" name="Результат канала" sourceRef="P16_accessService" targetRef="P16_call"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P16_process" name="Доставка одного сообщения и обработка сбоя" isExecutable="false">
+    <bpmn:documentation>Область: Предложение по доставке и открытый канал OQ02
+Старт: Создана доставка или наступило время разрешённого повтора
+Результат: Сохранён известный результат доставки либо назначено дальнейшее восстановление
+Приёмка: Одно событие не создаёт второй экземпляр сообщения. Ошибка одного получателя не останавливает рассылку другим.
+Функциональные требования 0.4: FR-NT-02, FR-NT-03, FR-NT-04
+Канал бота пока не выбран. Звук проверяется в выбранной среде при разрешённых уведомлениях. Отправка не означает прочтение сообщения.
+Защита от повторов и восстановление — предложения FR-NT-03 и FR-NT-04. Неизвестный результат транспорта не считается подтверждённой доставкой. Число попыток и интервалы пока не заданы.
+Открытые вопросы: OQ02, OQ03. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P16_lanes">
+      <bpmn:lane id="P16_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P16_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_load</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_known</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_call</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_save</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_e</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P16_wait</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P16_s" name="Доставка готова">
+      <bpmn:outgoing>P16_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P16_load" name="Найти сообщение и адресата">
+      <bpmn:incoming>P16_F01</bpmn:incoming>
+      <bpmn:outgoing>P16_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P16_known" name="Доставка уже подтверждена?" default="P16_F04" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-NT-03</bpmn:documentation>
+      <bpmn:incoming>P16_F02</bpmn:incoming>
+      <bpmn:outgoing>P16_F03</bpmn:outgoing>
+      <bpmn:outgoing>P16_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="P16_done" name="Повтор не нужен">
+      <bpmn:incoming>P16_F03</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="P16_call" name="Отправить через выбранный канал">
+      <bpmn:documentation>Текущие требования: FR-NT-02</bpmn:documentation>
+      <bpmn:incoming>P16_F04</bpmn:incoming>
+      <bpmn:outgoing>P16_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P16_g" name="Отправка подтверждена?" default="P16_F07" gatewayDirection="Diverging">
+      <bpmn:incoming>P16_F05</bpmn:incoming>
+      <bpmn:outgoing>P16_F06</bpmn:outgoing>
+      <bpmn:outgoing>P16_F07</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P16_save" name="Сохранить подтверждение доставки">
+      <bpmn:incoming>P16_F06</bpmn:incoming>
+      <bpmn:outgoing>P16_F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P16_retry" name="Сохранить сбой и политику повтора">
+      <bpmn:documentation>Текущие требования: FR-NT-04</bpmn:documentation>
+      <bpmn:incoming>P16_F07</bpmn:incoming>
+      <bpmn:outgoing>P16_F09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P16_e" name="Доставка учтена">
+      <bpmn:incoming>P16_F08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="P16_wait" name="Восстановление запланировано">
+      <bpmn:incoming>P16_F09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P16_F01" sourceRef="P16_s" targetRef="P16_load"/>
+    <bpmn:sequenceFlow id="P16_F02" sourceRef="P16_load" targetRef="P16_known"/>
+    <bpmn:sequenceFlow id="P16_F03" sourceRef="P16_known" targetRef="P16_done" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">deliveryKnown</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P16_F04" sourceRef="P16_known" targetRef="P16_call" name="Нет"/>
+    <bpmn:sequenceFlow id="P16_F05" sourceRef="P16_call" targetRef="P16_g"/>
+    <bpmn:sequenceFlow id="P16_F06" sourceRef="P16_g" targetRef="P16_save" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">channelConfirmed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P16_F07" sourceRef="P16_g" targetRef="P16_retry" name="Нет или неизвестно"/>
+    <bpmn:sequenceFlow id="P16_F08" sourceRef="P16_save" targetRef="P16_e"/>
+    <bpmn:sequenceFlow id="P16_F09" sourceRef="P16_retry" targetRef="P16_wait"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P16_diagram" name="Доставка одного сообщения и обработка сбоя">
+    <bpmndi:BPMNPlane id="P16_plane" bpmnElement="P16_collab">
+      <bpmndi:BPMNShape id="P16_pool_di" bpmnElement="P16_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="1350" height="330"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_lane_A_di" bpmnElement="P16_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="1320" height="330"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_accessService_di" bpmnElement="P16_accessService" isHorizontal="true">
+        <dc:Bounds x="30" y="450" width="1350" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_s_di" bpmnElement="P16_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="144" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="102" y="186" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_load_di" bpmnElement="P16_load" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="114" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_known_di" bpmnElement="P16_known" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="438" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_done_di" bpmnElement="P16_done" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="672" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="624" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_call_di" bpmnElement="P16_call" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_g_di" bpmnElement="P16_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="840" y="138" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="786" y="192" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_save_di" bpmnElement="P16_save" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_retry_di" bpmnElement="P16_retry" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="174" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_e_di" bpmnElement="P16_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="1146" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P16_wait_di" bpmnElement="P16_wait" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="1194" y="204" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="1146" y="246" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P16_F01_di" bpmnElement="P16_F01">
+        <di:waypoint x="186" y="162"/>
+        <di:waypoint x="273" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F02_di" bpmnElement="P16_F02">
+        <di:waypoint x="411" y="162"/>
+        <di:waypoint x="492" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F03_di" bpmnElement="P16_F03">
+        <di:waypoint x="540" y="162"/>
+        <di:waypoint x="552" y="162"/>
+        <di:waypoint x="552" y="102"/>
+        <di:waypoint x="672" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="597" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F04_di" bpmnElement="P16_F04">
+        <di:waypoint x="540" y="162"/>
+        <di:waypoint x="606" y="162"/>
+        <di:waypoint x="606" y="222"/>
+        <di:waypoint x="621" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="574" y="137" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F05_di" bpmnElement="P16_F05">
+        <di:waypoint x="759" y="222"/>
+        <di:waypoint x="768" y="222"/>
+        <di:waypoint x="768" y="162"/>
+        <di:waypoint x="840" y="162"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F06_di" bpmnElement="P16_F06">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="900" y="162"/>
+        <di:waypoint x="900" y="102"/>
+        <di:waypoint x="969" y="102"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="919" y="77" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F07_di" bpmnElement="P16_F07">
+        <di:waypoint x="888" y="162"/>
+        <di:waypoint x="954" y="162"/>
+        <di:waypoint x="954" y="222"/>
+        <di:waypoint x="969" y="222"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="816" y="128" width="138" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F08_di" bpmnElement="P16_F08">
+        <di:waypoint x="1107" y="102"/>
+        <di:waypoint x="1194" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_F09_di" bpmnElement="P16_F09">
+        <di:waypoint x="1107" y="222"/>
+        <di:waypoint x="1194" y="222"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_request_di" bpmnElement="P16_request">
+        <di:waypoint x="657" y="270"/>
+        <di:waypoint x="657" y="402"/>
+        <di:waypoint x="621" y="402"/>
+        <di:waypoint x="621" y="450"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="486" y="414" width="130" height="20"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P16_response_di" bpmnElement="P16_response">
+        <di:waypoint x="755" y="450"/>
+        <di:waypoint x="755" y="402"/>
+        <di:waypoint x="723" y="402"/>
+        <di:waypoint x="723" y="270"/>
+        <bpmndi:BPMNLabel labelStyle="P16_font">
+          <dc:Bounds x="760" y="414" width="130" height="20"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P16_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

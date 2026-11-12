@@ -1,0 +1,351 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" id="Defs_P14" targetNamespace="urn:origination:ai-buddy:bpmn:v3" exporter="Origination AI-buddy">
+  <bpmn:collaboration id="P14_collab">
+    <bpmn:participant id="P14_pool" name="Личный вопрос стажёра и ответ через RAG" processRef="P14_process"/>
+  </bpmn:collaboration>
+  <bpmn:process id="P14_process" name="Личный вопрос стажёра и ответ через RAG" isExecutable="false">
+    <bpmn:documentation>Область: Текущая концепция
+Старт: Стажёр написал вопрос в переписке
+Результат: Показан ответ с источниками либо понятное сообщение об отсутствии ответа
+Приёмка: В модель передаются только разрешённые источники. Личный вопрос не включается в плановые сообщения другим ролям.
+Функциональные требования 0.4: FR-IN-03, FR-IN-07, FR-KB-01, FR-KB-02, FR-KB-03, FR-KB-04, FR-KB-05, FR-AC-01, FR-AC-02
+Отбор по правам предшествует поиску и вызову модели. При отсутствии источника, сбое или тайм-ауте доступен ответ без выдуманной инструкции. Локальная Qwen и деморежим остаются за одним адаптером.
+OQ01 закрыт: личный вопрос и ответ доступны только стажёру. Плановые сообщения P15 не используют эту переписку.
+Три вопроса принадлежат продукту, сохраняются на стажёра и меняются только при смене stageKey. До старта — стартовый набор. Без опубликованного плана ввод и подсказки скрыты. Копии блоков наследуют тему.
+Открытые вопросы: OQ07. Они сохраняют статус, указанный в функциональных требованиях.</bpmn:documentation>
+    <bpmn:laneSet id="P14_lanes">
+      <bpmn:lane id="P14_lane_I" name="Стажёр">
+        <bpmn:flowNodeRef>P14_s</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_ask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_e</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P14_lane_A" name="Приложение">
+        <bpmn:flowNodeRef>P14_stage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_selection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_random</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_reuse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_chips</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_filter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_retrieve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_g</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_validate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_valid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_answer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>P14_help</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="P14_lane_M" name="Модель AI">
+        <bpmn:flowNodeRef>P14_model</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="P14_s" name="Открыта личная переписка">
+      <bpmn:outgoing>P14_F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="P14_stage" name="Текущий этап по активному плану">
+      <bpmn:documentation>Текущие требования: FR-IN-07</bpmn:documentation>
+      <bpmn:incoming>P14_F01</bpmn:incoming>
+      <bpmn:outgoing>P14_F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P14_selection" name="Тройка этапа уже сохранена?" default="P14_F04" gatewayDirection="Diverging">
+      <bpmn:documentation>Текущие требования: FR-IN-07</bpmn:documentation>
+      <bpmn:incoming>P14_F02</bpmn:incoming>
+      <bpmn:outgoing>P14_F03</bpmn:outgoing>
+      <bpmn:outgoing>P14_F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P14_random" name="Выбрать три разных вопроса">
+      <bpmn:documentation>Текущие требования: FR-IN-07</bpmn:documentation>
+      <bpmn:incoming>P14_F04</bpmn:incoming>
+      <bpmn:outgoing>P14_F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P14_reuse" name="Взять сохранённую тройку">
+      <bpmn:incoming>P14_F03</bpmn:incoming>
+      <bpmn:outgoing>P14_F06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P14_chips" name="Показать подсказки в чате">
+      <bpmn:documentation>Текущие требования: FR-IN-07</bpmn:documentation>
+      <bpmn:incoming>P14_F05</bpmn:incoming>
+      <bpmn:incoming>P14_F06</bpmn:incoming>
+      <bpmn:outgoing>P14_F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="P14_ask" name="Нажать подсказку или написать вопрос">
+      <bpmn:documentation>Текущие требования: FR-IN-03</bpmn:documentation>
+      <bpmn:documentation>Исторический источник: лист 3, строка 12. Знакомство и вопросы. Роль источника: Стажёр.
+После уточнения концепции поведение и роль AI определяются текущими требованиями и этой моделью; старые формулировки источника не являются новым условием выполнения.</bpmn:documentation>
+      <bpmn:incoming>P14_F07</bpmn:incoming>
+      <bpmn:outgoing>P14_F08</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="P14_filter" name="Проверить пользователя и права">
+      <bpmn:documentation>Текущие требования: FR-KB-02, FR-AC-01, FR-AC-02</bpmn:documentation>
+      <bpmn:incoming>P14_F08</bpmn:incoming>
+      <bpmn:outgoing>P14_F09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P14_retrieve" name="Найти подходящие фрагменты RAG">
+      <bpmn:documentation>Текущие требования: FR-KB-01, FR-KB-02</bpmn:documentation>
+      <bpmn:incoming>P14_F09</bpmn:incoming>
+      <bpmn:outgoing>P14_F10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P14_g" name="Есть разрешённый источник?" default="P14_F12" gatewayDirection="Diverging">
+      <bpmn:incoming>P14_F10</bpmn:incoming>
+      <bpmn:outgoing>P14_F11</bpmn:outgoing>
+      <bpmn:outgoing>P14_F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P14_model" name="Сформировать ответ по фрагментам">
+      <bpmn:incoming>P14_F11</bpmn:incoming>
+      <bpmn:outgoing>P14_F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P14_validate" name="Проверить источники и ссылки">
+      <bpmn:documentation>Текущие требования: FR-KB-03</bpmn:documentation>
+      <bpmn:incoming>P14_F13</bpmn:incoming>
+      <bpmn:outgoing>P14_F14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="P14_valid" name="Ответ пригоден?" default="P14_F16" gatewayDirection="Diverging">
+      <bpmn:incoming>P14_F14</bpmn:incoming>
+      <bpmn:outgoing>P14_F15</bpmn:outgoing>
+      <bpmn:outgoing>P14_F16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="P14_answer" name="Показать ответ стажёру">
+      <bpmn:documentation>Текущие требования: FR-KB-03</bpmn:documentation>
+      <bpmn:incoming>P14_F15</bpmn:incoming>
+      <bpmn:outgoing>P14_F17</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="P14_help" name="Объяснить проблему и дать контакт">
+      <bpmn:documentation>Текущие требования: FR-KB-04, FR-KB-05</bpmn:documentation>
+      <bpmn:incoming>P14_F12</bpmn:incoming>
+      <bpmn:incoming>P14_F16</bpmn:incoming>
+      <bpmn:outgoing>P14_F18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="P14_e" name="Стажёр получил ответ">
+      <bpmn:incoming>P14_F17</bpmn:incoming>
+      <bpmn:incoming>P14_F18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="P14_F01" sourceRef="P14_s" targetRef="P14_stage"/>
+    <bpmn:sequenceFlow id="P14_F02" sourceRef="P14_stage" targetRef="P14_selection"/>
+    <bpmn:sequenceFlow id="P14_F03" sourceRef="P14_selection" targetRef="P14_reuse" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">sameStage</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P14_F04" sourceRef="P14_selection" targetRef="P14_random" name="Нет"/>
+    <bpmn:sequenceFlow id="P14_F05" sourceRef="P14_random" targetRef="P14_chips"/>
+    <bpmn:sequenceFlow id="P14_F06" sourceRef="P14_reuse" targetRef="P14_chips"/>
+    <bpmn:sequenceFlow id="P14_F07" sourceRef="P14_chips" targetRef="P14_ask"/>
+    <bpmn:sequenceFlow id="P14_F08" sourceRef="P14_ask" targetRef="P14_filter"/>
+    <bpmn:sequenceFlow id="P14_F09" sourceRef="P14_filter" targetRef="P14_retrieve"/>
+    <bpmn:sequenceFlow id="P14_F10" sourceRef="P14_retrieve" targetRef="P14_g"/>
+    <bpmn:sequenceFlow id="P14_F11" sourceRef="P14_g" targetRef="P14_model" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">allowedSourceFound</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P14_F12" sourceRef="P14_g" targetRef="P14_help" name="Нет"/>
+    <bpmn:sequenceFlow id="P14_F13" sourceRef="P14_model" targetRef="P14_validate"/>
+    <bpmn:sequenceFlow id="P14_F14" sourceRef="P14_validate" targetRef="P14_valid"/>
+    <bpmn:sequenceFlow id="P14_F15" sourceRef="P14_valid" targetRef="P14_answer" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">replyValid</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="P14_F16" sourceRef="P14_valid" targetRef="P14_help" name="Сбой или нет"/>
+    <bpmn:sequenceFlow id="P14_F17" sourceRef="P14_answer" targetRef="P14_e"/>
+    <bpmn:sequenceFlow id="P14_F18" sourceRef="P14_help" targetRef="P14_e"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="P14_diagram" name="Личный вопрос стажёра и ответ через RAG">
+    <bpmndi:BPMNPlane id="P14_plane" bpmnElement="P14_collab">
+      <bpmndi:BPMNShape id="P14_pool_di" bpmnElement="P14_pool" isHorizontal="true">
+        <dc:Bounds x="30" y="36" width="2568" height="588"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_lane_I_di" bpmnElement="P14_lane_I" isHorizontal="true">
+        <dc:Bounds x="60" y="36" width="2538" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_lane_A_di" bpmnElement="P14_lane_A" isHorizontal="true">
+        <dc:Bounds x="60" y="192" width="2538" height="276"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_lane_M_di" bpmnElement="P14_lane_M" isHorizontal="true">
+        <dc:Bounds x="60" y="468" width="2538" height="156"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_s_di" bpmnElement="P14_s" bioc:fill="#E1F5E6" bioc:stroke="#243448">
+        <dc:Bounds x="150" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="102" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_ask_di" bpmnElement="P14_ask" bioc:fill="#E7F1FF" bioc:stroke="#243448">
+        <dc:Bounds x="969" y="54" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_e_di" bpmnElement="P14_e" bioc:fill="#D6E8ED" bioc:stroke="#243448">
+        <dc:Bounds x="2412" y="84" width="36" height="36"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="2364" y="126" width="132" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_stage_di" bpmnElement="P14_stage" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="273" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_selection_di" bpmnElement="P14_selection" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="492" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="438" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_random_di" bpmnElement="P14_random" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_reuse_di" bpmnElement="P14_reuse" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="621" y="330" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_chips_di" bpmnElement="P14_chips" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="795" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_filter_di" bpmnElement="P14_filter" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1143" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_retrieve_di" bpmnElement="P14_retrieve" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1317" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_g_di" bpmnElement="P14_g" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="1536" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="1482" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_validate_di" bpmnElement="P14_validate" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="1839" y="270" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_valid_di" bpmnElement="P14_valid" bioc:fill="#FFF1D0" bioc:stroke="#243448">
+        <dc:Bounds x="2058" y="294" width="48" height="48"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="2004" y="348" width="156" height="48"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_answer_di" bpmnElement="P14_answer" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="2187" y="210" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_help_di" bpmnElement="P14_help" bioc:fill="#EEF2F8" bioc:stroke="#243448">
+        <dc:Bounds x="2187" y="330" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P14_model_di" bpmnElement="P14_model" bioc:fill="#EDE8FF" bioc:stroke="#243448">
+        <dc:Bounds x="1665" y="486" width="138" height="96"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="P14_F01_di" bpmnElement="P14_F01">
+        <di:waypoint x="186" y="102"/>
+        <di:waypoint x="258" y="102"/>
+        <di:waypoint x="258" y="318"/>
+        <di:waypoint x="273" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F02_di" bpmnElement="P14_F02">
+        <di:waypoint x="411" y="318"/>
+        <di:waypoint x="492" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F03_di" bpmnElement="P14_F03">
+        <di:waypoint x="540" y="318"/>
+        <di:waypoint x="606" y="318"/>
+        <di:waypoint x="606" y="378"/>
+        <di:waypoint x="621" y="378"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="576" y="293" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F04_di" bpmnElement="P14_F04">
+        <di:waypoint x="540" y="318"/>
+        <di:waypoint x="552" y="318"/>
+        <di:waypoint x="552" y="258"/>
+        <di:waypoint x="621" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="570" y="233" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F05_di" bpmnElement="P14_F05">
+        <di:waypoint x="759" y="258"/>
+        <di:waypoint x="768" y="258"/>
+        <di:waypoint x="768" y="318"/>
+        <di:waypoint x="795" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F06_di" bpmnElement="P14_F06">
+        <di:waypoint x="759" y="378"/>
+        <di:waypoint x="780" y="378"/>
+        <di:waypoint x="780" y="318"/>
+        <di:waypoint x="795" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F07_di" bpmnElement="P14_F07">
+        <di:waypoint x="933" y="318"/>
+        <di:waypoint x="942" y="318"/>
+        <di:waypoint x="942" y="102"/>
+        <di:waypoint x="969" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F08_di" bpmnElement="P14_F08">
+        <di:waypoint x="1107" y="102"/>
+        <di:waypoint x="1116" y="102"/>
+        <di:waypoint x="1116" y="318"/>
+        <di:waypoint x="1143" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F09_di" bpmnElement="P14_F09">
+        <di:waypoint x="1281" y="318"/>
+        <di:waypoint x="1317" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F10_di" bpmnElement="P14_F10">
+        <di:waypoint x="1455" y="318"/>
+        <di:waypoint x="1536" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F11_di" bpmnElement="P14_F11">
+        <di:waypoint x="1584" y="318"/>
+        <di:waypoint x="1650" y="318"/>
+        <di:waypoint x="1650" y="534"/>
+        <di:waypoint x="1665" y="534"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="1602" y="284" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F12_di" bpmnElement="P14_F12">
+        <di:waypoint x="1584" y="318"/>
+        <di:waypoint x="1596" y="318"/>
+        <di:waypoint x="1596" y="312"/>
+        <di:waypoint x="1830" y="312"/>
+        <di:waypoint x="1830" y="402"/>
+        <di:waypoint x="2172" y="402"/>
+        <di:waypoint x="2172" y="378"/>
+        <di:waypoint x="2187" y="378"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="1697" y="287" width="33" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F13_di" bpmnElement="P14_F13">
+        <di:waypoint x="1803" y="534"/>
+        <di:waypoint x="1812" y="534"/>
+        <di:waypoint x="1812" y="318"/>
+        <di:waypoint x="1839" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F14_di" bpmnElement="P14_F14">
+        <di:waypoint x="1977" y="318"/>
+        <di:waypoint x="2058" y="318"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F15_di" bpmnElement="P14_F15">
+        <di:waypoint x="2106" y="318"/>
+        <di:waypoint x="2118" y="318"/>
+        <di:waypoint x="2118" y="258"/>
+        <di:waypoint x="2187" y="258"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="2137" y="233" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F16_di" bpmnElement="P14_F16">
+        <di:waypoint x="2106" y="318"/>
+        <di:waypoint x="2172" y="318"/>
+        <di:waypoint x="2172" y="378"/>
+        <di:waypoint x="2187" y="378"/>
+        <bpmndi:BPMNLabel labelStyle="P14_font">
+          <dc:Bounds x="2091" y="284" width="96" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F17_di" bpmnElement="P14_F17">
+        <di:waypoint x="2325" y="258"/>
+        <di:waypoint x="2334" y="258"/>
+        <di:waypoint x="2334" y="102"/>
+        <di:waypoint x="2412" y="102"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="P14_F18_di" bpmnElement="P14_F18">
+        <di:waypoint x="2325" y="378"/>
+        <di:waypoint x="2352" y="378"/>
+        <di:waypoint x="2352" y="108"/>
+        <di:waypoint x="2400" y="108"/>
+        <di:waypoint x="2400" y="102"/>
+        <di:waypoint x="2412" y="102"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="P14_font">
+      <dc:Font name="Arial" size="13"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

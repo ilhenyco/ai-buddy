@@ -1,0 +1,4270 @@
+{
+  "version": 3.1,
+  "requirements_version": "0.4",
+  "models": [
+    {
+      "id": "P00",
+      "title": "Весь путь и независимые периоды",
+      "scope": "Текущая концепция",
+      "trigger": "Выход согласован, руководитель настраивает сценарий",
+      "result": "Календарные сообщения обработаны независимо от отметок и выполнения внешней работы",
+      "acceptance": "Незаполненный чек-лист и незавершённая встреча не задерживают рассылку следующего периода.",
+      "notes": [
+        "Каждая ветка календаря запускается независимо. Задачи отправки не ожидают выполнения чек-листов, курсов или встреч. Конечные события относятся к рассылке, а не к кадровому закрытию стажировки.",
+        "Показаны восемь блоков исходного шаблона. Удалённый блок не создаёт таймер; практика условна по применимости. Даты — параметры активной публикации. Действия P03–P14 запускаются по сообщениям и запросам участников.",
+        "Открытые вопросы: OQ04. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "R",
+          "kind": "start",
+          "col": 0,
+          "name": "Выход согласован",
+          "rows": []
+        },
+        "prep": {
+          "role": "R",
+          "kind": "sub",
+          "col": 1,
+          "name": "P01 Опубликовать сценарий",
+          "rows": []
+        },
+        "fork": {
+          "role": "R",
+          "kind": "parallel",
+          "col": 2,
+          "name": "",
+          "rows": []
+        },
+        "first": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Дата старта",
+          "rows": []
+        },
+        "week": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Дата первой недели",
+          "rows": []
+        },
+        "adapt": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Дата адаптации",
+          "rows": []
+        },
+        "practice": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Дата практики при наличии блока",
+          "rows": []
+        },
+        "mid": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Дата экватора",
+          "rows": []
+        },
+        "final": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Месяц до финала",
+          "rows": []
+        },
+        "last": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "Последняя неделя",
+          "rows": []
+        },
+        "after": {
+          "role": "R",
+          "kind": "timer",
+          "col": 3,
+          "name": "После окончания",
+          "rows": []
+        },
+        "sendfirst": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Сообщения старта P02",
+          "rows": []
+        },
+        "sendweek": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Первая неделя P03–P07",
+          "rows": []
+        },
+        "sendadapt": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Сообщения адаптации P08",
+          "rows": []
+        },
+        "sendpractice": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Памятка по практике P09",
+          "rows": []
+        },
+        "sendmid": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Сообщения экватора P10",
+          "rows": []
+        },
+        "sendfinal": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Подготовка финала P11",
+          "rows": []
+        },
+        "sendlast": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Напоминания финала P12",
+          "rows": []
+        },
+        "sendafter": {
+          "role": "R",
+          "kind": "service",
+          "col": 4,
+          "name": "P15 Следующие шаги P13",
+          "rows": []
+        },
+        "e1": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Старт разослан",
+          "rows": []
+        },
+        "e2": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Адаптация разослана",
+          "rows": []
+        },
+        "e3": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Экватор разослан",
+          "rows": []
+        },
+        "e4": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Подготовка разослана",
+          "rows": []
+        },
+        "e5": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Финал разослан",
+          "rows": []
+        },
+        "e6": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Завершение разослано",
+          "rows": []
+        },
+        "e7": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Неделя разослана",
+          "rows": []
+        },
+        "e8": {
+          "role": "R",
+          "kind": "end",
+          "col": 5,
+          "name": "Практика разослана",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "prep",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "prep",
+          "dst": "fork",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "fork",
+          "dst": "first",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "fork",
+          "dst": "week",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "fork",
+          "dst": "adapt",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "fork",
+          "dst": "practice",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "fork",
+          "dst": "mid",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "fork",
+          "dst": "final",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "fork",
+          "dst": "last",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "fork",
+          "dst": "after",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "first",
+          "dst": "sendfirst",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "week",
+          "dst": "sendweek",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        },
+        {
+          "src": "adapt",
+          "dst": "sendadapt",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "practice",
+          "dst": "sendpractice",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        },
+        {
+          "src": "mid",
+          "dst": "sendmid",
+          "name": "",
+          "condition": "",
+          "key": "F15"
+        },
+        {
+          "src": "final",
+          "dst": "sendfinal",
+          "name": "",
+          "condition": "",
+          "key": "F16"
+        },
+        {
+          "src": "last",
+          "dst": "sendlast",
+          "name": "",
+          "condition": "",
+          "key": "F17"
+        },
+        {
+          "src": "after",
+          "dst": "sendafter",
+          "name": "",
+          "condition": "",
+          "key": "F18"
+        },
+        {
+          "src": "sendfirst",
+          "dst": "e1",
+          "name": "",
+          "condition": "",
+          "key": "F19"
+        },
+        {
+          "src": "sendweek",
+          "dst": "e7",
+          "name": "",
+          "condition": "",
+          "key": "F20"
+        },
+        {
+          "src": "sendadapt",
+          "dst": "e2",
+          "name": "",
+          "condition": "",
+          "key": "F21"
+        },
+        {
+          "src": "sendpractice",
+          "dst": "e8",
+          "name": "",
+          "condition": "",
+          "key": "F22"
+        },
+        {
+          "src": "sendmid",
+          "dst": "e3",
+          "name": "",
+          "condition": "",
+          "key": "F23"
+        },
+        {
+          "src": "sendfinal",
+          "dst": "e4",
+          "name": "",
+          "condition": "",
+          "key": "F24"
+        },
+        {
+          "src": "sendlast",
+          "dst": "e5",
+          "name": "",
+          "condition": "",
+          "key": "F25"
+        },
+        {
+          "src": "sendafter",
+          "dst": "e6",
+          "name": "",
+          "condition": "",
+          "key": "F26"
+        }
+      ],
+      "requirements": [
+        "FR-CY-01",
+        "FR-CY-02"
+      ],
+      "open_questions": [
+        "OQ04"
+      ]
+    },
+    {
+      "id": "P01",
+      "title": "Настройка сценария из готовых блоков",
+      "scope": "Текущая концепция и предложения",
+      "trigger": "Руководитель создаёт или меняет сценарий",
+      "result": "Опубликован сценарий с сообщениями по ролям и расписанием",
+      "acceptance": "Предпросмотр показывает стажёра, бадди и руководителя. Черновик не запускает рассылку. AI не обязателен для сборки.",
+      "notes": [
+        "Руководитель настраивает действия стажёра и соответствующие сообщения помощникам. Получатели привязаны к конкретной стажировке. Общий шаблон и конкретный сценарий различаются; массовое назначение — OQ06.",
+        "HR и бадди передают исходные сведения вне приложения, а не при каждой правке. Собственные интерфейсы HR не согласованы. Полнота и версии согласованы 12 ноября; неполный draft можно сохранить. Способ загрузки материалов — OQ07.",
+        "Открытые вопросы: OQ04, OQ05, OQ06, OQ07. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "L",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыть Сценарий",
+          "rows": []
+        },
+        "auth": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Проверить права руководителя",
+          "rows": []
+        },
+        "list": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Список, поиск и фильтры",
+          "rows": []
+        },
+        "pick": {
+          "role": "L",
+          "kind": "xor",
+          "col": 3,
+          "name": "Новый или существующий?",
+          "rows": []
+        },
+        "new": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Создать черновик на 6 месяцев",
+          "rows": []
+        },
+        "resume": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Открыть сохранённую редакцию",
+          "rows": []
+        },
+        "date": {
+          "role": "H",
+          "kind": "manual",
+          "col": 5,
+          "name": "Передать дату и контакты",
+          "rows": [
+            2
+          ]
+        },
+        "owner": {
+          "role": "L",
+          "kind": "user",
+          "col": 6,
+          "name": "Участники, название, 6 или 9 месяцев",
+          "rows": [
+            3
+          ]
+        },
+        "pack": {
+          "role": "B",
+          "kind": "manual",
+          "col": 7,
+          "name": "Передать материалы команды",
+          "rows": [
+            4
+          ]
+        },
+        "draft": {
+          "role": "L",
+          "kind": "user",
+          "col": 8,
+          "name": "Добавить и расположить блоки",
+          "rows": [
+            5
+          ]
+        },
+        "edit": {
+          "role": "L",
+          "kind": "user",
+          "col": 9,
+          "name": "Даты, пункты и действия по ролям",
+          "rows": []
+        },
+        "autosave": {
+          "role": "A",
+          "kind": "service",
+          "col": 10,
+          "name": "Сохранить отдельный черновик",
+          "rows": []
+        },
+        "saved": {
+          "role": "A",
+          "kind": "xor",
+          "col": 11,
+          "name": "Запись успешна?",
+          "rows": []
+        },
+        "error": {
+          "role": "L",
+          "kind": "user",
+          "col": 12,
+          "name": "Сохранить ввод и повторить",
+          "rows": []
+        },
+        "next": {
+          "role": "L",
+          "kind": "xor",
+          "col": 12,
+          "name": "Продолжить или вернуться?",
+          "rows": []
+        },
+        "preview": {
+          "role": "A",
+          "kind": "service",
+          "col": 13,
+          "name": "Предпросмотр трёх ролей",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "xor",
+          "col": 14,
+          "name": "Поля допустимы?",
+          "rows": []
+        },
+        "replacement": {
+          "role": "L",
+          "kind": "xor",
+          "col": 15,
+          "name": "Подтвердить публикацию и замену?",
+          "rows": []
+        },
+        "publish": {
+          "role": "L",
+          "kind": "user",
+          "col": 16,
+          "name": "Подтвердить активный вариант",
+          "rows": [
+            6
+          ]
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 17,
+          "name": "Новая версия, active и cutoff",
+          "rows": []
+        },
+        "invite": {
+          "role": "H",
+          "kind": "manual",
+          "col": 18,
+          "name": "Передать ссылку и инструкции",
+          "rows": [
+            7
+          ]
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 19,
+          "name": "Версия активна, история сохранена",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "auth",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "auth",
+          "dst": "list",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "list",
+          "dst": "pick",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "pick",
+          "dst": "new",
+          "name": "Новый",
+          "condition": "newVariant",
+          "key": "F04"
+        },
+        {
+          "src": "pick",
+          "dst": "resume",
+          "name": "Существующий",
+          "condition": "default",
+          "key": "F05"
+        },
+        {
+          "src": "new",
+          "dst": "date",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "resume",
+          "dst": "edit",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "date",
+          "dst": "owner",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "owner",
+          "dst": "pack",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "pack",
+          "dst": "draft",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "draft",
+          "dst": "edit",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "edit",
+          "dst": "autosave",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        },
+        {
+          "src": "autosave",
+          "dst": "saved",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "saved",
+          "dst": "error",
+          "name": "Сбой",
+          "condition": "storageFailed",
+          "key": "F14"
+        },
+        {
+          "src": "saved",
+          "dst": "next",
+          "name": "Да",
+          "condition": "default",
+          "key": "F15"
+        },
+        {
+          "src": "error",
+          "dst": "autosave",
+          "name": "",
+          "condition": "",
+          "key": "F16"
+        },
+        {
+          "src": "next",
+          "dst": "edit",
+          "name": "Редактировать",
+          "condition": "continueEditing",
+          "key": "F17"
+        },
+        {
+          "src": "next",
+          "dst": "preview",
+          "name": "Публиковать",
+          "condition": "publishRequested",
+          "key": "F18"
+        },
+        {
+          "src": "next",
+          "dst": "list",
+          "name": "К списку",
+          "condition": "default",
+          "key": "F19"
+        },
+        {
+          "src": "preview",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F20"
+        },
+        {
+          "src": "ok",
+          "dst": "replacement",
+          "name": "Да",
+          "condition": "validFields",
+          "key": "F21"
+        },
+        {
+          "src": "ok",
+          "dst": "edit",
+          "name": "Исправить",
+          "condition": "default",
+          "key": "F22"
+        },
+        {
+          "src": "replacement",
+          "dst": "publish",
+          "name": "Подтвердить",
+          "condition": "confirmed",
+          "key": "F23"
+        },
+        {
+          "src": "replacement",
+          "dst": "edit",
+          "name": "Отмена",
+          "condition": "default",
+          "key": "F24"
+        },
+        {
+          "src": "publish",
+          "dst": "save",
+          "name": "",
+          "condition": "",
+          "key": "F25"
+        },
+        {
+          "src": "save",
+          "dst": "invite",
+          "name": "",
+          "condition": "",
+          "key": "F26"
+        },
+        {
+          "src": "invite",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F27"
+        }
+      ],
+      "requirements": [
+        "FR-PL-01",
+        "FR-PL-02",
+        "FR-PL-03",
+        "FR-PL-04",
+        "FR-PL-05",
+        "FR-PL-06",
+        "FR-PL-07",
+        "FR-PL-08",
+        "FR-PL-09",
+        "FR-PL-10",
+        "FR-PL-11",
+        "FR-CY-04",
+        "FR-AC-01",
+        "FR-HR-01",
+        "FR-HR-02"
+      ],
+      "open_questions": [
+        "OQ04",
+        "OQ05",
+        "OQ06",
+        "OQ07"
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Первый вход в переписку",
+      "scope": "Текущая концепция",
+      "trigger": "Стажёр открывает бот",
+      "result": "Открыта собственная переписка или показано понятное состояние отсутствия плана",
+      "acceptance": "Стажёр видит адресованные ему сообщения. Отсутствие плана не раскрывает чужие сообщения.",
+      "notes": [
+        "Среда работы и способ входа — OQ02. Модель не требует отдельного кабинета и трёх обязательных экранов-карточек.",
+        "История переписки — предложение FR-IN-05. Новые плановые сообщения инициирует P15, а не открытие чата. AI ответы выполняются по P14.",
+        "Открытые вопросы: OQ02. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Стажёр открыл бот",
+          "rows": []
+        },
+        "login": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Подтвердить свою учётную запись",
+          "rows": [
+            8
+          ]
+        },
+        "session": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Проверить личность и назначение",
+          "rows": []
+        },
+        "signed": {
+          "role": "A",
+          "kind": "xor",
+          "col": 3,
+          "name": "Пользователь определён?",
+          "rows": []
+        },
+        "err": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Показать ошибку входа",
+          "rows": []
+        },
+        "load": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Найти сценарий стажёра",
+          "rows": []
+        },
+        "has": {
+          "role": "A",
+          "kind": "xor",
+          "col": 5,
+          "name": "План опубликован?",
+          "rows": []
+        },
+        "contact": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать известный контакт руководителя",
+          "rows": []
+        },
+        "home": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Открыть сообщения и инструкции",
+          "rows": [
+            9
+          ]
+        },
+        "choose": {
+          "role": "I",
+          "kind": "user",
+          "col": 7,
+          "name": "Читать сообщение или задать вопрос",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Переписка открыта",
+          "rows": []
+        },
+        "blocked": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Ожидается публикация",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "login",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "login",
+          "dst": "session",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "session",
+          "dst": "signed",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "signed",
+          "dst": "load",
+          "name": "Да",
+          "condition": "identityKnown",
+          "key": "F04"
+        },
+        {
+          "src": "signed",
+          "dst": "err",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F05"
+        },
+        {
+          "src": "err",
+          "dst": "login",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "load",
+          "dst": "has",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "has",
+          "dst": "home",
+          "name": "Да",
+          "condition": "publishedPlanVisible",
+          "key": "F08"
+        },
+        {
+          "src": "has",
+          "dst": "contact",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "contact",
+          "dst": "blocked",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "home",
+          "dst": "choose",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "choose",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        }
+      ],
+      "requirements": [
+        "FR-IN-01",
+        "FR-IN-05",
+        "FR-AC-01"
+      ],
+      "open_questions": [
+        "OQ02"
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "Знакомство и формальная отметка",
+      "scope": "Текущая концепция",
+      "trigger": "Стажёр открыл сообщение знакомства",
+      "result": "Стажёр получил контакты; собственная отметка изменена либо оставлена прежней",
+      "acceptance": "Отметка и обращение к бадди не меняют период. Другие сообщения приходят по своим датам.",
+      "notes": [
+        "Ручное знакомство выполняется вне продукта. Обязательное подтверждение бадди или руководителя не требуется.",
+        "Сохранение истории — предложение FR-IN-05. Изменение отметки прошедшего периода — предложение FR-CY-06; оно не запускает старые рассылки."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыто сообщение",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать контакты и каналы",
+          "rows": [
+            11
+          ]
+        },
+        "meet": {
+          "role": "I",
+          "kind": "xor",
+          "col": 2,
+          "name": "Нужна помощь со знакомством?",
+          "rows": []
+        },
+        "intro": {
+          "role": "B",
+          "kind": "manual",
+          "col": 3,
+          "name": "Познакомить с командой",
+          "rows": [
+            10
+          ]
+        },
+        "mark": {
+          "role": "I",
+          "kind": "user",
+          "col": 4,
+          "name": "Выбрать действие с пунктом",
+          "rows": [
+            12
+          ]
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 5,
+          "name": "Что выбрано?",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Сохранить собственную отметку",
+          "rows": []
+        },
+        "buddy": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Показать контакт бадди",
+          "rows": []
+        },
+        "defer": {
+          "role": "I",
+          "kind": "end",
+          "col": 7,
+          "name": "Отметка без изменений",
+          "rows": []
+        },
+        "done": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Отметка сохранена",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "meet",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "meet",
+          "dst": "intro",
+          "name": "Да",
+          "condition": "introHelpNeeded",
+          "key": "F03"
+        },
+        {
+          "src": "meet",
+          "dst": "mark",
+          "name": "Уже знаком или позже",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "intro",
+          "dst": "mark",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "mark",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "g",
+          "dst": "store",
+          "name": "Изменить отметку",
+          "condition": "changeMark",
+          "key": "F07"
+        },
+        {
+          "src": "g",
+          "dst": "buddy",
+          "name": "Контакт",
+          "condition": "contactRequested",
+          "key": "F08"
+        },
+        {
+          "src": "g",
+          "dst": "defer",
+          "name": "Позже",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "buddy",
+          "dst": "defer",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "store",
+          "dst": "done",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        }
+      ],
+      "requirements": [
+        "FR-IN-04",
+        "FR-CY-03",
+        "FR-CY-05",
+        "FR-CY-06"
+      ],
+      "open_questions": []
+    },
+    {
+      "id": "P04",
+      "title": "Доступы по ссылке и помощь бадди",
+      "scope": "Текущая концепция и условная интеграция OQ08",
+      "trigger": "Стажёр открыл сообщение о доступах",
+      "result": "Дана инструкция для внешнего действия либо подготовлен черновик условной интеграции",
+      "acceptance": "Основной путь ведёт по ссылке с помощью бадди. Открытие ссылки и галочка не означают выдачу доступа.",
+      "notes": [
+        "Вызов сервиса внутри продукта показан как условное исключение, требующее решения OQ08. Он не является общим способом выполнения всех пунктов.",
+        "Оба пути не управляют календарём. Результат внешнего действия может быть неизвестен боту. Сообщения бадди и руководителю отправляются независимо через P15.",
+        "Открытые вопросы: OQ08. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыто сообщение доступов",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать инструкцию, ссылку и бадди",
+          "rows": [
+            15
+          ]
+        },
+        "mode": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Прямая интеграция включена?",
+          "rows": []
+        },
+        "link": {
+          "role": "I",
+          "kind": "user",
+          "col": 3,
+          "name": "Открыть внешний инструмент",
+          "rows": [
+            16
+          ]
+        },
+        "guide": {
+          "role": "B",
+          "kind": "manual",
+          "col": 4,
+          "name": "Помочь получить доступ",
+          "rows": [
+            15
+          ]
+        },
+        "outside": {
+          "role": "I",
+          "kind": "end",
+          "col": 5,
+          "name": "Дальнейшее действие во внешнем сервисе",
+          "rows": []
+        },
+        "pick": {
+          "role": "I",
+          "kind": "user",
+          "col": 3,
+          "name": "Выбрать разрешённый ресурс",
+          "rows": [
+            16
+          ]
+        },
+        "auth": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Проверить ресурс и найти попытку",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "xor",
+          "col": 5,
+          "name": "Запрос разрешён и новый?",
+          "rows": []
+        },
+        "existing": {
+          "role": "A",
+          "kind": "end",
+          "col": 6,
+          "name": "Показать состояние или отказ",
+          "rows": []
+        },
+        "help": {
+          "role": "I",
+          "kind": "xor",
+          "col": 6,
+          "name": "Нужен AI черновик?",
+          "rows": []
+        },
+        "suggest": {
+          "role": "M",
+          "kind": "service",
+          "col": 7,
+          "name": "Предложить обоснование",
+          "rows": [
+            17
+          ]
+        },
+        "edit": {
+          "role": "I",
+          "kind": "user",
+          "col": 8,
+          "name": "Проверить или написать обоснование",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 9,
+          "name": "Сохранить точный предпросмотр",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 10,
+          "name": "Далее условный P05",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "mode",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "mode",
+          "dst": "pick",
+          "name": "Да по OQ08",
+          "condition": "directIntegrationConfigured",
+          "key": "F03"
+        },
+        {
+          "src": "mode",
+          "dst": "link",
+          "name": "По ссылке",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "link",
+          "dst": "guide",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "guide",
+          "dst": "outside",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "pick",
+          "dst": "auth",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "auth",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "ok",
+          "dst": "help",
+          "name": "Да",
+          "condition": "allowedNewAttempt",
+          "key": "F09"
+        },
+        {
+          "src": "ok",
+          "dst": "existing",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F10"
+        },
+        {
+          "src": "help",
+          "dst": "suggest",
+          "name": "Да",
+          "condition": "draftHelpRequested",
+          "key": "F11"
+        },
+        {
+          "src": "help",
+          "dst": "edit",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "suggest",
+          "dst": "edit",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "edit",
+          "dst": "save",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        },
+        {
+          "src": "save",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F15"
+        }
+      ],
+      "requirements": [
+        "FR-IN-02",
+        "FR-IN-06",
+        "FR-EX-01"
+      ],
+      "open_questions": [
+        "OQ08"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Условная отправка заявки",
+      "scope": "Условная интеграция OQ08",
+      "trigger": "В блоке явно включена интеграция по решению OQ08. Стажёр видит сохранённый черновик или предлагает повторить отправку",
+      "result": "Сохранены номер и статус сервиса либо показано восстанавливаемое состояние отправки.",
+      "acceptance": "Без явного подтверждения сервис не вызывается. Два подтверждения создают одну заявку. Повтор после потери ответа использует исходные параметры и operationId.",
+      "notes": [
+        "POST /access-drafts/{draftId}/confirm. Сервер ищет единственную попытку по planId + resourceId. При известном результате возвращает его без повторного создания. При неизвестном — восстанавливает ту же операцию.",
+        "Внутренний PUT /requests/{operationId} идемпотентен. 200 означает сохранённый результат. 202 означает submitting с confirmationDraftId. 503 до вызова означает, что попытка не сохранена. Сбой записи результата также оставляет восстанавливаемую попытку.",
+        "Сохранён технический сценарий прежнего демо, а не обязательная функция новой концепции. Его реализация и объём требуют решения OQ08.",
+        "Статус внешней заявки и формальная отметка чек-листа хранятся отдельно. Ожидание или отказ не задерживают сообщения следующих периодов.",
+        "Открытые вопросы: OQ08. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Черновик или повтор",
+          "rows": []
+        },
+        "confirm": {
+          "role": "I",
+          "kind": "user",
+          "col": 1,
+          "name": "Выбрать отправку или отмену",
+          "rows": [
+            16
+          ]
+        },
+        "yes": {
+          "role": "I",
+          "kind": "xor",
+          "col": 2,
+          "name": "Подтверждено?",
+          "rows": []
+        },
+        "stop": {
+          "role": "I",
+          "kind": "end",
+          "col": 3,
+          "name": "Без отправки",
+          "rows": []
+        },
+        "ensure": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Проверить права и зафиксировать попытку",
+          "rows": []
+        },
+        "ready": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Итог проверки",
+          "rows": []
+        },
+        "denied": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Запрос недоступен",
+          "rows": []
+        },
+        "db": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Попытка не сохранена",
+          "rows": []
+        },
+        "known": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Возвращён прежний результат",
+          "rows": []
+        },
+        "call": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Вызвать сервис и сохранить ответ",
+          "rows": [
+            17
+          ]
+        },
+        "res": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Результат сохранён?",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать номер и статус",
+          "rows": []
+        },
+        "unknown": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать ожидание и повтор",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Номер и статус показаны",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Отправка не подтверждена",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "confirm",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "confirm",
+          "dst": "yes",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "yes",
+          "dst": "ensure",
+          "name": "Отправить",
+          "condition": "explicitConfirmation",
+          "key": "F03"
+        },
+        {
+          "src": "yes",
+          "dst": "stop",
+          "name": "Отмена",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "ensure",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "ready",
+          "dst": "denied",
+          "name": "Нет прав",
+          "condition": "notAllowed",
+          "key": "F06"
+        },
+        {
+          "src": "ready",
+          "dst": "db",
+          "name": "Сбой записи",
+          "condition": "writeFailed",
+          "key": "F07"
+        },
+        {
+          "src": "ready",
+          "dst": "known",
+          "name": "Результат уже есть",
+          "condition": "knownResult",
+          "key": "F08"
+        },
+        {
+          "src": "ready",
+          "dst": "call",
+          "name": "Готова к вызову",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "call",
+          "dst": "res",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "res",
+          "dst": "save",
+          "name": "Да",
+          "condition": "resultPersisted",
+          "key": "F11"
+        },
+        {
+          "src": "res",
+          "dst": "unknown",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "save",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "unknown",
+          "dst": "wait",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        }
+      ],
+      "requirements": [
+        "FR-EX-03"
+      ],
+      "open_questions": [
+        "OQ08"
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "Условная проверка статуса доступа",
+      "scope": "Условная интеграция OQ08",
+      "trigger": "В блоке явно включена интеграция по решению OQ08. Стажёр явно нажал «Проверить статус»",
+      "result": "Отображён подтверждённый статус, последнее известное состояние при сбое либо предусмотренный следующий шаг.",
+      "acceptance": "Устаревший ответ не понижает ревизию. При отказе показан контакт бадди. Одобрение другого ресурса не открывает первую задачу.",
+      "notes": [
+        "GET /access-requests/{resourceId} вызывает GET /requests/{operationId}. При сбое serviceAvailable=false. GET /onboarding использует сохранённое состояние без внешнего вызова.",
+        "При pending стажёр может открыть другие карточки. При submitting интерфейс предлагает повтор P05. При approved возможность открыть P07 зависит от ID требуемого ресурса.",
+        "Сохранён технический сценарий прежнего демо, а не обязательная функция новой концепции. Его реализация и объём требуют решения OQ08.",
+        "Статус внешней заявки и формальная отметка чек-листа хранятся отдельно. Ожидание или отказ не задерживают сообщения следующих периодов.",
+        "Открытые вопросы: OQ08. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Статус запрошен",
+          "rows": []
+        },
+        "check": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Проверить права и попытку",
+          "rows": []
+        },
+        "try": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Есть попытка?",
+          "rows": []
+        },
+        "none": {
+          "role": "A",
+          "kind": "end",
+          "col": 3,
+          "name": "Нет доступной попытки",
+          "rows": []
+        },
+        "read": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Прочитать статус по operationId",
+          "rows": [
+            16
+          ]
+        },
+        "got": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Сервис ответил?",
+          "rows": []
+        },
+        "last": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Показать последнее состояние",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Сохранить только свежую ревизию",
+          "rows": [
+            17
+          ]
+        },
+        "status": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Статус заявки",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Ожидание или повтор",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Одобрение показано",
+          "rows": []
+        },
+        "no": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать отказ и контакт бадди",
+          "rows": [
+            15
+          ]
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 8,
+          "name": "Показан следующий шаг",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "check",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "check",
+          "dst": "try",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "try",
+          "dst": "read",
+          "name": "Да",
+          "condition": "attemptVisible",
+          "key": "F03"
+        },
+        {
+          "src": "try",
+          "dst": "none",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "read",
+          "dst": "got",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "got",
+          "dst": "store",
+          "name": "Да",
+          "condition": "serviceResponded",
+          "key": "F06"
+        },
+        {
+          "src": "got",
+          "dst": "last",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F07"
+        },
+        {
+          "src": "last",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "store",
+          "dst": "status",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "status",
+          "dst": "ok",
+          "name": "Одобрена",
+          "condition": "statusApproved",
+          "key": "F10"
+        },
+        {
+          "src": "status",
+          "dst": "no",
+          "name": "Отказ",
+          "condition": "statusDenied",
+          "key": "F11"
+        },
+        {
+          "src": "status",
+          "dst": "wait",
+          "name": "Ожидание",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "no",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        }
+      ],
+      "requirements": [
+        "FR-CY-05",
+        "FR-EX-03"
+      ],
+      "open_questions": [
+        "OQ08"
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Подготовка к первой задаче",
+      "scope": "Текущая концепция и условная проверка OQ08",
+      "trigger": "Стажёр открыл сообщение о первой задаче",
+      "result": "Показаны инструкция и помощь либо блокер конкретного защищённого материала",
+      "acceptance": "Проверка защищённого материала не блокирует рассылки. Одобрение чужого ресурса не открывает закрытую постановку.",
+      "notes": [
+        "Постановка и помощь выполняются людьми. Открытие ссылки не означает готовность или выполнение задачи.",
+        "Защищённый материал внутри бота и проверка статуса сервиса сохранены как условный вариант OQ08. Даже его блокировка не влияет на даты P00 и P15.",
+        "Открытые вопросы: OQ08. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "L",
+          "kind": "start",
+          "col": 0,
+          "name": "Задача согласована",
+          "rows": []
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 1,
+          "name": "Передать задачу, критерии и ссылки",
+          "rows": [
+            14
+          ]
+        },
+        "open": {
+          "role": "I",
+          "kind": "user",
+          "col": 2,
+          "name": "Открыть сообщение о задаче",
+          "rows": [
+            19
+          ]
+        },
+        "base": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Показать инструкцию и контакт бадди",
+          "rows": [
+            18
+          ]
+        },
+        "protected": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "В боте есть закрытый материал?",
+          "rows": []
+        },
+        "check": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Проверить именно нужный доступ",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Доступ подтверждён?",
+          "rows": []
+        },
+        "block": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать причину и помощь",
+          "rows": []
+        },
+        "stop": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Можно продолжать другие периоды",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Показать разрешённые материалы",
+          "rows": [
+            18
+          ]
+        },
+        "choose": {
+          "role": "I",
+          "kind": "user",
+          "col": 8,
+          "name": "Открыть ссылки или отметить пункт",
+          "rows": [
+            19
+          ]
+        },
+        "mark": {
+          "role": "I",
+          "kind": "xor",
+          "col": 9,
+          "name": "Изменить отметку?",
+          "rows": []
+        },
+        "store": {
+          "role": "A",
+          "kind": "service",
+          "col": 10,
+          "name": "Сохранить выбранную отметку",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 11,
+          "name": "Подготовка вне бота",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "lead",
+          "dst": "open",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "open",
+          "dst": "base",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "base",
+          "dst": "protected",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "protected",
+          "dst": "check",
+          "name": "Да по OQ08",
+          "condition": "protectedMaterialConfigured",
+          "key": "F05"
+        },
+        {
+          "src": "protected",
+          "dst": "show",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "check",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "g",
+          "dst": "show",
+          "name": "Да",
+          "condition": "requiredResourceApproved",
+          "key": "F08"
+        },
+        {
+          "src": "g",
+          "dst": "block",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F09"
+        },
+        {
+          "src": "block",
+          "dst": "stop",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "show",
+          "dst": "choose",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "choose",
+          "dst": "mark",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        },
+        {
+          "src": "mark",
+          "dst": "store",
+          "name": "Да",
+          "condition": "markChanged",
+          "key": "F13"
+        },
+        {
+          "src": "mark",
+          "dst": "e",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F14"
+        },
+        {
+          "src": "store",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F15"
+        }
+      ],
+      "requirements": [
+        "FR-IN-06"
+      ],
+      "open_questions": [
+        "OQ08"
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Напоминания об адаптации и обучении",
+      "scope": "Текущая концепция и ручная работа",
+      "trigger": "Участники получили сообщения адаптации из P15",
+      "result": "Участники знают действия и выполняют работу во внешних инструментах",
+      "acceptance": "Курсы, цели и обсуждения не требуют отчёта в боте для наступления следующего периода.",
+      "notes": [
+        "Две ветки показывают человеческую работу после уведомления. Они не входят в механизм календарного перехода и не отправляют в него условие завершения.",
+        "Источник курсов и сведения HR могут передаваться вручную. Интерфейс HR и его рассылки — предложения и OQ05. Продукт не требует хранения результатов встреч.",
+        "Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Сообщения этапа получены",
+          "rows": []
+        },
+        "fork": {
+          "role": "A",
+          "kind": "parallel",
+          "col": 1,
+          "name": "",
+          "rows": []
+        },
+        "org": {
+          "role": "H",
+          "kind": "manual",
+          "col": 2,
+          "name": "Разъяснить организационные вопросы",
+          "rows": [
+            13
+          ]
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 3,
+          "name": "Передать курсы и инструмент прогресса",
+          "rows": [
+            23
+          ]
+        },
+        "learn": {
+          "role": "I",
+          "kind": "manual",
+          "col": 4,
+          "name": "Пройти курсы по ссылкам",
+          "rows": [
+            24
+          ]
+        },
+        "e1": {
+          "role": "I",
+          "kind": "end",
+          "col": 5,
+          "name": "Обучение вне продукта",
+          "rows": []
+        },
+        "buddy": {
+          "role": "B",
+          "kind": "manual",
+          "col": 2,
+          "name": "Разобрать задачу и инструкции",
+          "rows": [
+            21
+          ]
+        },
+        "intern": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Подготовить вопросы и цели",
+          "rows": [
+            20
+          ]
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 4,
+          "name": "Обсудить адаптацию и препятствия",
+          "rows": [
+            22
+          ]
+        },
+        "e2": {
+          "role": "L",
+          "kind": "end",
+          "col": 5,
+          "name": "Договорённости вне продукта",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "fork",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "fork",
+          "dst": "org",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "org",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "hr",
+          "dst": "learn",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "learn",
+          "dst": "e1",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "fork",
+          "dst": "buddy",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "buddy",
+          "dst": "intern",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "intern",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "lead",
+          "dst": "e2",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        }
+      ],
+      "requirements": [
+        "FR-HR-02"
+      ],
+      "open_questions": [
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "Учебная практика",
+      "scope": "Ручная работа вне продукта",
+      "trigger": "В сценарии предусмотрено напоминание о практике и наступила его дата",
+      "result": "Согласованы список документов и срок либо шаг пропущен.",
+      "acceptance": "Шаг условный и не блокирует другие этапы. Владелец порядка оформления — HR. AI не обрабатывает документы.",
+      "notes": [
+        "Это организационный сценарий. Он описывает взаимодействие стажёра и HR вне продукта.",
+        "Бот может прислать ссылку на памятку и контакт HR. Документы и согласование остаются вне продукта; прохождение этого процесса не влияет на другие периоды.",
+        "Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Получено напоминание о практике",
+          "rows": []
+        },
+        "g": {
+          "role": "I",
+          "kind": "xor",
+          "col": 1,
+          "name": "Нужна практика?",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 2,
+          "name": "Передать памятку и контакт",
+          "rows": [
+            25
+          ]
+        },
+        "agree": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Согласовать документы и сроки",
+          "rows": [
+            26
+          ]
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 4,
+          "name": "Порядок согласован",
+          "rows": []
+        },
+        "skip": {
+          "role": "I",
+          "kind": "end",
+          "col": 3,
+          "name": "Шаг пропущен",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "g",
+          "dst": "hr",
+          "name": "Да",
+          "condition": "practiceNeeded",
+          "key": "F02"
+        },
+        {
+          "src": "g",
+          "dst": "skip",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F03"
+        },
+        {
+          "src": "hr",
+          "dst": "agree",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "agree",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        }
+      ],
+      "requirements": [],
+      "open_questions": [
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Напоминание об экваторе и обсуждение",
+      "scope": "Текущая концепция и ручная работа",
+      "trigger": "P15 отправил сообщения периода экватора",
+      "result": "Стажёр и помощники получили напоминания; обсуждение проходит вне продукта",
+      "acceptance": "Бот не требует загрузки результатов и не ожидает завершения встречи для запуска следующих дат.",
+      "notes": [
+        "P15 создаёт отдельные сообщения стажёру, бадди и руководителю. Здесь показан бизнес-контекст действий после сообщения, а не необходимость отчитаться приложению.",
+        "AI генерация презентации, хранение итогов встречи и автоматическая оценка не входят в согласованный объём. Участие HR в приложении — OQ05; согласование с ним может оставаться ручным.",
+        "Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Сообщения экватора получены",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать напоминания и ссылки",
+          "rows": [
+            29
+          ]
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 2,
+          "name": "При необходимости уточнить формат",
+          "rows": [
+            27
+          ]
+        },
+        "collect": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Собрать результаты вне продукта",
+          "rows": [
+            28
+          ]
+        },
+        "help": {
+          "role": "I",
+          "kind": "xor",
+          "col": 4,
+          "name": "Нужна помощь бадди?",
+          "rows": []
+        },
+        "rehearse": {
+          "role": "B",
+          "kind": "manual",
+          "col": 5,
+          "name": "Помочь разобрать примеры",
+          "rows": [
+            30
+          ]
+        },
+        "review": {
+          "role": "L",
+          "kind": "manual",
+          "col": 6,
+          "name": "Обсудить со стажёром результаты",
+          "rows": [
+            31
+          ]
+        },
+        "plan": {
+          "role": "B",
+          "kind": "manual",
+          "col": 7,
+          "name": "Помочь спланировать следующие задачи",
+          "rows": [
+            30
+          ]
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 8,
+          "name": "Выводы сформированы вне продукта",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "hr",
+          "dst": "collect",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "collect",
+          "dst": "help",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "help",
+          "dst": "rehearse",
+          "name": "Да",
+          "condition": "buddyHelpNeeded",
+          "key": "F05"
+        },
+        {
+          "src": "help",
+          "dst": "review",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "rehearse",
+          "dst": "review",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "review",
+          "dst": "plan",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "plan",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        }
+      ],
+      "requirements": [
+        "FR-SU-05",
+        "FR-EX-02"
+      ],
+      "open_questions": [
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Напоминание о подготовке финала",
+      "scope": "Текущая концепция и ручная работа",
+      "trigger": "P15 отправил сообщения о подготовке финала",
+      "result": "Участники получили напоминания о разговоре и подготовке",
+      "acceptance": "Следующий период наступает независимо от готовности выступления и заполнения пунктов.",
+      "notes": [
+        "Дата берётся из опубликованного сценария. Формулировка «за месяц» требует согласования календарного расчёта в OQ04.",
+        "Бот напоминает обсудить результаты и договориться о встрече. AI черновик выступления прежней версии не включён как обязательная функция. Наличие HR дорожки не означает интерфейс кадрового оформления.",
+        "Открытые вопросы: OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Сообщения подготовки получены",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать действия и ссылки",
+          "rows": [
+            35
+          ]
+        },
+        "lead": {
+          "role": "L",
+          "kind": "manual",
+          "col": 2,
+          "name": "Обсудить формат, критерии и срок ответа",
+          "rows": [
+            32
+          ]
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 3,
+          "name": "При необходимости уточнить оформление",
+          "rows": [
+            33
+          ]
+        },
+        "buddy": {
+          "role": "B",
+          "kind": "manual",
+          "col": 4,
+          "name": "Помочь выбрать примеры работ",
+          "rows": [
+            34
+          ]
+        },
+        "ready": {
+          "role": "I",
+          "kind": "manual",
+          "col": 5,
+          "name": "Подготовить результаты вне продукта",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 6,
+          "name": "Подготовка вне продукта",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "lead",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "lead",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "hr",
+          "dst": "buddy",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "buddy",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "ready",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        }
+      ],
+      "requirements": [
+        "FR-SU-05",
+        "FR-EX-02"
+      ],
+      "open_questions": [
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Итог и передача задач",
+      "scope": "Ручная работа вне продукта",
+      "trigger": "Получено напоминание последней недели; участники договорились о встрече",
+      "result": "Результаты представлены, задачи переданы; дальнейший шаг сообщён человеком вне продукта",
+      "acceptance": "Бот напоминает о действиях, но не требует их загрузки или подтверждения для следующих сообщений.",
+      "notes": [
+        "Участники представляют результаты, передают задачи и обсуждают решение вне продукта. Ручные действия показаны для понимания бизнеса.",
+        "Итог и ожидаемый срок ответа могут быть сообщены человеком. Сохранение кадрового решения и отчёта внутри бота в текущую концепцию не включено."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Последняя неделя",
+          "rows": []
+        },
+        "result": {
+          "role": "I",
+          "kind": "manual",
+          "col": 1,
+          "name": "Представить результат и передать задачи",
+          "rows": [
+            36
+          ]
+        },
+        "handoff": {
+          "role": "B",
+          "kind": "manual",
+          "col": 2,
+          "name": "Проверить приём задач командой",
+          "rows": [
+            37
+          ]
+        },
+        "review": {
+          "role": "L",
+          "kind": "manual",
+          "col": 3,
+          "name": "Обсудить итоговую оценку",
+          "rows": [
+            38
+          ]
+        },
+        "g": {
+          "role": "L",
+          "kind": "xor",
+          "col": 4,
+          "name": "Решение согласовано?",
+          "rows": []
+        },
+        "yes": {
+          "role": "L",
+          "kind": "manual",
+          "col": 5,
+          "name": "Сообщить согласованный итог",
+          "rows": [
+            38
+          ]
+        },
+        "wait": {
+          "role": "L",
+          "kind": "manual",
+          "col": 5,
+          "name": "Назвать срок следующего ответа",
+          "rows": [
+            38
+          ]
+        },
+        "e": {
+          "role": "L",
+          "kind": "end",
+          "col": 6,
+          "name": "Итог зафиксирован",
+          "rows": []
+        },
+        "w": {
+          "role": "L",
+          "kind": "end",
+          "col": 6,
+          "name": "Ожидается решение",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "result",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "result",
+          "dst": "handoff",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "handoff",
+          "dst": "review",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "review",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "g",
+          "dst": "yes",
+          "name": "Да",
+          "condition": "decisionConfirmed",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "wait",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F06"
+        },
+        {
+          "src": "yes",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "wait",
+          "dst": "w",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        }
+      ],
+      "requirements": [
+        "FR-EX-02"
+      ],
+      "open_questions": []
+    },
+    {
+      "id": "P13",
+      "title": "Напоминания после окончания",
+      "scope": "Текущая концепция и ручная работа",
+      "trigger": "P15 отправил сообщения блока после окончания",
+      "result": "Стажёр получил ссылки и контакты для дальнейших действий",
+      "acceptance": "Сообщение приходит по расписанию независимо от наличия решения о трудоустройстве. Бот не придумывает итог.",
+      "notes": [
+        "Это окончание календарной рассылки, а не доказательство завершения оформления или найма. Решение о дальнейшем сотрудничестве сообщается людьми.",
+        "Автоматическое чтение кадрового статуса и показ сохранённого итогового решения из прежней P13 исключены. HR действия остаются ручным контекстом.",
+        "Открытые вопросы: OQ04, OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Сообщение после окончания получено",
+          "rows": []
+        },
+        "show": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Показать памятку и контакты",
+          "rows": [
+            41
+          ]
+        },
+        "fork": {
+          "role": "A",
+          "kind": "parallel",
+          "col": 2,
+          "name": "",
+          "rows": []
+        },
+        "hr": {
+          "role": "H",
+          "kind": "manual",
+          "col": 3,
+          "name": "Обсудить документы и опрос по ситуации",
+          "rows": [
+            39
+          ]
+        },
+        "e1": {
+          "role": "H",
+          "kind": "end",
+          "col": 4,
+          "name": "Кадровые действия вне продукта",
+          "rows": []
+        },
+        "i": {
+          "role": "I",
+          "kind": "manual",
+          "col": 3,
+          "name": "Проверить передачу и обратиться в HR",
+          "rows": [
+            40
+          ]
+        },
+        "e2": {
+          "role": "I",
+          "kind": "end",
+          "col": 4,
+          "name": "Дальнейшие шаги вне продукта",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "show",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "show",
+          "dst": "fork",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "fork",
+          "dst": "hr",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "hr",
+          "dst": "e1",
+          "name": "",
+          "condition": "",
+          "key": "F04"
+        },
+        {
+          "src": "fork",
+          "dst": "i",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "i",
+          "dst": "e2",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        }
+      ],
+      "requirements": [],
+      "open_questions": [
+        "OQ04",
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P14",
+      "title": "Личный вопрос стажёра и ответ через RAG",
+      "scope": "Текущая концепция",
+      "trigger": "Стажёр написал вопрос в переписке",
+      "result": "Показан ответ с источниками либо понятное сообщение об отсутствии ответа",
+      "acceptance": "В модель передаются только разрешённые источники. Личный вопрос не включается в плановые сообщения другим ролям.",
+      "notes": [
+        "Отбор по правам предшествует поиску и вызову модели. При отсутствии источника, сбое или тайм-ауте доступен ответ без выдуманной инструкции. Локальная Qwen и деморежим остаются за одним адаптером.",
+        "OQ01 закрыт: личный вопрос и ответ доступны только стажёру. Плановые сообщения P15 не используют эту переписку.",
+        "Три вопроса принадлежат продукту, сохраняются на стажёра и меняются только при смене stageKey. До старта — стартовый набор. Без опубликованного плана ввод и подсказки скрыты. Копии блоков наследуют тему.",
+        "Открытые вопросы: OQ07. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "I",
+          "kind": "start",
+          "col": 0,
+          "name": "Открыта личная переписка",
+          "rows": []
+        },
+        "stage": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Текущий этап по активному плану",
+          "rows": []
+        },
+        "selection": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Тройка этапа уже сохранена?",
+          "rows": []
+        },
+        "random": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Выбрать три разных вопроса",
+          "rows": []
+        },
+        "reuse": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Взять сохранённую тройку",
+          "rows": []
+        },
+        "chips": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Показать подсказки в чате",
+          "rows": []
+        },
+        "ask": {
+          "role": "I",
+          "kind": "user",
+          "col": 5,
+          "name": "Нажать подсказку или написать вопрос",
+          "rows": [
+            12
+          ]
+        },
+        "filter": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Проверить пользователя и права",
+          "rows": []
+        },
+        "retrieve": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Найти подходящие фрагменты RAG",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 8,
+          "name": "Есть разрешённый источник?",
+          "rows": []
+        },
+        "model": {
+          "role": "M",
+          "kind": "service",
+          "col": 9,
+          "name": "Сформировать ответ по фрагментам",
+          "rows": []
+        },
+        "validate": {
+          "role": "A",
+          "kind": "service",
+          "col": 10,
+          "name": "Проверить источники и ссылки",
+          "rows": []
+        },
+        "valid": {
+          "role": "A",
+          "kind": "xor",
+          "col": 11,
+          "name": "Ответ пригоден?",
+          "rows": []
+        },
+        "answer": {
+          "role": "A",
+          "kind": "service",
+          "col": 12,
+          "name": "Показать ответ стажёру",
+          "rows": []
+        },
+        "help": {
+          "role": "A",
+          "kind": "service",
+          "col": 12,
+          "name": "Объяснить проблему и дать контакт",
+          "rows": []
+        },
+        "e": {
+          "role": "I",
+          "kind": "end",
+          "col": 13,
+          "name": "Стажёр получил ответ",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "stage",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "stage",
+          "dst": "selection",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "selection",
+          "dst": "reuse",
+          "name": "Да",
+          "condition": "sameStage",
+          "key": "F03"
+        },
+        {
+          "src": "selection",
+          "dst": "random",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "random",
+          "dst": "chips",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "reuse",
+          "dst": "chips",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "chips",
+          "dst": "ask",
+          "name": "",
+          "condition": "",
+          "key": "F07"
+        },
+        {
+          "src": "ask",
+          "dst": "filter",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "filter",
+          "dst": "retrieve",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        },
+        {
+          "src": "retrieve",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F10"
+        },
+        {
+          "src": "g",
+          "dst": "model",
+          "name": "Да",
+          "condition": "allowedSourceFound",
+          "key": "F11"
+        },
+        {
+          "src": "g",
+          "dst": "help",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F12"
+        },
+        {
+          "src": "model",
+          "dst": "validate",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        },
+        {
+          "src": "validate",
+          "dst": "valid",
+          "name": "",
+          "condition": "",
+          "key": "F14"
+        },
+        {
+          "src": "valid",
+          "dst": "answer",
+          "name": "Да",
+          "condition": "replyValid",
+          "key": "F15"
+        },
+        {
+          "src": "valid",
+          "dst": "help",
+          "name": "Сбой или нет",
+          "condition": "default",
+          "key": "F16"
+        },
+        {
+          "src": "answer",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F17"
+        },
+        {
+          "src": "help",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F18"
+        }
+      ],
+      "requirements": [
+        "FR-IN-03",
+        "FR-IN-07",
+        "FR-KB-01",
+        "FR-KB-02",
+        "FR-KB-03",
+        "FR-KB-04",
+        "FR-KB-05",
+        "FR-AC-01",
+        "FR-AC-02"
+      ],
+      "open_questions": [
+        "OQ07"
+      ]
+    },
+    {
+      "id": "P15",
+      "title": "Рассылка сообщений по периодам и ролям",
+      "scope": "Текущая концепция и предложения доставки",
+      "trigger": "Наступило время блока опубликованного сценария",
+      "result": "Созданы независимые доставки сообщений нужным участникам",
+      "acceptance": "Незаполненный чек-лист не участвует в проверках. Для одного блока тексты по ролям имеют общий контекст стажёра.",
+      "notes": [
+        "Получатели — стажёр, назначенный бадди и руководитель с предусмотренными блоком сообщениями. Шаблон и ссылки задаёт руководитель. Генерация AI и состояние чек-листа для рассылки не требуются.",
+        "Каждая доставка обрабатывается независимо по P16. Ошибка отправки бадди не мешает создать сообщение руководителю. Защита от повторов и хранение доставки — предложения FR-NT-03 и FR-NT-04.",
+        "Рассылка HR добавляется только после решения OQ05; FR-HR-03 является предложением. Интервалы напоминаний и календарные расчёты остаются в OQ03–OQ04. Пересылка личных AI ответов в этот процесс не входит.",
+        "Открытые вопросы: OQ03, OQ04, OQ05. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "timerStart",
+          "col": 0,
+          "name": "Время сообщения блока",
+          "rows": []
+        },
+        "load": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Прочитать active, версию и cutoff",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Дата и вариант актуальны?",
+          "rows": []
+        },
+        "stop": {
+          "role": "A",
+          "kind": "end",
+          "col": 3,
+          "name": "Рассылка не требуется",
+          "rows": []
+        },
+        "targets": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Определить назначенных получателей",
+          "rows": []
+        },
+        "more": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Есть следующий получатель?",
+          "rows": []
+        },
+        "build": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Взять текст его роли и ссылки",
+          "rows": []
+        },
+        "dedup": {
+          "role": "A",
+          "kind": "xor",
+          "col": 6,
+          "name": "Сообщение уже создано?",
+          "rows": []
+        },
+        "skip": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Оставить существующее сообщение",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 7,
+          "name": "Сохранить сообщение и доставку P16",
+          "rows": []
+        },
+        "next": {
+          "role": "A",
+          "kind": "service",
+          "col": 8,
+          "name": "Взять следующего получателя",
+          "rows": []
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 5,
+          "name": "Все доставки созданы",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "load",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "load",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "g",
+          "dst": "targets",
+          "name": "Да",
+          "condition": "currentPublishedBlock",
+          "key": "F03"
+        },
+        {
+          "src": "g",
+          "dst": "stop",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "targets",
+          "dst": "more",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "more",
+          "dst": "build",
+          "name": "Да",
+          "condition": "recipientAvailable",
+          "key": "F06"
+        },
+        {
+          "src": "more",
+          "dst": "e",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F07"
+        },
+        {
+          "src": "build",
+          "dst": "dedup",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "dedup",
+          "dst": "skip",
+          "name": "Да",
+          "condition": "messageExists",
+          "key": "F09"
+        },
+        {
+          "src": "dedup",
+          "dst": "save",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F10"
+        },
+        {
+          "src": "skip",
+          "dst": "next",
+          "name": "",
+          "condition": "",
+          "key": "F11"
+        },
+        {
+          "src": "save",
+          "dst": "next",
+          "name": "",
+          "condition": "",
+          "key": "F12"
+        },
+        {
+          "src": "next",
+          "dst": "more",
+          "name": "",
+          "condition": "",
+          "key": "F13"
+        }
+      ],
+      "requirements": [
+        "FR-PL-04",
+        "FR-PL-07",
+        "FR-IN-01",
+        "FR-IN-02",
+        "FR-PL-11",
+        "FR-CY-01",
+        "FR-CY-02",
+        "FR-CY-04",
+        "FR-SU-01",
+        "FR-SU-02",
+        "FR-SU-03",
+        "FR-SU-04",
+        "FR-KB-05",
+        "FR-NT-01",
+        "FR-NT-03",
+        "FR-AC-02",
+        "FR-HR-03"
+      ],
+      "open_questions": [
+        "OQ03",
+        "OQ04",
+        "OQ05"
+      ]
+    },
+    {
+      "id": "P16",
+      "title": "Доставка одного сообщения и обработка сбоя",
+      "scope": "Предложение по доставке и открытый канал OQ02",
+      "trigger": "Создана доставка или наступило время разрешённого повтора",
+      "result": "Сохранён известный результат доставки либо назначено дальнейшее восстановление",
+      "acceptance": "Одно событие не создаёт второй экземпляр сообщения. Ошибка одного получателя не останавливает рассылку другим.",
+      "notes": [
+        "Канал бота пока не выбран. Звук проверяется в выбранной среде при разрешённых уведомлениях. Отправка не означает прочтение сообщения.",
+        "Защита от повторов и восстановление — предложения FR-NT-03 и FR-NT-04. Неизвестный результат транспорта не считается подтверждённой доставкой. Число попыток и интервалы пока не заданы.",
+        "Открытые вопросы: OQ02, OQ03. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "A",
+          "kind": "start",
+          "col": 0,
+          "name": "Доставка готова",
+          "rows": []
+        },
+        "load": {
+          "role": "A",
+          "kind": "service",
+          "col": 1,
+          "name": "Найти сообщение и адресата",
+          "rows": []
+        },
+        "known": {
+          "role": "A",
+          "kind": "xor",
+          "col": 2,
+          "name": "Доставка уже подтверждена?",
+          "rows": []
+        },
+        "done": {
+          "role": "A",
+          "kind": "end",
+          "col": 3,
+          "name": "Повтор не нужен",
+          "rows": []
+        },
+        "call": {
+          "role": "A",
+          "kind": "service",
+          "col": 3,
+          "name": "Отправить через выбранный канал",
+          "rows": []
+        },
+        "g": {
+          "role": "A",
+          "kind": "xor",
+          "col": 4,
+          "name": "Отправка подтверждена?",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Сохранить подтверждение доставки",
+          "rows": []
+        },
+        "retry": {
+          "role": "A",
+          "kind": "service",
+          "col": 5,
+          "name": "Сохранить сбой и политику повтора",
+          "rows": []
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 6,
+          "name": "Доставка учтена",
+          "rows": []
+        },
+        "wait": {
+          "role": "A",
+          "kind": "end",
+          "col": 6,
+          "name": "Восстановление запланировано",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "load",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "load",
+          "dst": "known",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "known",
+          "dst": "done",
+          "name": "Да",
+          "condition": "deliveryKnown",
+          "key": "F03"
+        },
+        {
+          "src": "known",
+          "dst": "call",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F04"
+        },
+        {
+          "src": "call",
+          "dst": "g",
+          "name": "",
+          "condition": "",
+          "key": "F05"
+        },
+        {
+          "src": "g",
+          "dst": "save",
+          "name": "Да",
+          "condition": "channelConfirmed",
+          "key": "F06"
+        },
+        {
+          "src": "g",
+          "dst": "retry",
+          "name": "Нет или неизвестно",
+          "condition": "default",
+          "key": "F07"
+        },
+        {
+          "src": "save",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F08"
+        },
+        {
+          "src": "retry",
+          "dst": "wait",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        }
+      ],
+      "requirements": [
+        "FR-NT-02",
+        "FR-NT-03",
+        "FR-NT-04"
+      ],
+      "open_questions": [
+        "OQ02",
+        "OQ03"
+      ]
+    },
+    {
+      "id": "P17",
+      "title": "Обновление источников RAG",
+      "scope": "Предложение и открытый владелец OQ07",
+      "trigger": "Уполномоченный владелец обновляет материалы",
+      "result": "Новая разрешённая версия доступна для поиска либо прежняя версия сохранена при ошибке",
+      "acceptance": "Недоступные пользователю документы не попадают в поиск. Ошибка обновления не выдаёт непроверенный источник.",
+      "notes": [
+        "Владелец материалов, интерфейс загрузки и правила проверки источников ещё не выбраны. Дорожка владельца обозначает будущую роль по OQ07 и не назначает её автоматически HR.",
+        "Модель конкретизирует предложение FR-KB-06. Механизм индекса и права на материалы согласуются до реализации.",
+        "Открытые вопросы: OQ07. Они сохраняют статус, указанный в функциональных требованиях."
+      ],
+      "nodes": {
+        "s": {
+          "role": "K",
+          "kind": "start",
+          "col": 0,
+          "name": "Изменились материалы",
+          "rows": []
+        },
+        "owner": {
+          "role": "K",
+          "kind": "user",
+          "col": 1,
+          "name": "Передать источник и область доступа",
+          "rows": []
+        },
+        "check": {
+          "role": "A",
+          "kind": "service",
+          "col": 2,
+          "name": "Проверить права и сведения источника",
+          "rows": []
+        },
+        "ok": {
+          "role": "A",
+          "kind": "xor",
+          "col": 3,
+          "name": "Изменение допустимо?",
+          "rows": []
+        },
+        "bad": {
+          "role": "A",
+          "kind": "end",
+          "col": 4,
+          "name": "Изменение отклонено",
+          "rows": []
+        },
+        "build": {
+          "role": "A",
+          "kind": "service",
+          "col": 4,
+          "name": "Подготовить версию поискового индекса",
+          "rows": []
+        },
+        "ready": {
+          "role": "A",
+          "kind": "xor",
+          "col": 5,
+          "name": "Обновление успешно?",
+          "rows": []
+        },
+        "save": {
+          "role": "A",
+          "kind": "service",
+          "col": 6,
+          "name": "Активировать разрешённую версию",
+          "rows": []
+        },
+        "fail": {
+          "role": "A",
+          "kind": "end",
+          "col": 6,
+          "name": "Прежняя версия сохранена",
+          "rows": []
+        },
+        "e": {
+          "role": "A",
+          "kind": "end",
+          "col": 7,
+          "name": "Источник обновлён",
+          "rows": []
+        }
+      },
+      "edges": [
+        {
+          "src": "s",
+          "dst": "owner",
+          "name": "",
+          "condition": "",
+          "key": "F01"
+        },
+        {
+          "src": "owner",
+          "dst": "check",
+          "name": "",
+          "condition": "",
+          "key": "F02"
+        },
+        {
+          "src": "check",
+          "dst": "ok",
+          "name": "",
+          "condition": "",
+          "key": "F03"
+        },
+        {
+          "src": "ok",
+          "dst": "build",
+          "name": "Да",
+          "condition": "sourceChangeAllowed",
+          "key": "F04"
+        },
+        {
+          "src": "ok",
+          "dst": "bad",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F05"
+        },
+        {
+          "src": "build",
+          "dst": "ready",
+          "name": "",
+          "condition": "",
+          "key": "F06"
+        },
+        {
+          "src": "ready",
+          "dst": "save",
+          "name": "Да",
+          "condition": "indexReady",
+          "key": "F07"
+        },
+        {
+          "src": "ready",
+          "dst": "fail",
+          "name": "Нет",
+          "condition": "default",
+          "key": "F08"
+        },
+        {
+          "src": "save",
+          "dst": "e",
+          "name": "",
+          "condition": "",
+          "key": "F09"
+        }
+      ],
+      "requirements": [
+        "FR-KB-06"
+      ],
+      "open_questions": [
+        "OQ07"
+      ]
+    }
+  ],
+  "rows": {
+    "2": [
+      "P01_date"
+    ],
+    "3": [
+      "P01_owner"
+    ],
+    "4": [
+      "P01_pack"
+    ],
+    "5": [
+      "P01_draft"
+    ],
+    "6": [
+      "P01_publish"
+    ],
+    "7": [
+      "P01_invite"
+    ],
+    "8": [
+      "P02_login"
+    ],
+    "9": [
+      "P02_home"
+    ],
+    "11": [
+      "P03_show"
+    ],
+    "10": [
+      "P03_intro"
+    ],
+    "12": [
+      "P03_mark",
+      "P14_ask"
+    ],
+    "15": [
+      "P04_show",
+      "P04_guide",
+      "P06_no"
+    ],
+    "16": [
+      "P04_link",
+      "P04_pick",
+      "P05_confirm",
+      "P06_read"
+    ],
+    "17": [
+      "P04_suggest",
+      "P05_call",
+      "P06_store"
+    ],
+    "14": [
+      "P07_lead"
+    ],
+    "19": [
+      "P07_open",
+      "P07_choose"
+    ],
+    "18": [
+      "P07_base",
+      "P07_show"
+    ],
+    "13": [
+      "P08_org"
+    ],
+    "23": [
+      "P08_hr"
+    ],
+    "24": [
+      "P08_learn"
+    ],
+    "21": [
+      "P08_buddy"
+    ],
+    "20": [
+      "P08_intern"
+    ],
+    "22": [
+      "P08_lead"
+    ],
+    "25": [
+      "P09_hr"
+    ],
+    "26": [
+      "P09_agree"
+    ],
+    "29": [
+      "P10_show"
+    ],
+    "27": [
+      "P10_hr"
+    ],
+    "28": [
+      "P10_collect"
+    ],
+    "30": [
+      "P10_rehearse",
+      "P10_plan"
+    ],
+    "31": [
+      "P10_review"
+    ],
+    "35": [
+      "P11_show"
+    ],
+    "32": [
+      "P11_lead"
+    ],
+    "33": [
+      "P11_hr"
+    ],
+    "34": [
+      "P11_buddy"
+    ],
+    "36": [
+      "P12_result"
+    ],
+    "37": [
+      "P12_handoff"
+    ],
+    "38": [
+      "P12_review",
+      "P12_yes",
+      "P12_wait"
+    ],
+    "41": [
+      "P13_show"
+    ],
+    "39": [
+      "P13_hr"
+    ],
+    "40": [
+      "P13_i"
+    ]
+  },
+  "requirements": {
+    "FR-PL-01": {
+      "name": "Выбор шаблона",
+      "status": "Согласовано."
+    },
+    "FR-PL-02": {
+      "name": "Назначение участников",
+      "status": "Согласовано."
+    },
+    "FR-PL-03": {
+      "name": "Сборка из готовых блоков",
+      "status": "Согласовано."
+    },
+    "FR-PL-04": {
+      "name": "Содержание блока",
+      "status": "Согласовано."
+    },
+    "FR-PL-05": {
+      "name": "Предпросмотр и публикация",
+      "status": "Согласовано."
+    },
+    "FR-PL-06": {
+      "name": "Проверка перед публикацией",
+      "status": "Согласовано планом от 12 ноября 2026 года."
+    },
+    "FR-PL-07": {
+      "name": "Изменение опубликованного сценария",
+      "status": "Согласовано планом от 12 ноября 2026 года."
+    },
+    "FR-PL-08": {
+      "name": "Список сценариев и возврат к черновикам",
+      "status": "Согласовано 12 ноября 2026 года."
+    },
+    "FR-PL-09": {
+      "name": "Несколько вариантов для одного стажёра",
+      "status": "Согласовано 12 ноября 2026 года; граница досылки реализована в локальном прототипе как дата переключения."
+    },
+    "FR-PL-10": {
+      "name": "Автосохранение рабочих редакций",
+      "status": "Согласовано 12 ноября 2026 года."
+    },
+    "FR-PL-11": {
+      "name": "Разделение истории по стажёрам",
+      "status": "Согласовано 12 ноября 2026 года. Хранение в браузере и переключатель просмотра являются средствами демонстрации, а не промышленной авторизацией."
+    },
+    "FR-IN-01": {
+      "name": "Получение сообщения чек листа",
+      "status": "Согласовано."
+    },
+    "FR-IN-02": {
+      "name": "Инструкция к действию",
+      "status": "Согласовано."
+    },
+    "FR-IN-03": {
+      "name": "Вопрос к AI",
+      "status": "Согласовано."
+    },
+    "FR-IN-04": {
+      "name": "Отметка пункта",
+      "status": "Согласовано."
+    },
+    "FR-IN-05": {
+      "name": "Просмотр истории",
+      "status": "Предложение."
+    },
+    "FR-IN-06": {
+      "name": "Переход по ссылке",
+      "status": "Согласовано."
+    },
+    "FR-IN-07": {
+      "name": "Случайные подсказки текущего этапа",
+      "status": "Согласовано 12 ноября 2026 года."
+    },
+    "FR-CY-01": {
+      "name": "Переход по расписанию",
+      "status": "Согласовано."
+    },
+    "FR-CY-02": {
+      "name": "Свободное движение по этапам",
+      "status": "Согласовано."
+    },
+    "FR-CY-03": {
+      "name": "Достоверность отметок",
+      "status": "Согласовано."
+    },
+    "FR-CY-04": {
+      "name": "Привязка к датам",
+      "status": "Предложение."
+    },
+    "FR-CY-05": {
+      "name": "Формальная отметка и внешнее событие",
+      "status": "Согласовано."
+    },
+    "FR-CY-06": {
+      "name": "Отметка прошедшего периода",
+      "status": "Предложение."
+    },
+    "FR-SU-01": {
+      "name": "Сообщение назначенному бадди",
+      "status": "Согласовано."
+    },
+    "FR-SU-02": {
+      "name": "Сообщение руководителю",
+      "status": "Согласовано."
+    },
+    "FR-SU-03": {
+      "name": "Контекст сообщения",
+      "status": "Согласовано."
+    },
+    "FR-SU-04": {
+      "name": "Связь сообщений участников",
+      "status": "Согласовано."
+    },
+    "FR-SU-05": {
+      "name": "Напоминание о встрече",
+      "status": "Согласовано."
+    },
+    "FR-KB-01": {
+      "name": "Использование материалов",
+      "status": "Согласовано."
+    },
+    "FR-KB-02": {
+      "name": "Фильтрация по правам",
+      "status": "Согласовано."
+    },
+    "FR-KB-03": {
+      "name": "Ссылки на основания ответа",
+      "status": "Согласовано."
+    },
+    "FR-KB-04": {
+      "name": "Недостаток данных",
+      "status": "Согласовано."
+    },
+    "FR-KB-05": {
+      "name": "Недоступность модели",
+      "status": "Согласовано."
+    },
+    "FR-KB-06": {
+      "name": "Обновление базы знаний",
+      "status": "Предложение."
+    },
+    "FR-NT-01": {
+      "name": "Сообщения по расписанию",
+      "status": "Согласовано."
+    },
+    "FR-NT-02": {
+      "name": "Звуковое уведомление",
+      "status": "Согласовано."
+    },
+    "FR-NT-03": {
+      "name": "Защита от повторов",
+      "status": "Предложение."
+    },
+    "FR-NT-04": {
+      "name": "Сбой доставки",
+      "status": "Предложение."
+    },
+    "FR-AC-01": {
+      "name": "Проверка участника",
+      "status": "Согласовано."
+    },
+    "FR-AC-02": {
+      "name": "Приватность сообщений стажёра",
+      "status": "Согласовано."
+    },
+    "FR-EX-01": {
+      "name": "Работа во внешних инструментах",
+      "status": "Согласовано."
+    },
+    "FR-EX-02": {
+      "name": "Результаты вне продукта",
+      "status": "Согласовано."
+    },
+    "FR-EX-03": {
+      "name": "Отдельный статус интеграции",
+      "status": "Условно по OQ08."
+    },
+    "FR-HR-01": {
+      "name": "Организационные сведения",
+      "status": "Предложение."
+    },
+    "FR-HR-02": {
+      "name": "Организационные материалы",
+      "status": "Предложение."
+    },
+    "FR-HR-03": {
+      "name": "Сообщения для HR",
+      "status": "Предложение."
+    }
+  },
+  "requirement_nodes": {
+    "FR-PL-01": [
+      "P01_owner"
+    ],
+    "FR-PL-02": [
+      "P01_owner"
+    ],
+    "FR-PL-03": [
+      "P01_draft",
+      "P01_edit"
+    ],
+    "FR-PL-04": [
+      "P01_edit",
+      "P15_build"
+    ],
+    "FR-PL-05": [
+      "P01_preview",
+      "P01_publish"
+    ],
+    "FR-PL-06": [
+      "P01_preview",
+      "P01_ok"
+    ],
+    "FR-PL-07": [
+      "P01_save",
+      "P15_load"
+    ],
+    "FR-IN-01": [
+      "P15_build",
+      "P02_home"
+    ],
+    "FR-IN-02": [
+      "P15_build",
+      "P04_show"
+    ],
+    "FR-IN-03": [
+      "P14_ask"
+    ],
+    "FR-IN-04": [
+      "P03_mark",
+      "P03_store"
+    ],
+    "FR-IN-05": [
+      "P02_home"
+    ],
+    "FR-IN-06": [
+      "P04_link",
+      "P07_choose"
+    ],
+    "FR-IN-07": [
+      "P14_stage",
+      "P14_selection",
+      "P14_random",
+      "P14_chips"
+    ],
+    "FR-PL-08": [
+      "P01_list",
+      "P01_resume"
+    ],
+    "FR-PL-09": [
+      "P01_new",
+      "P01_replacement",
+      "P01_save"
+    ],
+    "FR-PL-10": [
+      "P01_autosave",
+      "P01_saved",
+      "P01_error"
+    ],
+    "FR-PL-11": [
+      "P01_save",
+      "P15_targets"
+    ],
+    "FR-CY-01": [
+      "P00_fork",
+      "P15_s"
+    ],
+    "FR-CY-02": [
+      "P00_fork",
+      "P15_g"
+    ],
+    "FR-CY-03": [
+      "P03_store"
+    ],
+    "FR-CY-04": [
+      "P01_edit",
+      "P15_s"
+    ],
+    "FR-CY-05": [
+      "P06_store",
+      "P03_store"
+    ],
+    "FR-CY-06": [
+      "P03_store"
+    ],
+    "FR-SU-01": [
+      "P15_targets",
+      "P15_build"
+    ],
+    "FR-SU-02": [
+      "P15_targets",
+      "P15_build"
+    ],
+    "FR-SU-03": [
+      "P15_build"
+    ],
+    "FR-SU-04": [
+      "P15_s",
+      "P15_build"
+    ],
+    "FR-SU-05": [
+      "P10_show",
+      "P11_show"
+    ],
+    "FR-KB-01": [
+      "P14_retrieve"
+    ],
+    "FR-KB-02": [
+      "P14_filter",
+      "P14_retrieve"
+    ],
+    "FR-KB-03": [
+      "P14_validate",
+      "P14_answer"
+    ],
+    "FR-KB-04": [
+      "P14_help"
+    ],
+    "FR-KB-05": [
+      "P14_help",
+      "P15_build"
+    ],
+    "FR-KB-06": [
+      "P17_build",
+      "P17_save"
+    ],
+    "FR-NT-01": [
+      "P15_s"
+    ],
+    "FR-NT-02": [
+      "P16_call"
+    ],
+    "FR-NT-03": [
+      "P15_dedup",
+      "P16_known"
+    ],
+    "FR-NT-04": [
+      "P16_retry"
+    ],
+    "FR-AC-01": [
+      "P01_auth",
+      "P02_session",
+      "P14_filter"
+    ],
+    "FR-AC-02": [
+      "P14_filter",
+      "P15_build"
+    ],
+    "FR-EX-01": [
+      "P04_link",
+      "P04_guide"
+    ],
+    "FR-EX-02": [
+      "P10_collect",
+      "P11_ready",
+      "P12_result"
+    ],
+    "FR-EX-03": [
+      "P05_ensure",
+      "P05_call",
+      "P06_store"
+    ],
+    "FR-HR-01": [
+      "P01_date"
+    ],
+    "FR-HR-02": [
+      "P01_pack",
+      "P08_hr"
+    ],
+    "FR-HR-03": [
+      "P15_targets"
+    ]
+  },
+  "open_questions": {
+    "OQ02": [
+      "P02",
+      "P16"
+    ],
+    "OQ03": [
+      "P15",
+      "P16"
+    ],
+    "OQ04": [
+      "P00",
+      "P01",
+      "P13",
+      "P15"
+    ],
+    "OQ05": [
+      "P01",
+      "P08",
+      "P09",
+      "P10",
+      "P11",
+      "P13",
+      "P15"
+    ],
+    "OQ06": [
+      "P01"
+    ],
+    "OQ07": [
+      "P01",
+      "P14",
+      "P17"
+    ],
+    "OQ08": [
+      "P04",
+      "P05",
+      "P06",
+      "P07"
+    ]
+  }
+}
