@@ -7,7 +7,7 @@ Go 1.24, PostgreSQL 16 (с pgvector), одна зависимость — дра
 ## Запуск
 
 ```sh
-docker compose up --build          # из корня репозитория: PostgreSQL + API на :8080
+docker compose up --build          # из корня: PostgreSQL, API на :8080, приложение на :8088
 curl localhost:8080/healthz        # {"status":"ok"}
 ```
 
