@@ -62,6 +62,28 @@ async def test_acl_before_ranking_and_real_hybrid(store, doc, access):
     assert mismatch.retrievalMode == "lexical_degraded"
 
 
+async def test_natural_question_retains_lexical_topic_ranking(store, doc, access):
+    learning = doc.model_copy(
+        update={
+            "documentId": "learning",
+            "title": "Обучение и развитие",
+            "text": "# Тренинги\nКоманда проводит технические тренинги и оплачивает курсы.",
+        }
+    )
+    structure = doc.model_copy(
+        update={
+            "documentId": "structure",
+            "title": "Структура",
+            "text": "# Структура\nСотрудники Авито работают в командах. В Авито много сотрудников.",
+        }
+    )
+    await store.publish([learning, structure], DeterministicProvider())
+    result = await store.search(
+        "Как в Авито устроено обучение и развитие сотрудников?", access, None, 1, 0.5
+    )
+    assert [item.documentId for item in result.items] == ["learning"]
+
+
 async def test_snapshot_rollback_immutable_revision_and_revocation(store, doc, access):
     provider = DeterministicProvider()
     snapshot = await store.publish([doc], provider)

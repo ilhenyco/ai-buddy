@@ -64,6 +64,9 @@ def build_prompt(question: str, context: str | None, hits: list, budget: int):
                         "title": h.title,
                         "section": h.section,
                         "synthetic": h.synthetic,
+                        "sourceType": "public_playbook"
+                        if h.url.startswith("https://github.com/avito-tech/playbook/")
+                        else "knowledge",
                         "text": h.text,
                     }
                     for h in selected

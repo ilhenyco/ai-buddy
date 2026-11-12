@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from pathlib import Path
 from uuid import uuid4
 
@@ -32,6 +33,39 @@ def acl_params(access: AccessContext) -> dict:
 
 def vector_literal(vector: list[float]) -> str:
     return "[" + ",".join(str(x) for x in vector) + "]"
+
+
+def lexical_queries(query: str) -> tuple[str, str]:
+    # Natural questions contain extra words absent from the relevant paragraph.
+    # OR matching lets weighted title/section terms contribute instead of losing FTS entirely.
+    filler = {
+        "авито",
+        "avito",
+        "как",
+        "что",
+        "где",
+        "какие",
+        "какой",
+        "какая",
+        "кто",
+        "почему",
+        "зачем",
+        "расскажи",
+        "пожалуйста",
+        "устроено",
+        "устроен",
+        "устроена",
+        "устроены",
+    }
+    words = list(
+        dict.fromkeys(
+            word.lower() for word in re.findall(r"[^\W_]+", query) if word.lower() not in filler
+        )
+    )
+    russian = " OR ".join(f'"{word}"' for word in words)
+    # Keep exact identifiers, without matching Russian stop words in the simple dictionary.
+    simple = " OR ".join(f'"{word}"' for word in words if re.search(r"[a-zA-Z]", word))
+    return russian, simple
 
 
 def hit(row: dict) -> Hit:
@@ -85,9 +119,12 @@ class Store:
         threshold: float,
         digest: str | None = None,
     ) -> SearchResult:
+        lexical_ru, lexical_simple = lexical_queries(query)
         params = {
             **acl_params(access),
             "query": query,
+            "lexical_ru": lexical_ru,
+            "lexical_simple": lexical_simple,
             "threshold": threshold,
             "vector": vector_literal(vector) if vector else None,
         }
@@ -97,8 +134,8 @@ class Store:
             + ALLOWED
             + """),
         queries AS (
-          SELECT websearch_to_tsquery('russian', %(query)s) ru,
-                 websearch_to_tsquery('simple', %(query)s) simple
+          SELECT websearch_to_tsquery('russian', %(lexical_ru)s) ru,
+                 websearch_to_tsquery('simple', %(lexical_simple)s) simple
         ), lexical_scores AS (
           SELECT c.chunk_id,
                  ts_rank_cd(c.fts_ru,q.ru) + ts_rank_cd(c.fts_simple,q.simple) score

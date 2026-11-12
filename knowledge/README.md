@@ -72,6 +72,8 @@ python -m homych_knowledge.ingest playbook --repo /path/to/playbook
 владельца знаний и интерфейс материалов в этой поставке не назначаются.
 
 Поиск: PostgreSQL 16 + pgvector exact cosine, FTS russian/simple top-20, vector top-20, RRF(60),
+FTS сопоставляет содержательные слова вопроса через OR с весами заголовка/раздела/текста;
+simple-канал использует латинские идентификаторы, не русские служебные слова.
 до двух chunks документа и пяти в результате. Это FTS, не BM25. ACL применяется до ранжирования.
 Чанк до 1200 Unicode-символов, overlap до 150 внутри раздела. При отказе embeddings или несовпадении
 model digest используется FTS (`lexical_degraded`). Общего кэша ответов нет. Порог 0.50 — стартовая
