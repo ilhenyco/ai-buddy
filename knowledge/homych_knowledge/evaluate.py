@@ -12,6 +12,7 @@ import httpx
 
 from .config import Settings
 from .provider import DeterministicProvider, OllamaProvider
+from .runtime import loop_factory
 from .service import GoIdentity, KnowledgeService
 from .store import Store
 
@@ -63,7 +64,7 @@ def main():
     parser.add_argument("--subject", default="u-sasha")
     parser.add_argument("--minimum-recall", type=float, default=0.8)
     args = parser.parse_args()
-    raise SystemExit(0 if asyncio.run(evaluate(args)) else 1)
+    raise SystemExit(0 if asyncio.run(evaluate(args), loop_factory=loop_factory) else 1)
 
 
 if __name__ == "__main__":

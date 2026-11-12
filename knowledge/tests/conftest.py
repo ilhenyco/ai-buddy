@@ -6,7 +6,12 @@ import pytest
 from homych_knowledge.config import Settings
 from homych_knowledge.models import AccessContext, Document, Hit, SearchResult
 from homych_knowledge.provider import DeterministicProvider
+from homych_knowledge.runtime import loop_factory
 from homych_knowledge.service import KnowledgeService
+
+
+def pytest_asyncio_loop_factories():
+    return {"psycopg": loop_factory}
 
 
 @pytest.fixture

@@ -166,7 +166,12 @@ def main():
     import uvicorn
 
     uvicorn.run(
-        "homych_knowledge.app:create_app", factory=True, host="0.0.0.0", port=8090, access_log=False
+        "homych_knowledge.app:create_app",
+        factory=True,
+        host="0.0.0.0",
+        port=8090,
+        access_log=False,
+        loop="homych_knowledge.runtime:loop_factory",
     )
 
 

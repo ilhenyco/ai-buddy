@@ -11,6 +11,7 @@ import httpx
 from .config import Settings
 from .models import Document
 from .provider import DeterministicProvider, OllamaProvider
+from .runtime import loop_factory
 from .store import Store
 
 
@@ -115,7 +116,7 @@ def main():
     playbook.add_argument("--lock", default="data/playbook.lock.json")
     playbook.add_argument("--fixtures", help="Optional synthetic documents JSON (demo only)")
     args = parser.parse_args()
-    asyncio.run(run(args))
+    asyncio.run(run(args), loop_factory=loop_factory)
 
 
 if __name__ == "__main__":

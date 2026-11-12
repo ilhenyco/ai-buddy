@@ -5,7 +5,7 @@ description = "Shared ACL-aware RAG and MCP for Homych"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115,<1",
-  "uvicorn>=0.34,<1",
+  "uvicorn>=0.54,<1",
   "httpx>=0.28,<1",
   "mcp>=1.26,<2",
   "psycopg[binary]>=3.2,<4",
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "pytest-cov>=6,<8", "ruff>=0.11,<1"]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1.5,<2", "pytest-cov>=6,<8", "ruff>=0.11,<1"]
 
 [build-system]
 requires = ["hatchling"]
