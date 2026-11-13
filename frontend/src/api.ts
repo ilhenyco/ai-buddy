@@ -155,6 +155,8 @@ export const api = {
   // demo clock (DEMO_MODE): move "today" for the scheduler, null returns to real time
   getClock: () => request<ClockState>('GET', '/demo/clock'),
   setClock: (date: string | null) => request<ClockState>('POST', '/demo/clock', { date }),
+  /** Deletes everything done on the stand: demo scenarios again, real date, due messages sent. */
+  resetDemo: () => request<ClockState>('POST', '/demo/reset'),
 
   // access requests: draft -> explicit confirmation by the person -> status reconciled by correlationId
   createAccessDraft: (body: { assignmentId: string; resourceId: string; reason: string }, key = newKey()) =>

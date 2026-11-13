@@ -29,6 +29,8 @@ type Service struct {
 	Loc   *time.Location
 	Plans Plans
 	Log   *slog.Logger
+	// SaveDemoDate stores the moved "today" so that it survives a restart (demo module); optional.
+	SaveDemoDate func(ctx context.Context, date *string) error
 
 	once sync.Once
 	wake chan struct{}
