@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "test:sites": "node --test tests/sites-worker.test.mjs",
-    "test": "node --experimental-strip-types --test tests/domain.test.ts tests/scenarios.test.ts tests/suggestions.test.ts tests/serverScenarios.test.ts tests/serverMessages.test.ts tests/serverAccess.test.ts"
+    "test": "node --experimental-strip-types --test tests/domain.test.ts tests/scenarios.test.ts tests/suggestions.test.ts tests/serverScenarios.test.ts tests/serverMessages.test.ts tests/serverAccess.test.ts tests/planPanel.test.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",

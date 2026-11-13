@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Bell, BellSlash, BookOpen, CalendarBlank, CaretDown, Check, CheckCircle, ChatCircle, ClipboardText, Clock, Copy, DotsThree, FileText, FolderSimple, GearSix, Info, LinkSimple, LockSimple, MagnifyingGlass, PaperPlaneRight, Plus, SidebarSimple, SignOut, SlidersHorizontal, SquaresFour, Trash, Users, WarningCircle, Monitor, DeviceMobile, CloudArrowUp } from '@phosphor-icons/react';
+import { ListChecks, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Bell, BellSlash, BookOpen, CalendarBlank, CaretDown, Check, CheckCircle, ChatCircle, ClipboardText, Clock, Copy, DotsThree, FileText, FolderSimple, GearSix, Info, LinkSimple, LockSimple, MagnifyingGlass, PaperPlaneRight, Plus, SidebarSimple, SignOut, SlidersHorizontal, SquaresFour, Trash, Users, WarningCircle, Monitor, DeviceMobile, CloudArrowUp } from '@phosphor-icons/react';
 import { Avatar, Badge, Modal, Spinner, ExternalLabel } from './ui';
 import { makePlan, tasksForRole, shiftPlanStart, validExternalUrl, roleNames, people, dateLabel, timeLabel, demoAnswer, visibleSources, roleBody, personalizeText, submitAccess, EMPTY_ACCESS, type Access, type Block, type ChatMessage, type LinkKind, type Page, type Plan, type Role, type Source } from './domain';
 import './prototype.css';
 import './bot.css';
 import './origination.css';
 import './scenarios.css';
+import './planPanel.css';
 import { STORE, LEGACY_STORE, clone, restoreState, initialState, persistState, latestState, emptyRuntime, checkId, hasDraft, listScenarios, addScenario, patchScenario, publicationError, publishScenario, deliverDue, updateRuntime, type AppState, type ScenarioFilter } from './scenarios';
 import { ensureSuggestions, suggestionStage, validSelection } from './suggestions';
 import { API_ENABLED, api, errorText, ApiError, newKey, type ProtectedTask, type SessionContext } from './api';
 import { applyServerScenarios, describeFields, directory, internsOf, planToServer, roleOf, scenarioFromServer } from './serverScenarios';
 import { Login } from './Login';
 import { applyServerFeed, assignmentFor, serverToday } from './serverMessages';
+import { buildPlanPanel } from './planPanel';
 import { ACCESS_RESOURCE, accessFromServer, accessMode, accessStatusText, sameAccess, submitAccessRequest, type AccessKeys } from './serverAccess';
 const SESSION_USER_KEY='homych.session.user';
 
@@ -57,6 +59,7 @@ export function App() {
   const [directDemo,setDirectDemo]=useState(false); const [contactRole,setContactRole]=useState<Role>('buddy');
   // server mode: the access request goes to the access service (mock) through the backend
   const [protectedTask,setProtectedTask]=useState<ProtectedTask|null>(null);const [accessBusy,setAccessBusy]=useState(false);const accessKeys=useRef<AccessKeys|null>(null);const protectedTaskFor=useRef('');
+  const highlightTimer=useRef<ReturnType<typeof setTimeout>|null>(null); // "Показать в чате" from the plan tab
   const [contactPlan,setContactPlan]=useState<Plan|null>(null);
   const [sourceId,setSourceId]=useState<string|null>(null); const [sourceDraft,setSourceDraft]=useState('');
   const [sourceTitle,setSourceTitle]=useState('');const [uploadName,setUploadName]=useState('');
@@ -405,13 +408,51 @@ export function App() {
     </div>;
   }
 
+  function showInChat(checkpointId:string){
+    setPage('messages');
+    setTimeout(()=>{ // after the chat is mounted and scrolled to the end
+      const el=document.getElementById('cp-'+checkpointId);if(!el)return;
+      el.scrollIntoView({behavior:'smooth',block:'start'});el.classList.add('checkpoint-highlight');
+      if(highlightTimer.current)clearTimeout(highlightTimer.current);
+      highlightTimer.current=setTimeout(()=>el.classList.remove('checkpoint-highlight'),1800);
+    },80);
+  }
+  function openPanelLink(kind:LinkKind,p:Plan,url?:string){if(url&&validExternalUrl(url))window.open(url,'_blank','noopener,noreferrer');else openLink(kind,p);}
+  function PlanView(){
+    const panel=buildPlanPanel(runtime,role);const cur=panel.current;
+    const pct=panel.total?Math.round(panel.done/panel.total*100):0;
+    const accessLine=access.operationId?{approved:'Доступ к репозиторию одобрен',denied:'В доступе к репозиторию отказано',unknown:'Заявка на доступ: сверяем результат',pending:'Заявка на доступ на согласовании',none:''}[access.status]:'';
+    return <div className="plan-view" aria-label="Мой план">
+      <div className="plan-view-head"><h2>{role==='intern'?'Мой план':`План стажёра · ${plan.intern}`}</h2>
+        {panel.total>0&&<div className="plan-progress"><div className="plan-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Выполнено пунктов"><span style={{width:pct+'%'}}/></div><span>{panel.done} из {panel.total}</span></div>}</div>
+      {!cur?<p className="muted small">Этапы появятся здесь, когда Хомыч пришлёт первое сообщение.</p>:<div className="plan-columns"><div className="plan-col-main">
+      <section className="plan-section"><h3>Сейчас</h3><div className="plan-now">
+        <strong>{cur.title}</strong><span className="plan-now-meta">С {dateLabel(cur.date,true)} · выполнено {cur.done} из {cur.total}</span>
+        {accessLine&&<div className={'plan-now-row plan-access plan-access-'+access.status}><LockSimple size={16}/><button className="text-link" onClick={()=>setModal('access-status')}>{accessLine}{access.number?` · ${access.number}`:''}</button></div>}
+        {panel.upcoming[0]&&<div className="plan-now-row"><CalendarBlank size={16}/><span>Дальше — {panel.upcoming[0].title.toLowerCase()}, {dateLabel(panel.upcoming[0].date)}</span></div>}
+        <button className="plan-to-chat" onClick={()=>showInChat(cur.checkpointId)}>Показать в чате<ArrowRight size={14}/></button>
+      </div></section>
+      <section className="plan-section"><h3>Этапы</h3>{panel.stages.map(st=><details key={st.checkpointId} className="plan-stage" open={st.current}>
+        <summary><span>{st.title}<small>{dateLabel(st.date,true)}</small></span><span className={'plan-stage-count'+(st.total&&st.done===st.total?' complete':'')}>{st.done}/{st.total}</span><CaretDown size={16}/></summary>
+        <div className="plan-stage-body">{st.tasks.map(t=><div className="plan-task" key={t.id}><span className="check-control"><input id={`panel-${st.checkpointId}-${t.id}`} type="checkbox" checked={t.done} onChange={e=>setCheck(st.checkpointId,t.id,e.target.checked)}/>{t.done&&<Check size={16} weight="bold" aria-hidden="true"/>}</span><label htmlFor={`panel-${st.checkpointId}-${t.id}`} className={t.done?'task-done':''}>{t.title}</label></div>)}
+        <button className="plan-to-chat" onClick={()=>showInChat(st.checkpointId)}>Показать в чате<ArrowRight size={14}/></button></div>
+      </details>)}</section>
+      </div><div className="plan-col-side">
+      {panel.links.length>0&&<section className="plan-section"><h3>Ссылки и контакты</h3><div className="plan-links">{panel.links.map(l=><button key={l.key} className="plan-link" onClick={()=>openPanelLink(l.kind,l.plan,l.url)}><LinkSimple size={17}/><span>{l.label}<small>{l.stage} · {l.task}</small></span><ArrowRight size={15}/></button>)}</div></section>}
+      {panel.upcoming.length>0&&<section className="plan-section"><h3>Впереди</h3><ul className="plan-upcoming">{panel.upcoming.slice(0,5).map(u=><li key={u.date+u.title}><span>{u.title}</span><time dateTime={u.date}>{dateLabel(u.date)}</time></li>)}{panel.upcoming.length>5&&<li><span>и ещё {panel.upcoming.length-5}</span></li>}</ul><p className="muted small">Подробности придут в чат в свой день.</p></section>}
+      </div></div>}
+    </div>;
+  }
+  function PlanPage(){
+    return <div key="plan" className="plan-page">{role==='hr'||!planPublished||mode==='no-plan'?<Empty title="План ещё не опубликован" text="Когда руководитель опубликует сценарий, здесь появятся этапы, ссылки и контакты." icon={<CalendarBlank size={40}/>} action="Перейти к сообщениям" onAction={()=>setPage('messages')}/>:PlanView()}</div>;
+  }
   function Messages(){
     return <div key="messages" className="workspace bot-workspace"><section className="chat-pane"><header className="chat-header"><Avatar bot size={38}/><div className="chat-title"><h1>Хомыч</h1><p>{role==='intern'?'Твой AI-бадди':role==='hr'?'Организационные сведения · вариант':`Помощь стажёру · ${plan.intern}`}</p></div><button className="icon-button" title="Контакты команды" aria-label="Открыть контакты команды" onClick={()=>setModal('team-panel')}><Users size={22}/></button><button className="icon-button" aria-label="Настройки чата" onClick={()=>setModal('settings')}><DotsThree size={26}/></button></header>
     <div className="chat-content" ref={chatScroll}><div className="conversation bot-conversation">
     {(mode==='no-plan'||!planPublished)?<Empty title="План ещё не опубликован" text="Руководитель готовит сценарий. Если старт уже близко, свяжись с ним." icon={<CalendarBlank size={40}/>} action="Контакт руководителя" onAction={()=>openLink('lead')}/>:mode==='network-error'?<Empty title="Не получилось загрузить сообщения" text="Проверь соединение и попробуй ещё раз. Сохранённые отметки останутся на месте." icon={<WarningCircle size={40}/>} action="Попробовать ещё раз" onAction={()=>{setMode('normal');notify('Сообщения загружены');}}/>:role==='hr'?<><div className="proposal-banner"><Info size={20}/><div><strong>Вариант для обсуждения</strong><p>Состав сообщений HR пока не согласован. Здесь показана передача организационных материалов.</p></div></div><Empty title="Организационные материалы" text="Курсы, памятки и контакты можно передать руководителю для сценария." icon={<FolderSimple size={40}/>} action="Посмотреть материалы" onAction={()=>setPage('knowledge')}/></>:<>
     {!ownDelivered.length&&<p className="waiting-message">Я напишу, когда наступит первый шаг стажировки.</p>}
     {runtime.feed.map(entry=>{
-      if(entry.kind==='checkpoint'){const snap=runtime.snapshots[entry.id];return snap?<div key={entry.id}>{StageMessage({b:snap.block,p:snap.plan,upcoming:snap.next,checkpointId:entry.id})}</div>:null;}
+      if(entry.kind==='checkpoint'){const snap=runtime.snapshots[entry.id];return snap?<div key={entry.id} id={'cp-'+entry.id}>{StageMessage({b:snap.block,p:snap.plan,upcoming:snap.next,checkpointId:entry.id})}</div>:null;}
       if(role!=='intern')return null;
       const m=entry.message;return <div key={m.id} className={'chat-message '+(m.role==='user'?'user-message':'assistant-message')}><p>{m.text}</p>{m.source&&<button className="source-link" onClick={()=>{setSourceId(m.source!);setModal('source');}}><BookOpen size={15}/>{state.sources.find(s=>s.id===m.source)?.title}<ArrowRight size={14}/></button>}{m.error&&<button className="text-link" onClick={()=>openLink('buddy')}>Связаться с бадди</button>}<small>{m.time}</small></div>;
     })}
@@ -440,8 +481,8 @@ export function App() {
   if(API_ENABLED&&!session)return sessionChecked?<Login onLogin={startSession}/>:<main className="prototype-root login-page"><Spinner label="Проверяем вход…"/></main>;
   return <main className={'prototype-root '+(mobile?'mobile-preview ':'')+(theme==='dark'?'dark-theme':'')}>
     <div className="review-bar"><span className="review-label"><span/>Интерактивный макет</span>{API_ENABLED&&session?<div className="review-role review-user"><span>Вход: {session.subject.displayName} · {roleNames[roleOf(session)]}</span><button className="review-state" onClick={()=>void logout()}><SignOut size={16}/>Выйти</button></div>:<div className="review-role"><span>Смотреть как</span><select aria-label="Роль для просмотра" value={role} onChange={e=>changeRole(e.target.value as Role)}>{(['intern','buddy','lead','hr'] as Role[]).map(r=><option value={r} key={r}>{roleNames[r]}{r==='hr'?' · вариант':''}</option>)}</select></div>}<div className="review-role review-intern"><select aria-label="Стажёр для просмотра" value={viewIntern.id} onChange={e=>selectIntern(e.target.value)}>{state.interns.map(i=><option value={i.id} key={i.id}>{i.name}</option>)}</select></div><div className="review-tools"><span>Демоданные</span><button className="icon-button" aria-label={mobile?'Открыть широкий вид':'Открыть мобильный вид'} onClick={()=>setMobile(!mobile)}>{mobile?<Monitor size={18}/>:<DeviceMobile size={18}/>}</button><button className="review-state" onClick={()=>setModal('states')}><SlidersHorizontal size={16}/>Состояния</button></div></div>
-    <div className="app-shell"><header className="app-header"><button className="brand" onClick={()=>setPage('messages')} aria-label="Хомыч — сообщения"><Avatar bot size={36}/><span>Хомыч</span><span className="brand-caption">Стажировка в Авито</span></button><nav className="main-nav" aria-label="Разделы"><button className={page==='messages'?'active':''} onClick={()=>setPage('messages')}><ChatCircle size={18}/>Сообщения</button>{role==='lead'&&<button className={page==='builder'||page==='scenarios'?'active':''} onClick={()=>setPage('scenarios')}><ClipboardText size={18}/>Сценарий</button>}{(role==='lead'||role==='hr')&&<button className={page==='knowledge'?'active':''} onClick={()=>setPage('knowledge')}><BookOpen size={18}/>Материалы</button>}</nav><div className="header-actions"><button className="icon-button notification-trigger" aria-label="Открыть уведомления" onClick={()=>setModal('notifications')}><Bell size={22}/><span/></button><button className="profile-button" aria-label="Открыть профиль" onClick={()=>setModal('profile')}><Avatar size={32}/><span>{role==='intern'?plan.intern.split(' ')[0]:role==='buddy'?plan.buddy.split(' ')[0]:role==='lead'?plan.lead.split(' ')[0]:'Анна'}</span><CaretDown size={13}/></button></div></header>
-    {saveError&&<div role="alert" className="error-banner persistence-error"><WarningCircle size={20}/><span>{saveError}</span><button className="button" onClick={()=>restoreBlocked.current?window.location.reload():saveCurrent(true)}>Повторить</button></div>}{page==='messages'?Messages():page==='scenarios'?Scenarios():page==='builder'?(selectedScenario?Builder():Scenarios()):page==='knowledge'?Knowledge():Components()}</div>
+    <div className="app-shell"><header className="app-header"><button className="brand" onClick={()=>setPage('messages')} aria-label="Хомыч — сообщения"><Avatar bot size={36}/><span>Хомыч</span><span className="brand-caption">Стажировка в Авито</span></button><nav className="main-nav" aria-label="Разделы"><button className={page==='messages'?'active':''} onClick={()=>setPage('messages')}><ChatCircle size={18}/>Сообщения</button>{role!=='hr'&&<button className={page==='plan'?'active':''} onClick={()=>setPage('plan')}><ListChecks size={18}/>План</button>}{role==='lead'&&<button className={page==='builder'||page==='scenarios'?'active':''} onClick={()=>setPage('scenarios')}><ClipboardText size={18}/>Сценарий</button>}{(role==='lead'||role==='hr')&&<button className={page==='knowledge'?'active':''} onClick={()=>setPage('knowledge')}><BookOpen size={18}/>Материалы</button>}</nav><div className="header-actions"><button className="icon-button notification-trigger" aria-label="Открыть уведомления" onClick={()=>setModal('notifications')}><Bell size={22}/><span/></button><button className="profile-button" aria-label="Открыть профиль" onClick={()=>setModal('profile')}><Avatar size={32}/><span>{role==='intern'?plan.intern.split(' ')[0]:role==='buddy'?plan.buddy.split(' ')[0]:role==='lead'?plan.lead.split(' ')[0]:'Анна'}</span><CaretDown size={13}/></button></div></header>
+    {saveError&&<div role="alert" className="error-banner persistence-error"><WarningCircle size={20}/><span>{saveError}</span><button className="button" onClick={()=>restoreBlocked.current?window.location.reload():saveCurrent(true)}>Повторить</button></div>}{page==='messages'?Messages():page==='plan'?PlanPage():page==='scenarios'?Scenarios():page==='builder'?(selectedScenario?Builder():Scenarios()):page==='knowledge'?Knowledge():Components()}</div>
     {toast&&<div className="toast" role="status">{toastError?<WarningCircle size={20} weight="fill"/>:<CheckCircle size={20} weight="fill"/>}{toast}</div>}
     {modal==='contact'&&<Modal title={roleNames[contactRole]} onClose={()=>setModal(null)}><div className="contact-card"><Avatar size={64}/><h3>{contactRole==='intern'?(contactPlan??plan).intern:contactRole==='buddy'?(contactPlan??plan).buddy:contactRole==='lead'?(contactPlan??plan).lead:people.hr}</h3><p>{contactRole==='intern'?'Участник стажировки. Обсудите совместные шаги.':contactRole==='buddy'?'Поможет с задачами, инструментами и адаптацией':contactRole==='lead'?'Обсудит цели, результаты и важные решения':'Подскажет по документам и организационным вопросам'}</p><Badge>Демонстрационный контакт</Badge></div><p className="muted small">Рабочая ссылка на контакт появится после подключения каналов команды.</p></Modal>}
     {modal==='team-panel'&&<Modal title="Твоя команда" onClose={()=>setModal(null)}><div className="chat-contacts">{(['buddy','lead','hr'] as Role[]).map(r=><button className="person-row" key={r} onClick={()=>openLink(r)}><Avatar size={38}/><span><strong>{r==='buddy'?plan.buddy:r==='lead'?plan.lead:people.hr}</strong><small>{roleNames[r]}</small></span><ArrowRight size={17}/></button>)}</div><p className="muted small">Все контакты в макете демонстрационные.</p></Modal>}
