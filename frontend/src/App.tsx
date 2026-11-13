@@ -11,6 +11,8 @@ import { ensureSuggestions, suggestionStage, validSelection } from './suggestion
 import { API_ENABLED, api, errorText, ApiError, type SessionContext } from './api';
 import { applyServerScenarios, describeFields, directory, internsOf, planToServer, roleOf, scenarioFromServer } from './serverScenarios';
 import { Login } from './Login';
+import { applyServerFeed, assignmentFor, serverToday } from './serverMessages';
+const SESSION_USER_KEY='homych.session.user';
 
 function localDate(at:number){const d=new Date(at);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 
@@ -30,6 +32,9 @@ export function App() {
   const restoreBlocked=useRef(!!restored.error);
   // Server mode (VITE_API=on): session, draft versions for If-Match, cutoffs learnt from publications.
   const [session,setSession]=useState<SessionContext|null>(null);
+  // Server feed of the intern on screen: whether a plan is published, and the scheduler's "today".
+  const [serverFeed,setServerFeed]=useState<{internId:string;hasPlan:boolean;today:string}|null>(null);
+  const pickInternWithPlan=useRef(false); // right after login: show an intern who already has a plan
   const [sessionChecked,setSessionChecked]=useState(!API_ENABLED);
   const [serverStatus,setServerStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const versions=useRef<Record<string,number>>({});
@@ -40,7 +45,7 @@ export function App() {
   const [role,setRole]=useState<Role>('intern'); const [page,setPage]=useState<Page>('messages');
   const [mode,setMode]=useState('normal'); const [clockTick,setClockTick]=useState(Date.now());
   const [mobile,setMobile]=useState(false); const [theme,setTheme]=useState('light');
-  const [modal,setModal]=useState<string|null>(null); const [toast,setToast]=useState('');
+  const [modal,setModal]=useState<string|null>(null); const [toast,setToast]=useState('');const [toastError,setToastError]=useState(false);
   const [sound,setSound]=useState(false); const [input,setInput]=useState('');const [busyInterns,setBusyInterns]=useState<Record<string,boolean>>({});
   const busy=!!busyInterns[viewInternId];
   const [sourceSearch,setSourceSearch]=useState('');
@@ -60,9 +65,13 @@ export function App() {
   const fallbackPlan={...makePlan(),intern:viewIntern.name};
   const plan=activeScenario?.published??fallbackPlan;
   const draft=selectedScenario?.draft??fallbackPlan;
-  const runtime=state.runtimes[viewIntern.id]??emptyRuntime();
-  const today=state.demoDate??localDate(clockTick);
-  const suggestions=activeScenario?.published&&validSelection(runtime.suggestions,suggestionStage(plan,today))?runtime.suggestions!.questions:[];
+  // server mode: the feed is per signed-in user (two tabs with different roles must not overwrite each other)
+  const runtimeKey=API_ENABLED&&session?`${session.subject.id}@${viewIntern.id}`:viewIntern.id;
+  const runtime=state.runtimes[runtimeKey]??emptyRuntime();
+  const serverMode=API_ENABLED&&!!session;
+  const today=serverMode&&serverFeed?serverFeed.today:state.demoDate??localDate(clockTick);
+  const planPublished=serverMode?serverFeed?.internId===viewIntern.id&&serverFeed.hasPlan:!!activeScenario?.published;
+  const suggestions=serverMode?(planPublished?runtime.suggestions?.questions??[]:[]):activeScenario?.published&&validSelection(runtime.suggestions,suggestionStage(plan,today))?runtime.suggestions!.questions:[];
   const delivered=Object.values(runtime.snapshots).sort((a,b)=>a.block.date.localeCompare(b.block.date));
   const ownDelivered=delivered.filter(s=>role==='intern'||(role!=='hr'&&tasksForRole(s.block,role).length>0&&!!s.block[role].trim()));
   const snapshot=ownDelivered.at(-1);
@@ -98,32 +107,41 @@ export function App() {
     window.addEventListener('storage',handler);return()=>window.removeEventListener('storage',handler);
   },[]);
   useEffect(()=>{if(!saveError)return;const handler=(e:BeforeUnloadEvent)=>{e.preventDefault();};window.addEventListener('beforeunload',handler);return()=>window.removeEventListener('beforeunload',handler);},[saveError]);
-  useEffect(()=>{const timer=setInterval(()=>setClockTick(Date.now()),15_000);return()=>clearInterval(timer);},[]);
+  useEffect(()=>{if(API_ENABLED)return; /* server mode: the date comes from the server */ const timer=setInterval(()=>setClockTick(Date.now()),15_000);return()=>clearInterval(timer);},[]);
   useEffect(()=>{
     if(mode==='no-plan')return;
+    if(API_ENABLED&&session)return; // the server scheduler sends messages
     setState(current=>ensureSuggestions(deliverDue(current,today),today));
-  },[state.scenarios,state.activeScenarios,today,mode,viewInternId,role]);
+  },[state.scenarios,state.activeScenarios,today,mode,viewInternId,role,session]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'auto',block:'end'});},[runtime.feed.length,busy,role,page,viewInternId]);
   const previousFeedCount=useRef(runtime.feed.length);
   useEffect(()=>{if(runtime.feed.length>previousFeedCount.current)beep();previousFeedCount.current=runtime.feed.length;},[runtime.feed.length]);
   useEffect(()=>()=>{if(toastTimer.current)clearTimeout(toastTimer.current);},[]);
-  function notify(text:string){setToast(text);if(toastTimer.current)clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),3600);}
+  function notify(text:string,error=false){setToastError(error);setToast(text);if(toastTimer.current)clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),3600);}
   function beep(){
     if(!sound)return;
     try{const ctx=new AudioContext();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.frequency.value=720;gain.gain.setValueAtTime(.025,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);osc.start();osc.stop(ctx.currentTime+.18);osc.onended=()=>void ctx.close();}catch{/* Sound depends on browser permissions. */}
   }
   function changeRole(value:Role){setRole(value);setPage('messages');setInput('');}
-  function setCheck(event:string,taskId:string,value:boolean){const key=checkId(role,event,taskId);setState(s=>updateRuntime(s,viewIntern.id,r=>({...r,checks:{...r.checks,[key]:value}})));}
+  function setCheck(event:string,taskId:string,value:boolean){
+    const key=checkId(role,event,taskId),internId=runtimeKey;
+    setState(s=>updateRuntime(s,internId,r=>({...r,checks:{...r.checks,[key]:value}})));
+    if(API_ENABLED&&session)api.setCheck(event,taskId,value).catch(async e=>{
+      setState(s=>updateRuntime(s,internId,r=>({...r,checks:{...r.checks,[key]:!value}})));
+      if(e instanceof ApiError&&[401,403,404].includes(e.status)&&await switchIfSignedInElsewhere())return;
+      notify(errorText(e),true);
+    });
+  }
   function send(question=input){
     if(!question.trim()||busy||role!=='intern')return;
-    const q=question.trim();setInput('');setBusyInterns(current=>({...current,[viewInternId]:true}));
+    const q=question.trim();setInput('');const busyKey=viewInternId;setBusyInterns(current=>({...current,[busyKey]:true}));
     const user:ChatMessage={id:crypto.randomUUID(),role:'user',text:q,time:timeLabel()};
-    const recipient=viewIntern.id;
+    const recipient=runtimeKey;
     setState(s=>updateRuntime(s,recipient,r=>({...r,feed:[...r.feed,{kind:'chat',message:user}]})));
     setTimeout(()=>{
       const answer=demoAnswer(q,state.sources,mode,plan);
       const message:ChatMessage={id:crypto.randomUUID(),role:'assistant',time:timeLabel(),...answer};
-      setState(s=>updateRuntime(s,recipient,r=>({...r,feed:[...r.feed,{kind:'chat',message}]})));setBusyInterns(current=>({...current,[recipient]:false}));
+      setState(s=>updateRuntime(s,recipient,r=>({...r,feed:[...r.feed,{kind:'chat',message}]})));setBusyInterns(current=>({...current,[busyKey]:false})); // same key as above
     },650);
   }
   function openLink(kind:LinkKind,context=plan){
@@ -144,12 +162,30 @@ export function App() {
     }catch(e){if(e instanceof ApiError&&e.status===401)setSession(null);else notify(errorText(e));}
   }
   function startSession(ctx:SessionContext){
-    setSession(ctx);setSessionChecked(true);changeRole(roleOf(ctx));
+    setSession(ctx);setSessionChecked(true);changeRole(roleOf(ctx));pickInternWithPlan.current=roleOf(ctx)==='buddy';
+    try{localStorage.setItem(SESSION_USER_KEY,ctx.subject.id);}catch{/* only a hint for other tabs */}
     const interns=internsOf(ctx);
     if(interns.length){setState(s=>({...s,interns}));setViewInternId(interns[0].id);}
     void loadScenarios(ctx,true);
   }
-  async function logout(){try{await api.logout();}catch{/* the cookie expires anyway */}setSession(null);}
+  /** Another tab signed in as someone else: switch this tab to that user and say so. */
+  async function switchIfSignedInElsewhere():Promise<boolean>{
+    try{
+      const now=await api.session();
+      if(now.subject.id===session?.subject.id)return false;
+      startSession(now);notify(`В другой вкладке выполнен вход: ${now.subject.displayName}. Эта вкладка переключена.`,true);return true;
+    }catch{setSession(null);notify('Сессия закончилась. Войдите снова.',true);return true;}
+  }
+  async function logout(){try{await api.logout();}catch{/* the cookie expires anyway */}setSession(null);try{localStorage.setItem(SESSION_USER_KEY,'');}catch{/* hint only */}}
+  useEffect(()=>{
+    if(!API_ENABLED)return;
+    const onStorage=(e:StorageEvent)=>{
+      if(e.key!==SESSION_USER_KEY)return;
+      if(!e.newValue){setSession(null);return;}
+      if(e.newValue!==session?.subject.id)api.session().then(startSession).catch(()=>setSession(null));
+    };
+    window.addEventListener('storage',onStorage);return()=>window.removeEventListener('storage',onStorage);
+  },[session]);
   useEffect(()=>{if(API_ENABLED)api.session().then(startSession).catch(()=>setSessionChecked(true));},[]);
   useEffect(()=>{if(API_ENABLED&&page==='scenarios')void flushSave().then(()=>loadScenarios());},[page]); // unsaved edits first, then the fresh list
   function saveToServer(id:string):Promise<boolean>{
@@ -183,6 +219,42 @@ export function App() {
     const target=pendingSave.current;pendingSave.current=null;
     return target?saveToServer(target):saveChain.current;
   }
+  async function syncFeed(){
+    const ctx=session;if(!API_ENABLED||!ctx||role==='hr')return;
+    const internId=viewInternId;const a=assignmentFor(ctx,internId);
+    if(!a){setServerFeed({internId,hasPlan:false,today:localDate(Date.now())});return;}
+    try{
+      const feed=await api.listMessages(a.id);const day=serverToday(feed.serverTime);
+      if(pickInternWithPlan.current){
+        pickInternWithPlan.current=false;
+        if(!feed.activePlan)for(const other of ctx.assignments.filter(x=>x.id!==a.id)){
+          const page=await api.listMessages(other.id,1);
+          if(page.activePlan){setViewInternId(other.intern.id);return;} // the effect re-syncs for this intern
+        }
+      }
+      // the cookie belongs to someone else now (login in another tab): switch this tab to that user
+      if(feed.items.some(m=>m.recipientUserId!==ctx.subject.id)){const fresh=await api.session();startSession(fresh);return;}
+      setState(s=>applyServerFeed(s,`${ctx.subject.id}@${internId}`,role,a,feed,day));
+      const hasPlan=!!feed.activePlan;
+      // no re-render when nothing changed: idle polling must not touch the screen
+      setServerFeed(prev=>prev&&prev.internId===internId&&prev.hasPlan===hasPlan&&prev.today===day?prev:{internId,hasPlan,today:day});
+      if(mode==='network-error')setMode('normal');
+    }catch(e){if(e instanceof ApiError&&e.status===401)setSession(null);}
+  }
+  useEffect(()=>{
+    if(!API_ENABLED||!session)return;
+    void syncFeed();const timer=setInterval(()=>void syncFeed(),5000); // new messages appear without a reload
+    return()=>clearInterval(timer);
+  },[session,viewInternId,role]);
+  async function setServerClock(date:string|null){
+    try{
+      const st=await api.setClock(date);await syncFeed();
+      const own=Object.values(stateRef.current.runtimes[runtimeKey]?.snapshots??{}).sort((x,y)=>x.block.date.localeCompare(y.block.date));
+      const next=own.at(-1)?.next;
+      notify(`Дата на сервере: ${dateLabel(st.today,true)} — `+(st.created?`пришло новых сообщений: ${st.created}`:next?`новых этапов нет, следующий «${next.title}» ${dateLabel(next.date)}`:'новых этапов нет'));
+    }
+    catch(e){notify(errorText(e),true);}
+  }
   async function reloadDraft(){setFormError('');await loadScenarios();notify('Загружена актуальная версия с сервера');}
   async function createServerScenario(){
     try{
@@ -190,7 +262,7 @@ export function App() {
       versions.current[created.id]=created.draftVersion;
       const local=scenarioFromServer(created,directory(session!));
       setState(s=>({...s,scenarios:[...s.scenarios,local]}));openScenario(created.id);
-    }catch(e){notify(errorText(e));}
+    }catch(e){notify(errorText(e),true);}
   }
   async function publishToServer(){
     const scenario=selectedScenario;if(!scenario)return;
@@ -299,7 +371,7 @@ export function App() {
   function Messages(){
     return <div key="messages" className="workspace bot-workspace"><section className="chat-pane"><header className="chat-header"><Avatar bot size={38}/><div className="chat-title"><h1>Хомыч</h1><p>{role==='intern'?'Твой AI-бадди':role==='hr'?'Организационные сведения · вариант':`Помощь стажёру · ${plan.intern}`}</p></div><button className="icon-button" title="Контакты команды" aria-label="Открыть контакты команды" onClick={()=>setModal('team-panel')}><Users size={22}/></button><button className="icon-button" aria-label="Настройки чата" onClick={()=>setModal('settings')}><DotsThree size={26}/></button></header>
     <div className="chat-content" ref={chatScroll}><div className="conversation bot-conversation">
-    {(mode==='no-plan'||!activeScenario?.published)?<Empty title="План ещё не опубликован" text="Руководитель готовит сценарий. Если старт уже близко, свяжись с ним." icon={<CalendarBlank size={40}/>} action="Контакт руководителя" onAction={()=>openLink('lead')}/>:mode==='network-error'?<Empty title="Не получилось загрузить сообщения" text="Проверь соединение и попробуй ещё раз. Сохранённые отметки останутся на месте." icon={<WarningCircle size={40}/>} action="Попробовать ещё раз" onAction={()=>{setMode('normal');notify('Сообщения загружены');}}/>:role==='hr'?<><div className="proposal-banner"><Info size={20}/><div><strong>Вариант для обсуждения</strong><p>Состав сообщений HR пока не согласован. Здесь показана передача организационных материалов.</p></div></div><Empty title="Организационные материалы" text="Курсы, памятки и контакты можно передать руководителю для сценария." icon={<FolderSimple size={40}/>} action="Посмотреть материалы" onAction={()=>setPage('knowledge')}/></>:<>
+    {(mode==='no-plan'||!planPublished)?<Empty title="План ещё не опубликован" text="Руководитель готовит сценарий. Если старт уже близко, свяжись с ним." icon={<CalendarBlank size={40}/>} action="Контакт руководителя" onAction={()=>openLink('lead')}/>:mode==='network-error'?<Empty title="Не получилось загрузить сообщения" text="Проверь соединение и попробуй ещё раз. Сохранённые отметки останутся на месте." icon={<WarningCircle size={40}/>} action="Попробовать ещё раз" onAction={()=>{setMode('normal');notify('Сообщения загружены');}}/>:role==='hr'?<><div className="proposal-banner"><Info size={20}/><div><strong>Вариант для обсуждения</strong><p>Состав сообщений HR пока не согласован. Здесь показана передача организационных материалов.</p></div></div><Empty title="Организационные материалы" text="Курсы, памятки и контакты можно передать руководителю для сценария." icon={<FolderSimple size={40}/>} action="Посмотреть материалы" onAction={()=>setPage('knowledge')}/></>:<>
     {!ownDelivered.length&&<p className="waiting-message">Я напишу, когда наступит первый шаг стажировки.</p>}
     {runtime.feed.map(entry=>{
       if(entry.kind==='checkpoint'){const snap=runtime.snapshots[entry.id];return snap?<div key={entry.id}>{StageMessage({b:snap.block,p:snap.plan,upcoming:snap.next,checkpointId:entry.id})}</div>:null;}
@@ -308,7 +380,7 @@ export function App() {
     })}
     {busy&&role==='intern'&&<div className="assistant-message thinking"><Spinner label="Ищу в материалах команды"/></div>}<div ref={chatEnd}/></>}
     </div></div>
-    {role==='intern'&&!!activeScenario?.published&&mode!=='no-plan'&&mode!=='network-error'?<footer className="composer-area"><div className="suggestions" role="group" aria-label="Вопросы по текущему этапу">{suggestions.map(q=><button key={q} onClick={()=>send(q)} disabled={busy}>{q}</button>)}</div><form className="composer" onSubmit={e=>{e.preventDefault();send();}}><textarea aria-label="Сообщение Хомычу" placeholder="Спроси Хомыча" value={input} rows={1} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}/><button className="send-button" aria-label="Отправить сообщение" disabled={!input.trim()||busy}><span>Спросить</span></button></form><p className="composer-note"><LockSimple size={12}/>Личный чат · ответы по материалам команды</p></footer>:<footer className="feed-footer"><Bell size={16}/>{role==='hr'?'Вариант для согласования':'Хомыч напишет, когда наступит следующий шаг'}</footer>}</section></div>;
+    {role==='intern'&&planPublished&&mode!=='no-plan'&&mode!=='network-error'?<footer className="composer-area"><div className="suggestions" role="group" aria-label="Вопросы по текущему этапу">{suggestions.map(q=><button key={q} onClick={()=>send(q)} disabled={busy}>{q}</button>)}</div><form className="composer" onSubmit={e=>{e.preventDefault();send();}}><textarea aria-label="Сообщение Хомычу" placeholder="Спроси Хомыча" value={input} rows={1} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}/><button className="send-button" aria-label="Отправить сообщение" disabled={!input.trim()||busy}><span>Спросить</span></button></form><p className="composer-note"><LockSimple size={12}/>Личный чат · ответы по материалам команды</p></footer>:<footer className="feed-footer"><Bell size={16}/>{role==='hr'?'Вариант для согласования':'Хомыч напишет, когда наступит следующий шаг'}</footer>}</section></div>;
   }
 
   function Builder(){return <div key="builder" className="builder-page"><button className="text-link scenario-back" onClick={()=>setPage('scenarios')}><ArrowLeft size={18}/>К списку сценариев</button><div className="page-heading"><div><p className="eyebrow">Сопровождение стажировки</p><h1>Сценарий стажёра</h1><p>Собери путь из готовых блоков и настрой сообщения участникам.</p><p className="save-status" role="status">{saveStatusText()}</p></div><div className="heading-actions"><button className="button" onClick={()=>{if(API_ENABLED&&session){pendingSave.current=selectedScenarioId;void flushSave().then(ok=>{if(ok)notify('Черновик сохранён на сервере');});}else saveCurrent(true);}}>Сохранить черновик</button><button className="button button-primary" onClick={()=>{const error=publicationError(selectedScenario);setFormError(error);if(!error)setModal('publish');}}>Опубликовать</button></div></div>{formError&&<div role="alert" className="error-banner">{formError}{API_ENABLED&&serverStatus==='error'&&<button className="button" onClick={()=>void reloadDraft()}>Загрузить актуальную версию</button>}</div>}<div className="scenario-name-field"><label>Название сценария<input value={draft.name} onChange={e=>updateDraft({name:e.target.value})} placeholder="Например, адаптация backend-стажёра"/></label></div><div className="plan-settings"><label>Стажёр<select value={draft.intern} disabled={!!selectedScenario?.published} onChange={e=>updateDraft({intern:e.target.value})}><option value="">Выбери стажёра</option>{state.interns.map(i=><option key={i.id} value={i.name}>{i.name}</option>)}</select>{selectedScenario?.published&&<small>Стажёр закреплён за опубликованным сценарием</small>}</label><label>Бадди<select value={draft.buddy} onChange={e=>updateDraft({buddy:e.target.value})}><option>{people.buddy}</option><option>Игорь Волков</option></select></label><label>Длительность<select value={draft.months} onChange={e=>{const months=Number(e.target.value) as 6|9;const template=shiftPlanStart(makePlan(months),draft.start);updateDraft({months,blocks:draft.blocks.map(b=>{const fresh=template.blocks.find(x=>x.id===b.id);return fresh?{...b,date:fresh.date,endDate:fresh.endDate}:b;})});setEditId('week');}}><option value="6">6 месяцев</option><option value="9">9 месяцев</option></select></label><label>Дата начала<input type="date" value={draft.start} onChange={e=>updateDraft(shiftPlanStart(draft,e.target.value))}/></label></div><div className="builder-layout"><aside className="block-list"><div className="section-heading"><h2>Блоки сценария</h2><span>{draft.blocks.length}</span></div>{draft.blocks.map((b,i)=><button className={'block-item '+(draftBlock.id===b.id?'block-active':'')} key={b.id} onClick={()=>setEditId(b.id)}><span className="block-number">{i+1}</span><span><strong>{b.title}</strong><small>{dateLabel(b.date)}</small></span><CaretDown size={15} className="rotate-left"/></button>)}<button className="add-block" onClick={()=>setModal('add-block')}><Plus size={19}/>Добавить блок</button><div className="builder-hint"><Info size={18}/><p>Блоки приходят по датам. Выполнение чек-листов не влияет на расписание.</p></div></aside><section className="block-editor"><div className="editor-header"><div><p className="eyebrow">Настройка блока</p><h2>{draftBlock.title}</h2></div><div className="editor-tools"><button className="icon-button" aria-label="Поднять блок" disabled={draft.blocks[0].id===draftBlock.id} onClick={()=>moveBlock(-1)}><ArrowUp size={18}/></button><button className="icon-button" aria-label="Опустить блок" disabled={draft.blocks.at(-1)?.id===draftBlock.id} onClick={()=>moveBlock(1)}><ArrowDown size={18}/></button><button className="icon-button danger" aria-label="Удалить блок" disabled={draft.blocks.length===1} onClick={()=>{updateDraft({blocks:draft.blocks.filter(x=>x.id!==draftBlock.id)});setEditId(draft.blocks.find(x=>x.id!==draftBlock.id)!.id);}}><Trash size={18}/></button></div></div><div className="editor-fields"><label>Название блока<input value={draftBlock.title} onChange={e=>updateBlock({title:e.target.value})}/></label><label>Дата сообщения<input type="date" value={draftBlock.date} onChange={e=>updateBlock({date:e.target.value})}/></label></div><div className="tabs" role="tablist" aria-label="Получатель сообщения">{(['intern','buddy','lead'] as const).map(r=><button key={r} role="tab" aria-selected={editRole===r} onClick={()=>setEditRole(r)}>{r==='intern'?'Стажёру':r==='buddy'?'Бадди':'Руководителю'}</button>)}</div><label className="editor-copy">Сообщение {editRole==='intern'?'стажёру':editRole==='buddy'?'бадди':'руководителю'}<textarea rows={5} value={personalizeText(draftBlock[editRole],draft)} onChange={e=>updateBlock({[editRole]:e.target.value})}/></label>{editRole==='intern'&&<><div className="section-heading"><h3>Пункты чек-листа стажёра</h3><button className="text-link" onClick={()=>updateBlock({tasks:[...draftBlock.tasks,{id:crypto.randomUUID(),title:'Новый шаг',description:'',link:'Открыть материал',kind:'team'}]})}><Plus size={15}/>Добавить пункт</button></div><div className="editable-tasks">{draftBlock.tasks.map((t,i)=><div key={t.id} className="editable-task"><span>{i+1}</span><div><input aria-label={`Название пункта ${i+1}`} value={t.title} onChange={e=>updateBlock({tasks:draftBlock.tasks.map(x=>x.id===t.id?{...x,title:e.target.value}:x)})}/><input className="quiet-input" aria-label={`Описание пункта ${i+1}`} value={t.description} placeholder="Описание и помощь" onChange={e=>updateBlock({tasks:draftBlock.tasks.map(x=>x.id===t.id?{...x,description:e.target.value}:x)})}/><input type="url" className="quiet-input" aria-label={`Ссылка пункта ${i+1}`} value={t.url??''} placeholder="Рабочая ссылка · https://…" onChange={e=>updateBlock({tasks:draftBlock.tasks.map(x=>x.id===t.id?{...x,url:e.target.value}:x)})}/></div><button className="icon-button" aria-label={`Удалить пункт ${i+1}`} onClick={()=>updateBlock({tasks:draftBlock.tasks.filter(x=>x.id!==t.id)})}><Trash size={16}/></button></div>)}</div></>}{editRole!=='intern'&&HelperTaskEditor()}<button className="button preview-button" onClick={()=>setModal('preview')}><Monitor size={18}/>Предпросмотр всех ролей</button></section><aside className="builder-preview"><div className="section-heading"><h3>Так увидит участник</h3><Badge>Макет</Badge></div>{StageMessage({b:draftBlock,p:draft,asRole:editRole,preview:true})}<p className="muted small">Это предпросмотр. Публикация запускает сценарий по настроенным датам.</p></aside></div></div>;}
@@ -333,7 +405,7 @@ export function App() {
     <div className="review-bar"><span className="review-label"><span/>Интерактивный макет</span>{API_ENABLED&&session?<div className="review-role review-user"><span>Вход: {session.subject.displayName} · {roleNames[roleOf(session)]}</span><button className="review-state" onClick={()=>void logout()}><SignOut size={16}/>Выйти</button></div>:<div className="review-role"><span>Смотреть как</span><select aria-label="Роль для просмотра" value={role} onChange={e=>changeRole(e.target.value as Role)}>{(['intern','buddy','lead','hr'] as Role[]).map(r=><option value={r} key={r}>{roleNames[r]}{r==='hr'?' · вариант':''}</option>)}</select></div>}<div className="review-role review-intern"><select aria-label="Стажёр для просмотра" value={viewIntern.id} onChange={e=>selectIntern(e.target.value)}>{state.interns.map(i=><option value={i.id} key={i.id}>{i.name}</option>)}</select></div><div className="review-tools"><span>Демоданные</span><button className="icon-button" aria-label={mobile?'Открыть широкий вид':'Открыть мобильный вид'} onClick={()=>setMobile(!mobile)}>{mobile?<Monitor size={18}/>:<DeviceMobile size={18}/>}</button><button className="review-state" onClick={()=>setModal('states')}><SlidersHorizontal size={16}/>Состояния</button></div></div>
     <div className="app-shell"><header className="app-header"><button className="brand" onClick={()=>setPage('messages')} aria-label="Хомыч — сообщения"><Avatar bot size={36}/><span>Хомыч</span><span className="brand-caption">Стажировка в Авито</span></button><nav className="main-nav" aria-label="Разделы"><button className={page==='messages'?'active':''} onClick={()=>setPage('messages')}><ChatCircle size={18}/>Сообщения</button>{role==='lead'&&<button className={page==='builder'||page==='scenarios'?'active':''} onClick={()=>setPage('scenarios')}><ClipboardText size={18}/>Сценарий</button>}{(role==='lead'||role==='hr')&&<button className={page==='knowledge'?'active':''} onClick={()=>setPage('knowledge')}><BookOpen size={18}/>Материалы</button>}</nav><div className="header-actions"><button className="icon-button notification-trigger" aria-label="Открыть уведомления" onClick={()=>setModal('notifications')}><Bell size={22}/><span/></button><button className="profile-button" aria-label="Открыть профиль" onClick={()=>setModal('profile')}><Avatar size={32}/><span>{role==='intern'?plan.intern.split(' ')[0]:role==='buddy'?plan.buddy.split(' ')[0]:role==='lead'?plan.lead.split(' ')[0]:'Анна'}</span><CaretDown size={13}/></button></div></header>
     {saveError&&<div role="alert" className="error-banner persistence-error"><WarningCircle size={20}/><span>{saveError}</span><button className="button" onClick={()=>restoreBlocked.current?window.location.reload():saveCurrent(true)}>Повторить</button></div>}{page==='messages'?Messages():page==='scenarios'?Scenarios():page==='builder'?(selectedScenario?Builder():Scenarios()):page==='knowledge'?Knowledge():Components()}</div>
-    {toast&&<div className="toast" role="status"><CheckCircle size={20} weight="fill"/>{toast}</div>}
+    {toast&&<div className="toast" role="status">{toastError?<WarningCircle size={20} weight="fill"/>:<CheckCircle size={20} weight="fill"/>}{toast}</div>}
     {modal==='contact'&&<Modal title={roleNames[contactRole]} onClose={()=>setModal(null)}><div className="contact-card"><Avatar size={64}/><h3>{contactRole==='intern'?(contactPlan??plan).intern:contactRole==='buddy'?(contactPlan??plan).buddy:contactRole==='lead'?(contactPlan??plan).lead:people.hr}</h3><p>{contactRole==='intern'?'Участник стажировки. Обсудите совместные шаги.':contactRole==='buddy'?'Поможет с задачами, инструментами и адаптацией':contactRole==='lead'?'Обсудит цели, результаты и важные решения':'Подскажет по документам и организационным вопросам'}</p><Badge>Демонстрационный контакт</Badge></div><p className="muted small">Рабочая ссылка на контакт появится после подключения каналов команды.</p></Modal>}
     {modal==='team-panel'&&<Modal title="Твоя команда" onClose={()=>setModal(null)}><div className="chat-contacts">{(['buddy','lead','hr'] as Role[]).map(r=><button className="person-row" key={r} onClick={()=>openLink(r)}><Avatar size={38}/><span><strong>{r==='buddy'?plan.buddy:r==='lead'?plan.lead:people.hr}</strong><small>{roleNames[r]}</small></span><ArrowRight size={17}/></button>)}</div><p className="muted small">Все контакты в макете демонстрационные.</p></Modal>}
     {modal&&sourceModals[modal]&&<Modal title={sourceModals[modal].title} onClose={()=>setModal(null)} footer={<><button className="button" onClick={()=>openLink('buddy')}><Users size={17}/>Связаться с бадди</button><button className="button button-primary" onClick={()=>setModal('external')}>Открыть рабочую ссылку<ArrowRight size={17}/></button></>}><p>{sourceModals[modal].body}</p><ol className="instruction-list">{sourceModals[modal].bullets?.map(t=><li key={t}>{t}</li>)}</ol><div className="inline-note"><Info size={18}/>Это демонстрационная памятка. Реальные материалы добавит команда.</div>{modal==='access'&&directDemo&&<button className="text-link conditional-link" onClick={()=>setModal('access-form')}>Открыть условную интеграцию заявки</button>}{modal==='task'&&directDemo&&(access.status!=='approved'?<div className="error-banner"><LockSimple size={18}/><div>Защищённая постановка закрыта до одобрения нужного доступа. Это не влияет на другие периоды.<button className="text-link" onClick={()=>setModal(access.operationId?'access-status':'access-form')}>Проверить доступ</button></div></div>:<div className="protected-task"><Badge tone="green">Нужный доступ одобрен</Badge><h3>Первая задача</h3><p>Демонстрационная постановка: добавь проверку входных параметров в учебный сервис команды.</p><p className="muted small">Критерии: корректные параметры принимаются, некорректные возвращают понятную ошибку. Обсуди план работы с бадди.</p></div>)}</Modal>}
@@ -342,7 +414,7 @@ export function App() {
     {modal==='settings'&&<Modal title="Настройки уведомлений" onClose={()=>setModal(null)}><label className="setting-row"><span><strong>Звук новых сообщений</strong><small>Воспроизводится в открытом макете</small></span><input type="checkbox" role="switch" checked={sound} onChange={e=>setSound(e.target.checked)}/></label><button className="button" disabled={!sound} onClick={()=>{beep();notify('Проверка звука');}}>Проверить звук</button><div className="inline-note"><Info size={18}/>Фоновая доставка и системные разрешения зависят от выбранной среды бота.</div></Modal>}
     {modal==='notifications'&&<Modal title="Уведомления" onClose={()=>setModal(null)}>{mode==='delivery-error'&&<div className="error-banner"><WarningCircle size={20}/><div>Сообщение пока не доставлено. Остальные получатели продолжают получать свои напоминания.<button className="text-link" onClick={()=>{setMode('normal');notify('Демонстрационная доставка повторена');}}>Повторить доставку</button></div></div>}<div className="notification-item"><span className="notification-icon"><CalendarBlank size={23}/></span><div><strong>{block.title}</strong><p>{role==='intern'?'Твой чек-лист и материалы уже в переписке.':`Пора помочь стажёру: ${plan.intern}.`}</p><small>{dateLabel(block.date)} · 09:00</small><button className="text-link" onClick={()=>{setPage('messages');setModal(null);}}>Перейти к сообщению<ArrowRight size={15}/></button></div></div><div className="notification-item"><span className="notification-icon"><Users size={23}/></span><div><strong>Команда рядом</strong><p>Бадди и руководитель получили отдельные сообщения о своей помощи.</p><small>По сценарию стажировки</small></div></div><div className="inline-note">Все уведомления в этом макете демонстрационные.</div></Modal>}
     {modal==='profile'&&<Modal title="Просмотр макета" onClose={()=>setModal(null)}><p className="muted">Переключение роли используется для проверки экранов. Это не механизм авторизации рабочего продукта.</p>{(['intern','buddy','lead','hr'] as Role[]).map(r=><button className="profile-role-row" key={r} onClick={()=>{changeRole(r);setModal(null);}}><Avatar size={32}/><span>{roleNames[r]}{r==='hr'?' · вариант':''}</span>{role===r&&<Check size={19}/>}</button>)}<button className="text-link" onClick={()=>{setPage('components');setModal(null);}}><SquaresFour size={18}/>Посмотреть компоненты</button></Modal>}
-    {modal==='states'&&<Modal title="Состояния прототипа" onClose={()=>setModal(null)}><p className="muted">Переключатели для просмотра макетов. Реальные сервисы не вызываются.</p><div className="demo-clock"><label>Демонстрационная дата<input aria-label="Демонстрационная дата" type="date" key={state.demoDate??'realtime'} ref={clockInput} defaultValue={today}/></label><p className="muted small">Только проверка макета. Бот сам добавит сообщения, срок которых наступил. В пользовательском чате выбора этапов нет.</p><div className="button-row"><button className="button button-primary" onClick={()=>{const date=clockInput.current?.value;if(date)setState(s=>({...s,demoDate:date}));}}>Применить дату</button><button className="button" onClick={()=>setState(s=>({...s,demoDate:null}))}>Использовать сегодняшнюю дату</button></div></div><label>Тема интерфейса<select value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><label>Состояние переписки<select value={mode} onChange={e=>setMode(e.target.value)}><option value="normal">Обычный сценарий</option><option value="no-plan">Нет опубликованного плана</option><option value="network-error">Ошибка загрузки</option><option value="model-error">Модель не отвечает</option><option value="no-source">Нет подходящего источника</option><option value="delivery-error">Сбой доставки уведомления</option><option value="source-error">Ошибка обновления материала</option></select></label><label className="setting-row"><span><strong>Условная интеграция доступов</strong><small>Отдельная демонстрация · вопрос OQ08</small></span><input type="checkbox" checked={directDemo} onChange={e=>setDirectDemo(e.target.checked)}/></label>{directDemo&&<><label>Ответ демонстрационного сервиса<select value={accessOutcome} onChange={e=>setAccessOutcome(e.target.value as typeof accessOutcome)}><option value="approved">Одобрение</option><option value="denied">Отказ</option><option value="unknown">Неизвестный результат</option></select></label><button className="button" onClick={()=>setModal(access.operationId?'access-status':'access-form')}>Открыть заявку</button></>}<div className="state-actions"><button className="button" onClick={()=>{setPage('components');setModal(null);}}>Компоненты</button><button className="button" onClick={()=>{localStorage.removeItem(STORE);localStorage.removeItem(LEGACY_STORE);setState(initialState());setViewInternId('intern-sasha');setSelectedScenarioId('scenario-original');restoreBlocked.current=false;setSaveError('');if(chatScroll.current)chatScroll.current.scrollTop=0;setAccess(EMPTY_ACCESS);setDirectDemo(false);setMode('normal');setRole('intern');setPage('messages');setModal(null);notify('Демонстрация начата заново');}}>Начать демонстрацию заново</button></div></Modal>}
+    {modal==='states'&&<Modal title="Состояния прототипа" onClose={()=>setModal(null)}><p className="muted">Переключатели для просмотра макетов. Реальные сервисы не вызываются.</p><div className="demo-clock"><label>Демонстрационная дата<input aria-label="Демонстрационная дата" type="date" key={state.demoDate??'realtime'} ref={clockInput} defaultValue={today}/></label><p className="muted small">Только проверка макета. Бот сам добавит сообщения, срок которых наступил. В пользовательском чате выбора этапов нет.</p><div className="button-row"><button className="button button-primary" onClick={()=>{const date=clockInput.current?.value;if(!date)return;if(serverMode)void setServerClock(date);else setState(s=>({...s,demoDate:date}));}}>Применить дату</button><button className="button" onClick={()=>{if(serverMode)void setServerClock(null);else setState(s=>({...s,demoDate:null}));}}>Использовать сегодняшнюю дату</button></div></div><label>Тема интерфейса<select value={theme} onChange={e=>setTheme(e.target.value)}><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><label>Состояние переписки<select value={mode} onChange={e=>setMode(e.target.value)}><option value="normal">Обычный сценарий</option><option value="no-plan">Нет опубликованного плана</option><option value="network-error">Ошибка загрузки</option><option value="model-error">Модель не отвечает</option><option value="no-source">Нет подходящего источника</option><option value="delivery-error">Сбой доставки уведомления</option><option value="source-error">Ошибка обновления материала</option></select></label><label className="setting-row"><span><strong>Условная интеграция доступов</strong><small>Отдельная демонстрация · вопрос OQ08</small></span><input type="checkbox" checked={directDemo} onChange={e=>setDirectDemo(e.target.checked)}/></label>{directDemo&&<><label>Ответ демонстрационного сервиса<select value={accessOutcome} onChange={e=>setAccessOutcome(e.target.value as typeof accessOutcome)}><option value="approved">Одобрение</option><option value="denied">Отказ</option><option value="unknown">Неизвестный результат</option></select></label><button className="button" onClick={()=>setModal(access.operationId?'access-status':'access-form')}>Открыть заявку</button></>}<div className="state-actions"><button className="button" onClick={()=>{setPage('components');setModal(null);}}>Компоненты</button><button className="button" onClick={()=>{localStorage.removeItem(STORE);localStorage.removeItem(LEGACY_STORE);setState(initialState());setViewInternId('intern-sasha');setSelectedScenarioId('scenario-original');restoreBlocked.current=false;setSaveError('');if(chatScroll.current)chatScroll.current.scrollTop=0;setAccess(EMPTY_ACCESS);setDirectDemo(false);setMode('normal');setRole('intern');setPage('messages');setModal(null);notify('Демонстрация начата заново');}}>Начать демонстрацию заново</button></div></Modal>}
     {modal==='publish'&&<Modal title="Опубликовать сценарий?" onClose={()=>setModal(null)} footer={<><button className="button" onClick={()=>setModal(null)}>Вернуться к настройке</button><button className="button button-primary" onClick={publish}>Опубликовать</button></>}><p>Стажёр, бадди и руководитель будут получать предусмотренные сообщения по датам этого сценария.</p>{selectedScenario?.internId&&state.activeScenarios[selectedScenario.internId]&&state.activeScenarios[selectedScenario.internId].scenarioId!==selectedScenario.id&&<div className="inline-note replacement-note"><Info size={20}/><p>Этот вариант заменит «{state.scenarios.find(s=>s.id===state.activeScenarios[selectedScenario.internId!].scenarioId)?.published?.name}» у стажёра {draft.intern}. Прежний сценарий останется в списке. Уже наступившие этапы повторно не отправляются; новый вариант используется для дат после {dateLabel(today,true)}</p></div>}<div className="publish-summary"><p><span>Стажёр</span><strong>{draft.intern}</strong></p><p><span>Бадди</span><strong>{draft.buddy}</strong></p><p><span>Длительность</span><strong>{draft.months} месяцев</strong></p><p><span>Блоков</span><strong>{draft.blocks.length}</strong></p></div><p className="muted small">В макете публикация сохраняет сценарий только в этом браузере. Уже показанные сообщения остаются в истории.</p></Modal>}
     {modal==='preview'&&<Modal title="Предпросмотр сообщений" onClose={()=>setModal(null)} wide><div className="preview-role-tabs tabs" role="tablist">{(['intern','buddy','lead'] as Role[]).map(r=><button role="tab" aria-selected={previewRole===r} key={r} onClick={()=>setPreviewRole(r)}>{roleNames[r]}</button>)}</div><div className="preview-conversation">{StageMessage({b:draftBlock,p:draft,asRole:previewRole,preview:true})}</div></Modal>}
     {modal==='add-block'&&<Modal title="Готовые блоки" onClose={()=>setModal(null)}><p className="muted">Добавь блок и настрой даты и тексты для участников.</p><div className="library-list">{makePlan(draft.months).blocks.map(b=><button key={b.id} onClick={()=>{const added={...clone(b),id:b.id+'-'+crypto.randomUUID()};updateDraft({blocks:[...draft.blocks,added]});setEditId(added.id);setModal(null);notify('Блок добавлен в черновик');}}><CalendarBlank size={22}/><span><strong>{b.title}</strong><small>{b.tasks.length} пункта · сообщения трём ролям</small></span><Plus size={20}/></button>)}</div></Modal>}

@@ -71,18 +71,20 @@ export function planFromServer(p: ApiPlan, people: Map<string, string>, version 
   return {
     name: p.name, intern: name(p.internId), buddy: name(p.buddyId), lead: name(p.leadId),
     team: p.teamId, start: p.start, months: p.months, version,
-    blocks: p.blocks.map(b => {
-      const tpl = templateBlock(b.id, p.months);
-      return {
-        id: b.id, stageKind: b.stageKind as Block['stageKind'], title: b.title, date: b.date, endDate: b.endDate ?? '',
-        eyebrow: tpl?.eyebrow ?? '', process: tpl?.process ?? '',
-        intern: b.intern, buddy: b.buddy, lead: b.lead,
-        tasks: b.tasks.map(t => ({
-          id: t.id, title: t.title, description: t.description, link: t.link, kind: t.kind as LinkKind,
-          ...(t.url ? { url: t.url } : {}), ...(t.actions ? { actions: t.actions } : {}),
-        })),
-      };
-    }),
+    blocks: p.blocks.map(b => blockFromServer(b, p.months)),
+  };
+}
+
+export function blockFromServer(b: ApiBlock, months: 6 | 9 = 6): Block {
+  const tpl = templateBlock(b.id, months);
+  return {
+    id: b.id, stageKind: b.stageKind as Block['stageKind'], title: b.title, date: b.date, endDate: b.endDate ?? '',
+    eyebrow: tpl?.eyebrow ?? '', process: tpl?.process ?? '',
+    intern: b.intern, buddy: b.buddy, lead: b.lead,
+    tasks: b.tasks.map(t => ({
+      id: t.id, title: t.title, description: t.description, link: t.link, kind: t.kind as LinkKind,
+      ...(t.url ? { url: t.url } : {}), ...(t.actions ? { actions: t.actions } : {}),
+    })),
   };
 }
 

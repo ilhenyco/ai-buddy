@@ -33,6 +33,19 @@ export type ApiScenario = {
 export type ScenarioPage = { items: ApiScenario[]; nextCursor: string | null; counts: { all: number; drafts: number; published: number } };
 export type Publication = { scenario: ApiScenario; replacedScenarioId: string | null; cutoffDate: string | null; activeRevisionId: string };
 
+// messages (contract + two extensions: Message.next and FeedPage.activePlan, see backend/README.md)
+export type ApiMessage = {
+  id: string; assignmentId: string; kind: 'checkpoint' | 'user' | 'assistant'; recipientUserId: string; createdAt: string; text: string;
+  scenarioId?: string; revisionId?: string; block?: ApiBlock; next?: { id: string; title: string; date: string };
+};
+export type ApiCheck = { messageId: string; taskId: string; userId: string; checked: boolean; updatedAt: string };
+export type FeedPage = {
+  items: ApiMessage[]; nextCursor: string | null; checks: ApiCheck[]; serverTime: string;
+  activePlan: { scenarioId: string; revisionId: string; start: string; months: 6 | 9 } | null;
+};
+export type ApiNotification = { id: string; messageId: string; assignmentId: string; title: string; createdAt: string; deliveryStatus: string };
+export type ClockState = { today: string; shifted: boolean; created: number };
+
 // ---------- errors ----------
 
 export class ApiError extends Error {
@@ -121,6 +134,17 @@ export const api = {
     request<Publication>('POST', `/scenarios/${encodeURIComponent(id)}/publications`,
       { draftVersion: version, expectedActiveScenarioId, confirmReplacement },
       { ...ifMatch(version), 'Idempotency-Key': key }),
+
+  // messages by the calendar
+  listMessages: (assignmentId: string, limit = 200) =>
+    request<FeedPage>('GET', `/assignments/${encodeURIComponent(assignmentId)}/messages?limit=${limit}`),
+  setCheck: (messageId: string, taskId: string, checked: boolean) =>
+    request<ApiCheck>('PUT', `/messages/${encodeURIComponent(messageId)}/tasks/${encodeURIComponent(taskId)}/check`, { checked }),
+  listNotifications: () => request<{ items: ApiNotification[]; nextCursor: string | null }>('GET', '/notifications'),
+
+  // demo clock (DEMO_MODE): move "today" for the scheduler, null returns to real time
+  getClock: () => request<ClockState>('GET', '/demo/clock'),
+  setClock: (date: string | null) => request<ClockState>('POST', '/demo/clock', { date }),
 };
 
 /** A short message for the UI, by error code from the contract. */

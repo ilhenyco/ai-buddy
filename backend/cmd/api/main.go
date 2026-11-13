@@ -75,6 +75,13 @@ func run(log *slog.Logger) error {
 		Location:       loc,
 	}, log)
 
+	// the scheduler: due blocks -> messages, every SCHEDULER_INTERVAL and right after a publication
+	interval, err := time.ParseDuration(env("SCHEDULER_INTERVAL", "30s"))
+	if err != nil {
+		return err
+	}
+	go a.Messages.Run(ctx, interval)
+
 	srv := &http.Server{Addr: env("HTTP_ADDR", ":8080"), Handler: a.Handler, ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
