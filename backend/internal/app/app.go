@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/identity"
+	"github.com/ilhenyco/ai-buddy/backend/internal/messages"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
@@ -35,6 +36,10 @@ type App struct {
 	Handler   http.Handler
 	Identity  *identity.Service
 	Scenarios *scenarios.Service
+	Messages  *messages.Service
+	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
+	// (POST /demo/clock); sessions keep the real clock.
+	Clock *clock.Offset
 }
 
 // Prepare applies migrations and, if requested, the demo seed.
@@ -64,7 +69,10 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	}
 	id := &identity.Service{DB: d, Secret: cfg.SessionSecret, AllowedOrigins: cfg.AllowedOrigins,
 		Now: clk.Now, SecureCookie: cfg.SecureCookie}
-	sc := &scenarios.Service{DB: d, Clock: clk, Loc: cfg.Location}
+	calendar := clock.NewOffset(clk)
+	sc := &scenarios.Service{DB: d, Clock: calendar, Loc: cfg.Location}
+	ms := &messages.Service{DB: d, Clock: calendar, Loc: cfg.Location, Plans: sc, Log: log}
+	sc.AfterPublish = ms.Trigger
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /healthz", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
@@ -76,10 +84,15 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	}))
 	id.Routes(mux, APIPrefix, cfg.DemoLogin)
 	sc.Routes(mux, APIPrefix, id.Authenticate)
-	// Next modules: messages (Бэк-1), answers/knowledge (ML), access mock (Бэк-2).
+	var demoClock *clock.Offset
+	if cfg.DemoLogin {
+		demoClock = calendar
+	}
+	ms.Routes(mux, APIPrefix, id.Authenticate, demoClock)
+	// Next modules: answers/knowledge (ML), access mock (Бэк-2).
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		return httpx.NotFound()
 	}))
-	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc}
+	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Clock: calendar}
 }
