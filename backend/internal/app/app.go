@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/access"
+	"github.com/ilhenyco/ai-buddy/backend/internal/demo"
 	"github.com/ilhenyco/ai-buddy/backend/internal/identity"
 	"github.com/ilhenyco/ai-buddy/backend/internal/messages"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
@@ -42,6 +43,7 @@ type App struct {
 	Scenarios *scenarios.Service
 	Messages  *messages.Service
 	Access    *access.Service // nil when Config.AccessService is nil
+	Demo      *demo.Service   // nil outside DEMO_MODE
 	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
 	// (POST /demo/clock); sessions keep the real clock.
 	Clock *clock.Offset
@@ -94,17 +96,28 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 		demoClock = calendar
 	}
 	ms.Routes(mux, APIPrefix, id.Authenticate, demoClock)
+	var dm *demo.Service
+	if cfg.DemoLogin {
+		dm = &demo.Service{DB: d, Calendar: calendar, Loc: cfg.Location,
+			Seed:    func(ctx context.Context) error { return scenarios.SeedDemo(ctx, d, calendar, cfg.Location) },
+			Deliver: ms.RunOnce}
+		ms.SaveDemoDate = dm.SaveDate
+		dm.Routes(mux, APIPrefix, id.Authenticate)
+	}
 	var acc *access.Service
 	if cfg.AccessService != nil {
 		// real time, not the demo calendar: drafts expire and requests are decided in real time
 		acc = &access.Service{DB: d, Clock: clk, External: cfg.AccessService, DraftTTL: 24 * time.Hour,
 			InFlight: 5 * time.Second}
 		acc.Routes(mux, APIPrefix, id.Authenticate, cfg.DemoLogin)
+		if dm != nil {
+			dm.AccessMode = cfg.AccessService.SetMode
+		}
 	}
 	// Next modules: answers/knowledge (ML).
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		return httpx.NotFound()
 	}))
-	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Clock: calendar}
+	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm, Clock: calendar}
 }

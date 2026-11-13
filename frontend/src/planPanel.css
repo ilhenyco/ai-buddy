@@ -1,5 +1,6 @@
 /* "План" tab next to "Сообщения": the plan without the chat around it. */
-.plan-page{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;background:var(--origin-paper)}
+.plan-page{flex:1;min-height:0;display:flex;overflow:hidden;background:var(--origin-paper)}
+.plan-scroll{flex:1;min-width:0;overflow:auto;scrollbar-width:thin}
 .plan-view{max-width:1080px;margin:0 auto;padding:32px 32px 48px;display:flex;flex-direction:column;gap:26px}
 .plan-view-head h2{font-size:34px!important;font-weight:500!important;letter-spacing:-1px!important;margin-bottom:12px}
 .plan-view-head .plan-progress{max-width:520px}

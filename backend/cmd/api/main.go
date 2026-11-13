@@ -84,6 +84,13 @@ func run(log *slog.Logger) error {
 		AccessService:  accessService,
 	}, log)
 
+	if a.Demo != nil {
+		// the demo date moved before a restart stays moved
+		if err := a.Demo.Restore(ctx); err != nil {
+			return err
+		}
+	}
+
 	// the scheduler: due blocks -> messages, every SCHEDULER_INTERVAL and right after a publication
 	interval, err := time.ParseDuration(env("SCHEDULER_INTERVAL", "30s"))
 	if err != nil {

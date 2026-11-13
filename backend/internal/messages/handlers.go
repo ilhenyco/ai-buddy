@@ -38,6 +38,11 @@ func (s *Service) Routes(mux *http.ServeMux, prefix string, auth func(http.Handl
 		} else if err := demo.SetToday(*in.Date, s.Loc); err != nil {
 			return httpx.Validation("Дата в формате ГГГГ-ММ-ДД.", "date")
 		}
+		if s.SaveDemoDate != nil {
+			if err := s.SaveDemoDate(r.Context(), in.Date); err != nil {
+				return err
+			}
+		}
 		n, err := s.RunOnce(r.Context())
 		if err != nil {
 			return err
