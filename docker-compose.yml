@@ -2,6 +2,7 @@
 #   app (frontend + API through nginx): http://localhost:8088
 #   API directly:                       http://localhost:8080 (healthz: /healthz)
 #   PostgreSQL with pgvector:           localhost:55432 (HOMYCH_DB_PORT)
+#   access service mock:                http://localhost:8091 (HOMYCH_MOCK_PORT)
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -28,11 +29,24 @@ services:
       APP_TZ: Europe/Moscow
       SCHEDULER_INTERVAL: 10s   # how often the scheduler checks due blocks
       ALLOWED_ORIGINS: http://localhost:8088,http://127.0.0.1:8088,http://127.0.0.1:4173,http://localhost:4173
+      ACCESS_SERVICE_URL: http://mock-access:8091   # the real access service replaces the mock here
     ports:
       - "${HOMYCH_API_PORT:-8080}:8080"
     depends_on:
       db:
         condition: service_healthy
+      mock-access:
+        condition: service_started
+
+  # demo stand-in for the access request service (OQ08): number, approval after a delay, deny / lost modes
+  mock-access:
+    build: ./backend
+    entrypoint: ["/mock-access"]
+    environment:
+      HTTP_ADDR: :8091
+      MOCK_APPROVE_AFTER: ${MOCK_APPROVE_AFTER:-20s}
+    ports:
+      - "${HOMYCH_MOCK_PORT:-8091}:8091"
 
   web:
     build: ./frontend

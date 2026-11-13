@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ilhenyco/ai-buddy/backend/internal/access"
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
@@ -67,12 +68,20 @@ func run(log *slog.Logger) error {
 		}
 	}
 
+	var accessService access.External
+	if u := os.Getenv("ACCESS_SERVICE_URL"); u != "" {
+		accessService = access.NewHTTPClient(u, 3*time.Second)
+	} else {
+		log.Warn("ACCESS_SERVICE_URL not set: access requests are switched off")
+	}
+
 	a := app.New(d, clock.System{}, app.Config{
 		DemoLogin:      demo,
 		SessionSecret:  []byte(secret),
 		AllowedOrigins: strings.Split(env("ALLOWED_ORIGINS", "http://127.0.0.1:4173,http://localhost:4173"), ","),
 		SecureCookie:   env("SECURE_COOKIE", "false") == "true",
 		Location:       loc,
+		AccessService:  accessService,
 	}, log)
 
 	// the scheduler: due blocks -> messages, every SCHEDULER_INTERVAL and right after a publication

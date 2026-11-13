@@ -1,13 +1,16 @@
 TEST_DATABASE_URL ?= postgres://homych:homych@localhost:55432/postgres?sslmode=disable
 export TEST_DATABASE_URL
 
-.PHONY: db run test cover lint
+.PHONY: db mock run test cover lint
 
 db:            ## start only PostgreSQL from the root docker-compose.yml
 	docker compose -f ../docker-compose.yml up -d db
 
-run: db        ## run the API locally on :8080
-	DATABASE_URL=postgres://homych:homych@localhost:55432/homych?sslmode=disable go run ./cmd/api
+mock:          ## run the access service mock on :8091 (approves after 20s)
+	go run ./cmd/mock-access
+
+run: db        ## run the API locally on :8080 (start `make mock` in another terminal for access requests)
+	DATABASE_URL=postgres://homych:homych@localhost:55432/homych?sslmode=disable ACCESS_SERVICE_URL=http://localhost:8091 go run ./cmd/api
 
 test:          ## all tests (needs PostgreSQL: make db)
 	go test -race -count=1 ./...

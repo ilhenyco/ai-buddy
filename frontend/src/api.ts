@@ -46,6 +46,16 @@ export type FeedPage = {
 export type ApiNotification = { id: string; messageId: string; assignmentId: string; title: string; createdAt: string; deliveryStatus: string };
 export type ClockState = { today: string; shifted: boolean; created: number };
 
+// access requests (OQ08): the server stores the operation first, then calls the access service
+export type AccessStatus = 'pending' | 'approved' | 'denied' | 'unknown';
+export type AccessDraft = { id: string; assignmentId: string; resourceId: string; reason: string; version: number; expiresAt: string };
+export type AccessOperation = {
+  id: string; assignmentId: string; resourceId: string; correlationId: string;
+  externalNumber: string | null; status: AccessStatus; submissionConfirmed: boolean; updatedAt: string;
+};
+export type ProtectedTask = { id: string; title: string; description: string; requiredResourceId: string };
+export type AccessMode = 'approve' | 'deny' | 'lost';
+
 // ---------- errors ----------
 
 export class ApiError extends Error {
@@ -70,7 +80,7 @@ let fetchImpl: Fetch = (...args) => fetch(...args);
 /** For tests: replace the network. */
 export function setFetch(f: Fetch) { fetchImpl = f; }
 
-function newKey() {
+export function newKey() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random();
 }
 
@@ -145,6 +155,20 @@ export const api = {
   // demo clock (DEMO_MODE): move "today" for the scheduler, null returns to real time
   getClock: () => request<ClockState>('GET', '/demo/clock'),
   setClock: (date: string | null) => request<ClockState>('POST', '/demo/clock', { date }),
+
+  // access requests: draft -> explicit confirmation by the person -> status reconciled by correlationId
+  createAccessDraft: (body: { assignmentId: string; resourceId: string; reason: string }, key = newKey()) =>
+    request<AccessDraft>('POST', '/access-drafts', body, { 'Idempotency-Key': key }),
+  confirmAccess: (draftId: string, draftVersion: number, reason: string, key = newKey()) =>
+    request<AccessOperation>('POST', `/access-drafts/${encodeURIComponent(draftId)}/confirm`,
+      { draftVersion, reason, confirmed: true }, { 'Idempotency-Key': key }),
+  getAccessOperation: (id: string) => request<AccessOperation>('GET', `/access-operations/${encodeURIComponent(id)}`),
+  listAccessOperations: (assignmentId: string) =>
+    request<{ items: AccessOperation[] }>('GET', `/assignments/${encodeURIComponent(assignmentId)}/access-operations`),
+  getProtectedTask: (assignmentId: string) =>
+    request<ProtectedTask>('GET', `/assignments/${encodeURIComponent(assignmentId)}/protected-first-task`),
+  // demo only: what the access mock answers to the next requests
+  setAccessMode: (mode: AccessMode) => request<{ mode: AccessMode }>('POST', '/demo/access-mode', { mode }),
 };
 
 /** A short message for the UI, by error code from the contract. */
@@ -154,6 +178,7 @@ export function errorText(e: unknown): string {
   if (e.reason === 'REPLACEMENT_NOT_CONFIRMED') return 'У стажёра уже есть опубликованный сценарий. Подтвердите замену.';
   if (e.reason === 'ACTIVE_SCENARIO_CHANGED') return 'Действующий сценарий стажёра изменился. Обновите список и проверьте выбор.';
   if (e.reason === 'PUBLISHED_INTERN_LOCKED') return 'У опубликованного сценария нельзя сменить стажёра.';
+  if (e.reason === 'DRAFT_EXPIRED') return 'Черновик заявки устарел. Отправьте заявку ещё раз.';
   if (e.status === 401) return 'Сессия закончилась. Войдите снова.';
   return e.message;
 }
