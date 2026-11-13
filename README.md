@@ -71,7 +71,8 @@ npm run test:sites
 | Подсказки вопросов | getSuggestions | ⏳ не начато |
 | Вопросы и ответы AI (RAG, модель) | askQuestion, getAnswer | ⏳ не начато |
 | Источники знаний | listSources, createSource, getSource, updateSource, excludeSource, getSourceJob | ⏳ не начато |
-| Заявка на доступ через сервис (OQ08): мок-сервис доступов, черновик → подтверждение человеком → статус, защищённая первая задача | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ✅ в ветке `feat/access` |
+| Заявка на доступ через сервис (OQ08): мок-сервис доступов, черновик → подтверждение человеком → статус, защищённая первая задача | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ✅ в `main` |
+| Вкладка «План» рядом с «Сообщениями»: текущий этап, все ссылки, этапы с отметками, что впереди (только FRONT, данные из ленты) | — | ✅ в ветке `feat/plan-panel` |
 | MCP | — | ⏳ не начато |
 
 Новый модуль добавляется в `backend/internal/<модуль>/` по образцу сценариев — см. [backend/README.md](backend/README.md). Обновляйте эту таблицу в своём PR.

@@ -1,6 +1,6 @@
 export type Role = 'intern' | 'buddy' | 'lead' | 'hr';
 export type StageKind = 'start' | 'week' | 'adaptation' | 'practice' | 'midpoint' | 'final-prep' | 'final' | 'after';
-export type Page = 'messages' | 'scenarios' | 'builder' | 'knowledge' | 'components';
+export type Page = 'messages' | 'plan' | 'scenarios' | 'builder' | 'knowledge' | 'components';
 export type LinkKind = 'team' | 'intern' | 'buddy' | 'lead' | 'access' | 'task' | 'courses' | 'practice' | 'midpoint' | 'final' | 'handoff' | 'hr';
 export type Task = { id: string; title: string; description: string; link: string; kind: LinkKind; url?: string; actions?: Partial<Record<'buddy'|'lead',string>> };
 export type Block = { id: string; stageKind?: StageKind; title: string; eyebrow: string; date: string; endDate: string; intern: string; buddy: string; lead: string; tasks: Task[]; process: string };
