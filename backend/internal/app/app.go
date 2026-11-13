@@ -12,6 +12,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/ilhenyco/ai-buddy/backend/internal/access"
 	"github.com/ilhenyco/ai-buddy/backend/internal/identity"
 	"github.com/ilhenyco/ai-buddy/backend/internal/messages"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
@@ -30,6 +31,9 @@ type Config struct {
 	AllowedOrigins []string
 	SecureCookie   bool
 	Location       *time.Location
+	// AccessService is the external access request service (the mock in the demo).
+	// nil switches the access module off: its routes answer 404.
+	AccessService access.External
 }
 
 type App struct {
@@ -37,6 +41,7 @@ type App struct {
 	Identity  *identity.Service
 	Scenarios *scenarios.Service
 	Messages  *messages.Service
+	Access    *access.Service // nil when Config.AccessService is nil
 	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
 	// (POST /demo/clock); sessions keep the real clock.
 	Clock *clock.Offset
@@ -89,10 +94,17 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 		demoClock = calendar
 	}
 	ms.Routes(mux, APIPrefix, id.Authenticate, demoClock)
-	// Next modules: answers/knowledge (ML), access mock (Бэк-2).
+	var acc *access.Service
+	if cfg.AccessService != nil {
+		// real time, not the demo calendar: drafts expire and requests are decided in real time
+		acc = &access.Service{DB: d, Clock: clk, External: cfg.AccessService, DraftTTL: 24 * time.Hour,
+			InFlight: 5 * time.Second}
+		acc.Routes(mux, APIPrefix, id.Authenticate, cfg.DemoLogin)
+	}
+	// Next modules: answers/knowledge (ML).
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		return httpx.NotFound()
 	}))
-	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Clock: calendar}
+	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Clock: calendar}
 }

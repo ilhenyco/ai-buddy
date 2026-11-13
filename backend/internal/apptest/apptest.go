@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ilhenyco/ai-buddy/backend/internal/access"
+	"github.com/ilhenyco/ai-buddy/backend/internal/accessmock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/testdb"
@@ -28,7 +30,11 @@ type Env struct {
 	Clock  *clock.Manual
 	App    *app.App
 	Server *httptest.Server
+	// AccessMock is the access request service behind the API (approves after MockApproveAfter).
+	AccessMock *accessmock.Mock
 }
+
+const MockApproveAfter = 20 * time.Second
 
 func New(t testing.TB) *Env {
 	t.Helper()
@@ -37,13 +43,18 @@ func New(t testing.TB) *Env {
 		t.Fatalf("prepare: %v", err)
 	}
 	clk := clock.NewManual(DefaultNow)
+	mock := accessmock.New(clk, MockApproveAfter)
+	mock.LostDelay = 2 * time.Second
+	mockSrv := httptest.NewServer(mock.Handler())
+	t.Cleanup(mockSrv.Close)
 	loc, _ := time.LoadLocation("Europe/Moscow")
 	a := app.New(d, clk, app.Config{DemoLogin: true, SessionSecret: []byte("test-secret"),
-		AllowedOrigins: []string{"http://127.0.0.1:4173"}, Location: loc},
+		AllowedOrigins: []string{"http://127.0.0.1:4173"}, Location: loc,
+		AccessService: access.NewHTTPClient(mockSrv.URL, 300*time.Millisecond)},
 		slog.New(slog.NewTextHandler(io.Discard, nil)))
 	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)
-	return &Env{DB: d, Clock: clk, App: a, Server: srv}
+	return &Env{DB: d, Clock: clk, App: a, Server: srv, AccessMock: mock}
 }
 
 // Client is a logged-in (or anonymous) browser-like client.
