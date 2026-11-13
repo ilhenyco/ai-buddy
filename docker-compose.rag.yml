@@ -14,6 +14,9 @@ services:
       RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
       RAG_DEMO_MODE: "true"
       RAG_PROVIDER: ${RAG_PROVIDER:-ollama}
+      RAG_EMBEDDING_TIMEOUT: ${RAG_EMBEDDING_TIMEOUT:-15}
+      RAG_GENERATION_TIMEOUT: ${RAG_GENERATION_TIMEOUT:-45}
+      RAG_REQUEST_TIMEOUT: ${RAG_REQUEST_TIMEOUT:-60}
       RAG_MCP_TOKENS: ${RAG_MCP_TOKENS:-{}}
       RAG_SYNTHETIC_SUBJECTS: ${RAG_SYNTHETIC_SUBJECTS:-[]}
     ports:
@@ -34,6 +37,27 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     # CPU default; add a GPU override on a host with the appropriate runtime.
+
+  rag-demo:
+    profiles: [rag-demo]
+    build: ./knowledge
+    command: ["python", "-m", "homych_knowledge.demo", "--host", "0.0.0.0"]
+    environment:
+      RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
+      RAG_DEMO_MODE: "true"
+      RAG_DEMO_API_URL: http://knowledge:8090
+      RAG_DEMO_TIMEOUT: ${RAG_DEMO_TIMEOUT:-250}
+      RAG_DEMO_PUBLIC_ORIGINS: '["http://127.0.0.1:${HOMYCH_DEMO_PORT:-8091}","http://localhost:${HOMYCH_DEMO_PORT:-8091}"]'
+    ports:
+      - "127.0.0.1:${HOMYCH_DEMO_PORT:-8091}:8091"
+    depends_on:
+      knowledge:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8091/')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
 volumes:
   ollama-data:

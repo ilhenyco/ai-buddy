@@ -59,14 +59,15 @@ jobs:
           RAG_PROVIDER: deterministic
           RAG_MCP_TOKENS: '{"ci-mcp-token-with-at-least-24-characters":"u-sasha"}'
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.rag.yml up -d --build --wait db api knowledge
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo up -d --build --wait db api knowledge rag-demo
           docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python -m homych_knowledge.ingest playbook
           docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python smoke.py
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T rag-demo python -c "import httpx; r=httpx.post('http://localhost:8091/ask', headers={'Origin':'http://localhost:8091'}, json={'query':'Как устроено обучение и развитие?'}, timeout=65); r.raise_for_status(); assert r.json()['status']=='answered'; print('Demo page smoke passed')"
       - name: Stop smoke services
         if: always()
         env:
           RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
-        run: docker compose -f docker-compose.yml -f docker-compose.rag.yml down
+        run: docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo down
       - uses: actions/upload-artifact@v4
         with:
           name: knowledge-coverage

@@ -1,7 +1,7 @@
 # RAG и MCP Хомыча
 
-Python 3.12. HTTP и MCP используют общий retrieval с ACL. Go владеет идентичностью, назначениями,
-сценариями и историей. Модуль не добавляет публичные `askQuestion/getAnswer` и не переключает FRONT
+Python 3.12. HTTP и MCP используют общий retrieval с ACL. Go владеет идентичностью, назначениями
+и сценариями; хранение истории ответов ещё требуется реализовать в Go. Модуль не добавляет публичные `askQuestion/getAnswer` и не переключает FRONT
 с локальных AI-ответов. Инструкция следующему разработчику Go — ниже.
 
 ## Запуск
@@ -16,10 +16,23 @@ docker compose -f docker-compose.yml -f docker-compose.rag.yml exec ollama ollam
 docker compose -f docker-compose.yml -f docker-compose.rag.yml exec knowledge python -m homych_knowledge.ingest playbook
 ```
 
+Для отдельной тестовой страницы добавить профиль (можно выполнить после предыдущих команд):
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo up -d --build --wait
+```
+
+Открыть http://127.0.0.1:8091/ . Вся последовательность для нового клона приведена в [корневом README](../README.md#запуск-rag-с-живой-моделью-и-тестовой-страницей).
+Страница запускается отдельным `rag-demo`-сервисом, фиксирует демо-пользователя на сервере и
+не отдаёт браузеру service token. Она не проверяет пользовательскую сессию и предназначена только
+для локального оператора в DEMO_MODE. Это не подключение основного чата React к RAG.
+
 Сервис: `http://localhost:8090`. MCP: `http://localhost:8090/mcp/` с завершающим `/`.
 `/healthz` проверяет процесс, `/readyz` — доступный опубликованный индекс, до ingestion возвращает
 503. Это не проверка всех зависимостей. Compose использует CPU; для GPU нужен override под хост.
-Скорость и потребление RAM/VRAM пока не измерены. Базовый `docker compose up` работает как раньше.
+В native CPU-пробе на Ryzen 7 8845HS ответ занимал около 43 секунд; это отдельное наблюдение,
+не SLA и не измерение p95/нагрузки. Потребление RAM/VRAM не оформлено как проверенный минимум.
+Базовый `docker compose up` работает как раньше.
 
 Пример внутреннего запроса, shell с экспортированной переменной:
 
@@ -30,6 +43,39 @@ curl http://localhost:8090/internal/v1/answer \
 ```
 
 В PowerShell использовать `$env:RAG_SERVICE_TOKEN` и `curl.exe` либо `Invoke-RestMethod`.
+
+### Native Python и локальный стенд
+
+Нужны отдельно запущенные PostgreSQL с pgvector, Go API с тем же `RAG_SERVICE_TOKEN` и Ollama
+с установленными моделями. Для них настроить `RAG_DATABASE_URL`, `RAG_GO_URL`, `RAG_OLLAMA_URL`
+через окружение. Из `knowledge` установить зависимости `uv sync --frozen`.
+
+На Windows PowerShell секрет и режим можно загрузить из корневого dotenv, затем запустить API:
+
+```powershell
+$env:RAG_DEMO_MODE = 'true'
+uv run python -m dotenv -f ../.env run python -m homych_knowledge.app
+```
+
+После подготовки БД и моделей в другом терминале выполнить ingestion:
+
+```powershell
+$env:RAG_DEMO_MODE = 'true'
+uv run python -m dotenv -f ../.env run python -m homych_knowledge.ingest playbook
+```
+
+Для страницы вопросов в третьем терминале:
+
+```powershell
+$env:RAG_DEMO_MODE = 'true'
+uv run python -m homych_knowledge.demo --env-file ../.env
+```
+
+Native API по умолчанию слушает `8090`; демо-страница — `127.0.0.1:8091`.
+Системные пути и установленные вручную зависимости конкретного Windows/WSL-стенда в Git не входят;
+для воспроизводимого запуска команды используйте Compose. Чтобы не конфликтовать с уже работающим
+native-стендом на этой машине, остановите его перед запуском тех же портов в Docker или задайте
+`HOMYCH_API_PORT`, `HOMYCH_DB_PORT`, `HOMYCH_RAG_PORT`, `HOMYCH_DEMO_PORT`.
 
 ## MCP
 
@@ -72,9 +118,10 @@ python -m homych_knowledge.ingest playbook --repo /path/to/playbook
 владельца знаний и интерфейс материалов в этой поставке не назначаются.
 
 Поиск: PostgreSQL 16 + pgvector exact cosine, FTS russian/simple top-20, vector top-20, RRF(60),
+до двух chunks документа и пяти в результате.
 FTS сопоставляет содержательные слова вопроса через OR с весами заголовка/раздела/текста;
 simple-канал использует латинские идентификаторы, не русские служебные слова.
-до двух chunks документа и пяти в результате. Это FTS, не BM25. ACL применяется до ранжирования.
+Это FTS, не BM25. ACL применяется до ранжирования.
 Чанк до 1200 Unicode-символов, overlap до 150 внутри раздела. При отказе embeddings или несовпадении
 model digest используется FTS (`lexical_degraded`). Общего кэша ответов нет. Порог 0.50 — стартовая
 настройка, не измеренная уверенность. HNSW, reranker и Redis для этого MVP не используются.
@@ -123,8 +170,16 @@ docker compose -f docker-compose.yml -f docker-compose.rag.yml exec knowledge \
    не успешный содержательный ответ.
 
 Стартовые configurable budgets: embedding 15 с, generation 45 с, весь запрос 60 с. Это пределы
-эксперимента на CPU, не SLA. Go HTTP timeout должен превышать общий budget Python. Календарь
+библиотечной конфигурации, не SLA. Корневой `.env.example` задаёт для локальной CPU-пробы
+120/180/240 с соответственно; Compose передаёт эти параметры в Python. Тайм-аут демо-прокси —
+250 с (`RAG_DEMO_TIMEOUT`), он должен быть больше общего `RAG_REQUEST_TIMEOUT`.
+Go HTTP timeout должен превышать общий budget Python. Календарь
 не зависит от доступности AI. Схему `rag` применяет CLI `ingest migrate/playbook`, бизнес-миграции — Go.
+
+Известные ограничения: отсутствие источника в части живых вопросов пока может классифицироваться
+как `unavailable` из-за невалидных идентификаторов цитат, а не как `no_evidence`. Полный контекст
+периода и долговечная история пока не подключены. [Аудит](../docs/ai-buddy/implementation-audit-2026-11-13.md)
+фиксирует эти ограничения и состав оставшихся модулей; сквозная интеграция требует отдельных E2E-тестов.
 
 ## Проверки
 
