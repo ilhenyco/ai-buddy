@@ -37,6 +37,20 @@ export type Publication = { scenario: ApiScenario; replacedScenarioId: string | 
 export type ApiMessage = {
   id: string; assignmentId: string; kind: 'checkpoint' | 'user' | 'assistant'; recipientUserId: string; createdAt: string; text: string;
   scenarioId?: string; revisionId?: string; block?: ApiBlock; next?: { id: string; title: string; date: string };
+  // personal chat: sources of an answer, its AnswerJob, the code of an answer that failed
+  citations?: ApiCitation[]; answerRequestId?: string; errorCode?: string;
+};
+export type ApiCitation = { sourceId: string; sourceVersionId: string; title: string; fragment: string; url?: string };
+// team materials (sources): every save is a version indexed by the knowledge service in the background
+export type ApiSource = {
+  id: string; versionId: string | null; title: string; body: string; category: string;
+  acl: { teamIds: string[]; allowedRoleKinds?: string[] }; status: 'ready' | 'indexing' | 'error' | 'excluded'; updatedAt: string; etag: string;
+};
+export type SourceInput = { title: string; body: string; category: string; acl: { teamIds: string[] } };
+export type IndexJob = { id: string; sourceId: string; candidateVersionId: string; status: 'queued' | 'running' | 'ready' | 'failed'; activeVersionId: string | null; error: { code: string; message: string } | null };
+export type AnswerJob = {
+  id: string; assignmentId: string; questionMessageId: string; status: 'queued' | 'running' | 'completed' | 'failed';
+  answer: ApiMessage | null; error: { code: string; message: string; requestId: string } | null; createdAt: string;
 };
 export type ApiCheck = { messageId: string; taskId: string; userId: string; checked: boolean; updatedAt: string };
 export type FeedPage = {
@@ -146,8 +160,18 @@ export const api = {
       { ...ifMatch(version), 'Idempotency-Key': key }),
 
   // messages by the calendar
-  listMessages: (assignmentId: string, limit = 200) =>
-    request<FeedPage>('GET', `/assignments/${encodeURIComponent(assignmentId)}/messages?limit=${limit}`),
+  listMessages: (assignmentId: string, limit = 200, cursor?: string) =>
+    request<FeedPage>('GET', `/assignments/${encodeURIComponent(assignmentId)}/messages?limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`),
+  /** The whole history: checkpoints and the personal chat can exceed one page. */
+  async listAllMessages(assignmentId: string): Promise<FeedPage> {
+    let page = await api.listMessages(assignmentId);
+    const items = [...page.items];
+    for (let n = 0; page.nextCursor && n < 20; n++) {
+      page = await api.listMessages(assignmentId, 200, page.nextCursor);
+      items.push(...page.items);
+    }
+    return { ...page, items, nextCursor: null };
+  },
   setCheck: (messageId: string, taskId: string, checked: boolean) =>
     request<ApiCheck>('PUT', `/messages/${encodeURIComponent(messageId)}/tasks/${encodeURIComponent(taskId)}/check`, { checked }),
   listNotifications: () => request<{ items: ApiNotification[]; nextCursor: string | null }>('GET', '/notifications'),
@@ -155,6 +179,20 @@ export const api = {
   // demo clock (DEMO_MODE): move "today" for the scheduler, null returns to real time
   getClock: () => request<ClockState>('GET', '/demo/clock'),
   setClock: (date: string | null) => request<ClockState>('POST', '/demo/clock', { date }),
+  // personal questions: the question and its job are stored at once, the answer comes later
+  askQuestion: (assignmentId: string, text: string, key = newKey()) =>
+    request<AnswerJob>('POST', `/assignments/${encodeURIComponent(assignmentId)}/questions`, { text }, { 'Idempotency-Key': key }),
+  getAnswer: (id: string) => request<AnswerJob>('GET', `/answers/${encodeURIComponent(id)}`),
+  listSources: (q = '') => request<{ items: ApiSource[]; nextCursor: string | null }>('GET', `/sources?limit=100${q ? `&q=${encodeURIComponent(q)}` : ''}`),
+  getSource: (id: string) => request<ApiSource>('GET', `/sources/${encodeURIComponent(id)}`),
+  createSource: (body: SourceInput, key = newKey()) => request<IndexJob>('POST', '/sources', body, { 'Idempotency-Key': key }),
+  updateSource: (id: string, etag: string, body: SourceInput, key = newKey()) =>
+    request<IndexJob>('PUT', `/sources/${encodeURIComponent(id)}`, body, { 'Idempotency-Key': key, 'If-Match': `"${etag}"` }),
+  excludeSource: (id: string, etag: string, key = newKey()) =>
+    request<ApiSource>('POST', `/sources/${encodeURIComponent(id)}/exclude`, undefined, { 'Idempotency-Key': key, 'If-Match': `"${etag}"` }),
+  /** Three questions of the current stage, stored on the server: stable after answers and reloads. */
+  getSuggestions: (assignmentId: string) =>
+    request<{ stageKey: string; stageKind: string; poolVersion: string; questions: string[]; selectedAt: string }>('GET', `/assignments/${encodeURIComponent(assignmentId)}/suggestions`),
   /** Deletes everything done on the stand: demo scenarios again, real date, due messages sent. */
   resetDemo: () => request<ClockState>('POST', '/demo/reset'),
 

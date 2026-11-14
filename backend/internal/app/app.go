@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/access"
+	"github.com/ilhenyco/ai-buddy/backend/internal/answers"
 	"github.com/ilhenyco/ai-buddy/backend/internal/demo"
 	"github.com/ilhenyco/ai-buddy/backend/internal/identity"
 	"github.com/ilhenyco/ai-buddy/backend/internal/messages"
@@ -20,6 +21,8 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
+	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
+	"github.com/ilhenyco/ai-buddy/backend/internal/suggestions"
 	"github.com/ilhenyco/ai-buddy/backend/migrations"
 	"github.com/ilhenyco/ai-buddy/backend/seed"
 )
@@ -36,6 +39,14 @@ type Config struct {
 	// AccessService is the external access request service (the mock in the demo).
 	// nil switches the access module off: its routes answer 404.
 	AccessService access.External
+	// Knowledge is the Python RAG service (knowledge/). nil: questions get an honest
+	// "search is not connected" reply instead of an answer.
+	Knowledge answers.Knowledge
+	// SourcesIndex is the ingestion queue of the same service (a documents:write client key).
+	// nil: materials are stored, their index jobs fail with "search is not connected".
+	SourcesIndex sources.Index
+	// SourcesURLBase + source id is the link stored with an indexed material.
+	SourcesURLBase string
 }
 
 type App struct {
@@ -45,6 +56,8 @@ type App struct {
 	Messages  *messages.Service
 	Access    *access.Service // nil when Config.AccessService is nil
 	Demo      *demo.Service   // nil outside DEMO_MODE
+	Answers   *answers.Service
+	Sources   *sources.Service
 	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
 	// (POST /demo/clock); sessions keep the real clock.
 	Clock *clock.Offset
@@ -116,10 +129,19 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 			dm.AccessMode = cfg.AccessService.SetMode
 		}
 	}
-	// Next modules: answers/knowledge (ML).
+	// personal questions: jobs are stored first, the worker calls the knowledge service
+	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log}
+	ans.Routes(mux, APIPrefix, id.Authenticate)
+	sg := &suggestions.Service{DB: d, Calendar: calendar, Clock: clk, Loc: cfg.Location}
+	sg.Routes(mux, APIPrefix, id.Authenticate)
+	if cfg.SourcesURLBase == "" {
+		cfg.SourcesURLBase = "https://homych.invalid/sources/"
+	}
+	src := &sources.Service{DB: d, Clock: clk, Index: cfg.SourcesIndex, URLBase: cfg.SourcesURLBase, Log: log}
+	src.Routes(mux, APIPrefix, id.Authenticate)
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		return httpx.NotFound()
 	}))
-	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm, Clock: calendar}
+	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm, Answers: ans, Sources: src, Clock: calendar}
 }

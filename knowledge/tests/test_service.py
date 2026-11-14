@@ -48,8 +48,12 @@ async def test_empty_search_does_not_generate(service):
 @pytest.mark.parametrize(
     "payload,status",
     [
-        ({"reply": "Ответ", "sourceIds": ["foreign"], "conflict": False}, "unavailable"),
-        ({"reply": "Ответ", "sourceIds": [], "conflict": False}, "unavailable"),
+        ({"reply": "Ответ", "sourceIds": ["foreign"], "conflict": False}, "no_evidence"),
+        ({"reply": "Ответ", "sourceIds": [], "conflict": False}, "no_evidence"),
+        (
+            {"answered": False, "reply": "Нет", "sourceIds": ["c1"], "conflict": False},
+            "no_evidence",
+        ),
         ({"reply": "https://evil.invalid", "sourceIds": ["c1"], "conflict": False}, "unavailable"),
         ({"reply": " ", "sourceIds": ["c1"], "conflict": False}, "unavailable"),
         ({"reply": "Ответ", "sourceIds": ["c1"], "conflict": True}, "conflicting_sources"),
@@ -104,6 +108,14 @@ async def test_prompt_budget_removes_whole_excerpts(service):
     assert json.loads(prompt)["excerpts"][0]["text"] == hit.text
 
 
+async def test_prompt_keeps_several_excerpts_and_trims_context(service):
+    hit = service.store.search.return_value.items[0]
+    hits = [hit.model_copy(update={"chunkId": f"c{n}", "text": "Ц" * 1200}) for n in range(4)]
+    prompt, selected = build_prompt("вопрос", "Э" * 4000, hits, 12000)
+    assert len(selected) >= 3
+    assert len(json.loads(prompt)["messageContext"]) <= 1001
+
+
 async def test_identity_never_uses_body_acl(settings):
     def handler(request):
         assert json.loads(request.content) == {"subjectId": "u-sasha"}
@@ -131,3 +143,17 @@ async def test_invalid_embeddings(settings, vector):
     ) as client:
         with pytest.raises((ProviderError, ValueError)):
             await OllamaProvider(settings, client).embed(["text"])
+
+
+async def test_links_and_foreign_ids_are_dropped_from_a_grounded_reply(service):
+    service.provider.generate = AsyncMock(
+        return_value={
+            "reply": "Смотри регламент https://phish.invalid/x и www.evil.invalid тоже.",
+            "sourceIds": ["c1", "foreign", "c1"],
+            "conflict": False,
+        }
+    )
+    result = await service.answer(question())
+    assert result.status == "answered"
+    assert "http" not in result.reply and "www." not in result.reply
+    assert [c.chunkId for c in result.citations] == ["c1"]

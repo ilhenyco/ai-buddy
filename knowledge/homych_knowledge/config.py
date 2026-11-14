@@ -41,7 +41,9 @@ class Settings(BaseSettings):
     request_timeout: float = Field(default=60, gt=0)
     embedding_timeout: float = Field(default=15, gt=0)
     generation_timeout: float = Field(default=45, gt=0)
-    prompt_bytes: int = Field(default=6000, ge=4000, le=6000)
+    # 12000 bytes keep even one-token-per-Cyrillic-letter prompts (6000 tokens) plus 512 reply
+    # tokens inside num_ctx=8192; 6000 bytes left room for only one 1200-character excerpt.
+    prompt_bytes: int = Field(default=12000, ge=4000, le=12000)
 
     @model_validator(mode="after")
     def validate_demo(self):

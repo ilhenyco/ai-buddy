@@ -1,14 +1,14 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Хомыч — проект API для передачи FRONT",
-    "version": "1.0.0-proposed",
-    "description": "Не реализованный серверный контракт 12.11.2026. JSON является YAML 1.2. FRONT пока использует localStorage и demoAnswer. Лимиты текста/страниц — предложения для проверки. Личный чат стажёра приватен; сервер не доверяет role/internId клиента."
+    "title": "Хомыч — API сервера",
+    "version": "1.1.0",
+    "description": "Реализовано в Go (backend/), 14.11.2026: все 23 операции контракта и расширения ниже. JSON является YAML 1.2. Личный чат стажёра приватен; сервер не доверяет role/internId клиента. Расширения (x-extension) нужны FRONT для восстановления состояния; x-demo-only работают только при DEMO_MODE=true. Внутренний API для Python RAG (POST /internal/v1/ai-context) описан в backend/README.md и knowledge/contracts."
   },
   "servers": [
     {
       "url": "/api/v1",
-      "description": "Проект Go API, отсутствующий в текущем макете"
+      "description": "Go API (backend/cmd/api)"
     }
   ],
   "paths": {
@@ -16,7 +16,7 @@
       "get": {
         "operationId": "sessionContext",
         "summary": "Личность, назначения, разрешённые контакты и capabilities",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль identity. Пользователь, назначения и capabilities из базы; csrfToken для мутаций. Сервер проверяет subject, назначение и права.",
         "parameters": [],
         "responses": {
           "200": {
@@ -186,14 +186,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "identity"
       }
     },
     "/scenario-templates": {
       "get": {
         "operationId": "listTemplates",
         "summary": "Встроенные блоки 6/9 месяцев; подсказки не редактируются руководителем",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль scenarios. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "cursor",
@@ -377,14 +378,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "scenarios"
       }
     },
     "/scenarios": {
       "get": {
         "operationId": "listScenarios",
         "summary": "Список собственных персональных сценариев",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль scenarios. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "cursor",
@@ -639,12 +641,13 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "scenarios"
       },
       "post": {
         "operationId": "createScenario",
         "summary": "Создать неполный черновик из шаблона",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль scenarios. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -896,14 +899,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "scenarios"
       }
     },
     "/scenarios/{scenarioId}": {
       "get": {
         "operationId": "getScenario",
         "summary": "Черновик и опубликованная версия своего сценария",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль scenarios. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "scenarioId",
@@ -1128,14 +1132,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "scenarios"
       }
     },
     "/scenarios/{scenarioId}/draft": {
       "put": {
         "operationId": "saveDraft",
         "summary": "Сохранить целый структурно корректный, но неполный draft",
-        "description": "Пустые поля допустимы в draft. Валидация структуры, URL и назначения обязательна. Опубликованного стажёра менять нельзя. If-Match предотвращает потерю конкурирующей правки. PUT идемпотентен по содержимому.",
+        "description": "Реализовано: модуль scenarios. Пустые поля допустимы в draft. Валидация структуры, URL и назначения обязательна. Опубликованного стажёра менять нельзя. If-Match предотвращает потерю конкурирующей правки. PUT идемпотентен по содержимому.",
         "parameters": [
           {
             "name": "scenarioId",
@@ -1425,14 +1430,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "scenarios"
       }
     },
     "/scenarios/{scenarioId}/publications": {
       "post": {
         "operationId": "publishScenario",
         "summary": "Атомарно опубликовать и активировать вариант",
-        "description": "Проверить полные обязательные поля и draftVersion. expectedActiveScenarioId должен совпадать с текущим. При другой активной записи требуется confirmReplacement=true; конфликт 409. Замена сохраняет cutoff по локальной календарной дате назначения. Старые снимки неизменны. Idempotency-Key возвращает ту же revision при повторе.",
+        "description": "Реализовано: модуль scenarios. Проверить полные обязательные поля и draftVersion. expectedActiveScenarioId должен совпадать с текущим. При другой активной записи требуется confirmReplacement=true; конфликт 409. Замена сохраняет cutoff по локальной календарной дате назначения. Старые снимки неизменны. Idempotency-Key возвращает ту же revision при повторе.",
         "parameters": [
           {
             "name": "scenarioId",
@@ -1699,14 +1705,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "scenarios"
       }
     },
     "/assignments/{assignmentId}/messages": {
       "get": {
         "operationId": "listMessages",
         "summary": "Адресованная пользователю лента, без чужого личного чата",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль messages. Свои сообщения назначения по времени: этапы (checkpoint), вопросы (user) и ответы (assistant) личного чата стажёра. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "assignmentId",
@@ -1894,14 +1901,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "messages"
       }
     },
     "/messages/{messageId}/tasks/{taskId}/check": {
       "put": {
         "operationId": "setCheck",
         "summary": "Поставить свою формальную отметку",
-        "description": "userId берётся только из сессии. Task принадлежит видимому снимку адресата. Отметка не запускает и не блокирует этап или инструмент.",
+        "description": "Реализовано: модуль messages. userId берётся только из сессии. Task принадлежит видимому снимку адресата. Отметка не запускает и не блокирует этап или инструмент.",
         "parameters": [
           {
             "name": "messageId",
@@ -2088,14 +2096,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "messages"
       }
     },
     "/assignments/{assignmentId}/suggestions": {
       "get": {
         "operationId": "getSuggestions",
         "summary": "Сохранённая тройка текущего этапа",
-        "description": "Только стажёру своего назначения. Выбор и сохранение атомарны при смене stageKey. До старта startup pool; без активной публикации 409 NO_ACTIVE_SCENARIO. Стабильный stageKey не зависит от revision при правке той же стадии. GET логически читает стабильный ресурс; ленивое создание эквивалентно идемпотентному upsert.",
+        "description": "Реализовано: модуль suggestions. Только стажёру своего назначения. Выбор и сохранение атомарны при смене stageKey. До старта startup pool; без активной публикации 409 NO_ACTIVE_SCENARIO. Стабильный stageKey не зависит от revision при правке той же стадии. GET логически читает стабильный ресурс; ленивое создание эквивалентно идемпотентному upsert.",
         "parameters": [
           {
             "name": "assignmentId",
@@ -2254,14 +2263,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "suggestions"
       }
     },
     "/assignments/{assignmentId}/questions": {
       "post": {
         "operationId": "askQuestion",
         "summary": "Сохранить личный вопрос и создать AnswerJob",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль answers. Только стажёр своего назначения (бадди и руководитель — 403). Вопрос и AnswerJob сохраняются до обращения к RAG; worker берёт задание с lease, вызывает Python RAG, сохраняет ответ ровно один раз. Сбой связи — до 3 попыток с backoff; затем failed с честным сообщением в чате. Не более 6 вопросов в минуту: 429 RATE_LIMITED и Retry-After. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "assignmentId",
@@ -2451,14 +2461,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "answers"
       }
     },
     "/answers/{answerId}": {
       "get": {
         "operationId": "getAnswer",
         "summary": "Получить состояние и сохранённый ответ",
-        "description": "Только автор вопроса. completed может содержать честный fallback без цитаты. failed содержит безопасную ошибку, вопрос не теряется. Клиент завершает polling при completed/failed, использует Retry-After при 429/503.",
+        "description": "Реализовано: модуль answers. Только автор вопроса. completed может содержать честный fallback без цитаты. failed содержит безопасную ошибку, вопрос не теряется. Клиент завершает polling при completed/failed, использует Retry-After при 429/503.",
         "parameters": [
           {
             "name": "answerId",
@@ -2615,14 +2626,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "answers"
       }
     },
     "/sources": {
       "get": {
         "operationId": "listSources",
         "summary": "Разрешённый список источников; управление по capability",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. Руководитель и бадди видят материалы своих команд, новые сверху; q — поиск по названию. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "cursor",
@@ -2805,12 +2817,13 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "sources"
       },
       "post": {
         "operationId": "createSource",
         "summary": "Создать текстовый источник и задание индексации",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. Только руководитель команды из acl.teamIds (ровно одна команда). Материал и первая версия сохраняются, IndexJob уходит в очередь загрузки Python RAG. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3002,14 +3015,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "sources"
       }
     },
     "/sources/{sourceId}": {
       "get": {
         "operationId": "getSource",
         "summary": "Полный разрешённый текст/версия для чтения",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. Руководитель и бадди команды; стажёр команды — если материал не исключён (открыть источник ответа). versionId — прочитать прежнюю версию. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "sourceId",
@@ -3189,12 +3203,13 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "sources"
       },
       "put": {
         "operationId": "updateSource",
         "summary": "Подготовить новую версию; старая активна до ready",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. If-Match с etag. Новая неизменяемая версия; пока она индексируется, ответы используют прежнюю (versionId). Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "sourceId",
@@ -3405,14 +3420,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "sources"
       }
     },
     "/sources/{sourceId}/exclude": {
       "post": {
         "operationId": "excludeSource",
         "summary": "Исключить из новых ответов без удаления истории",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. If-Match с etag. Материал исключается из индекса; версии сохраняются; новая версия возвращает его. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "sourceId",
@@ -3613,14 +3629,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "sources"
       }
     },
     "/source-jobs/{jobId}": {
       "get": {
         "operationId": "getSourceJob",
         "summary": "Состояние индексирования",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль sources. Статус индексации версии; error при неудаче (INDEX_FAILED, INDEX_DISABLED без подключённого RAG). Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "jobId",
@@ -3776,14 +3793,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "sources"
       }
     },
     "/notifications": {
       "get": {
         "operationId": "listNotifications",
         "summary": "Свои сообщения и состояния доставки",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль messages. Свои сообщения-этапы, новые сверху. Вопросы и ответы личного чата в уведомления не попадают. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "cursor",
@@ -3952,14 +3970,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "messages"
       }
     },
     "/access-drafts": {
       "post": {
         "operationId": "createAccessDraft",
         "summary": "Условная интеграция: подготовить черновик действия",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль access. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -4141,14 +4160,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "access"
       }
     },
     "/access-drafts/{draftId}/confirm": {
       "post": {
         "operationId": "confirmAccess",
         "summary": "Подтверждение человеком и единственная отправка в HTTP-мок",
-        "description": "Функция условна до OQ08. Подтверждение связано с автором и версией черновика. Сначала долговечно сохранить operation/correlationId, затем вызывать mock. Потеря ответа -> unknown и сверка по correlationId, не новая заявка. Повтор ключа с тем же payload возвращает тот же результат. Модель не вызывает confirm за пользователя.",
+        "description": "Реализовано: модуль access. Функция условна до OQ08. Подтверждение связано с автором и версией черновика. Сначала долговечно сохранить operation/correlationId, затем вызывать mock. Потеря ответа -> unknown и сверка по correlationId, не новая заявка. Повтор ключа с тем же payload возвращает тот же результат. Модель не вызывает confirm за пользователя.",
         "parameters": [
           {
             "name": "draftId",
@@ -4341,14 +4361,15 @@
               }
             }
           }
-        }
+        },
+        "x-module": "access"
       }
     },
     "/access-operations/{operationId}": {
       "get": {
         "operationId": "getAccess",
         "summary": "Номер и статус той же внешней операции",
-        "description": "Проект будущего Go API. Сервер проверяет subject, назначение и права; frontend пока не вызывает этот endpoint.",
+        "description": "Реализовано: модуль access. Видят стажёр, бадди и руководитель назначения. Незавершённый статус сверяется с сервисом по correlationId. Сервер проверяет subject, назначение и права.",
         "parameters": [
           {
             "name": "operationId",
@@ -4506,14 +4527,15 @@
           {
             "sessionCookie": []
           }
-        ]
+        ],
+        "x-module": "access"
       }
     },
     "/assignments/{assignmentId}/protected-first-task": {
       "get": {
         "operationId": "getProtectedTask",
         "summary": "Защищённая постановка только при актуальном праве нужного ресурса",
-        "description": "Условно до OQ08. Сервер сверяет resourceId и entitlement, а не произвольный approved и не отметку. При отсутствии права 403 ACCESS_REQUIRED. Остальная переписка доступна.",
+        "description": "Реализовано: модуль access. Условно до OQ08. Сервер сверяет resourceId и entitlement, а не произвольный approved и не отметку. При отсутствии права 403 ACCESS_REQUIRED. Остальная переписка доступна.",
         "parameters": [
           {
             "name": "assignmentId",
@@ -4667,6 +4689,491 @@
           {
             "sessionCookie": []
           }
+        ],
+        "x-module": "access"
+      }
+    },
+    "/access-resources": {
+      "get": {
+        "operationId": "listAccessResources",
+        "summary": "Ресурсы, на которые можно подать заявку",
+        "description": "Каталог ресурсов модуля access; первой задаче нужен repo-learning-read.",
+        "x-extension": true,
+        "x-module": "access",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccessResource"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ]
+      }
+    },
+    "/assignments/{assignmentId}/access-operations": {
+      "get": {
+        "operationId": "listAccessOperations",
+        "summary": "Заявки на доступ назначения",
+        "description": "Видят стажёр, бадди и руководитель назначения, новые сверху; незавершённые сверяются с сервисом. FRONT восстанавливает статус после перезагрузки.",
+        "x-extension": true,
+        "x-module": "access",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccessOperation"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ]
+      }
+    },
+    "/demo/users": {
+      "get": {
+        "operationId": "listDemoUsers",
+        "summary": "Тестовые пользователи экрана входа",
+        "description": "Только DEMO_MODE: замена SSO (OQ02).",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DemoUser"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/demo/session": {
+      "post": {
+        "operationId": "demoLogin",
+        "summary": "Войти тестовым пользователем",
+        "description": "Только DEMO_MODE. Ставит cookie homych_session; Origin проверяется.",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "userId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Context"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "delete": {
+        "operationId": "demoLogout",
+        "summary": "Выйти",
+        "description": "Удаляет cookie.",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "responses": {
+          "204": {
+            "description": "Выход выполнен"
+          }
+        },
+        "security": []
+      }
+    },
+    "/demo/clock": {
+      "get": {
+        "operationId": "getDemoClock",
+        "summary": "Дата на демо-стенде",
+        "description": "Только DEMO_MODE: календарь сценариев и планировщика.",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "setDemoClock",
+        "summary": "Сдвинуть дату стенда",
+        "description": "Только DEMO_MODE. date=null возвращает реальную дату. Сдвиг хранится в demo_settings и переживает перезапуск; наступившие этапы рассылаются сразу.",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "date"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ]
+      }
+    },
+    "/demo/reset": {
+      "post": {
+        "operationId": "resetDemo",
+        "summary": "Начать демо заново",
+        "description": "Только DEMO_MODE. Удаляет сообщения, отметки, вопросы и ответы, заявки, сценарии, подсказки и сдвиг даты; пользователи, назначения и материалы команды остаются. Создаёт демо-сценарии и рассылает наступившие этапы.",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ]
+      }
+    },
+    "/demo/access-mode": {
+      "post": {
+        "operationId": "setAccessMode",
+        "summary": "Ответ мок-сервиса доступов на новые заявки",
+        "description": "Только DEMO_MODE: approve | deny | lost (заявка принята, ответ потерян — проверка сверки по correlationId).",
+        "x-extension": true,
+        "x-module": "demo",
+        "x-demo-only": true,
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "approve",
+                      "deny",
+                      "lost"
+                    ]
+                  }
+                },
+                "required": [
+                  "mode"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "DEPENDENCY_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
         ]
       }
     }
@@ -4677,7 +5184,7 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "homych_session",
-        "description": "Схематичная проверенная сервером сессия. SSO/transport по OQ02. При cookie-auth мутации требуют проверки Origin и CSRF-токена; конкретный handshake согласовать до реализации."
+        "description": "HttpOnly cookie homych_session (HMAC, 8 ч). Мутации требуют X-CSRF-Token из sessionContext и проверенный Origin. В демо вход через /demo/session вместо SSO (OQ02)."
       }
     },
     "schemas": {
@@ -5729,6 +6236,11 @@
           },
           "fragment": {
             "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "x-extension: ссылка на источник; https://homych.invalid/sources/<id> открывается в приложении"
           }
         },
         "required": [
@@ -5798,6 +6310,28 @@
           },
           "errorCode": {
             "type": "string"
+          },
+          "next": {
+            "description": "x-extension: следующий этап плана (только checkpoint)",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "date"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -5842,6 +6376,43 @@
           "serverTime": {
             "type": "string",
             "format": "date-time"
+          },
+          "activePlan": {
+            "description": "x-extension: опубликованный план назначения, даже до первого этапа",
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "scenarioId": {
+                    "type": "string"
+                  },
+                  "revisionId": {
+                    "type": "string"
+                  },
+                  "start": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "months": {
+                    "type": "integer",
+                    "enum": [
+                      6,
+                      9
+                    ]
+                  }
+                },
+                "required": [
+                  "scenarioId",
+                  "revisionId",
+                  "start",
+                  "months"
+                ],
+                "additionalProperties": false
+              }
+            ]
           }
         },
         "required": [
@@ -6585,9 +7156,74 @@
           "description": "Демонстрационная постановка",
           "requiredResourceId": "repo-learning-read"
         }
+      },
+      "DemoUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ],
+        "additionalProperties": true
+      },
+      "ClockState": {
+        "type": "object",
+        "properties": {
+          "today": {
+            "type": "string",
+            "format": "date"
+          },
+          "shifted": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "integer",
+            "description": "сколько сообщений разослано при смене даты или сбросе"
+          }
+        },
+        "required": [
+          "today",
+          "shifted"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "today": "2026-11-21",
+          "shifted": true,
+          "created": 3
+        }
+      },
+      "AccessResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "id": "repo-learning-read",
+          "title": "Репозиторий учебного проекта · чтение"
+        }
       }
     }
   },
-  "x-status": "proposed-not-implemented",
-  "x-date": "2026-11-12"
+  "x-status": "implemented",
+  "x-date": "2026-11-14"
 }

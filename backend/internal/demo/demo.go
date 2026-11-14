@@ -55,10 +55,11 @@ func (s *Service) Restore(ctx context.Context) error {
 }
 
 // Reset deletes everything people did on the stand and starts the demo from scratch:
-// demo scenarios again, real date, messages that are due. Users and assignments stay.
+// demo scenarios again, real date, messages that are due. Users, assignments and team materials
+// stay: materials are team knowledge already indexed by the knowledge service, not stand activity.
 func (s *Service) Reset(ctx context.Context) (int, error) {
 	err := db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
-		_, err := tx.ExecContext(ctx, `TRUNCATE message_checks, messages, message_events,
+		_, err := tx.ExecContext(ctx, `TRUNCATE suggestion_selections, answer_jobs, message_checks, messages, message_events,
 			access_operations, access_drafts, active_scenarios, scenario_revisions, scenarios,
 			idempotency_records, demo_settings`)
 		return err

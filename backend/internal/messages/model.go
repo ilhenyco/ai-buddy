@@ -29,6 +29,19 @@ type Message struct {
 	RevisionID      string           `json:"revisionId,omitempty"`
 	Block           *scenarios.Block `json:"block,omitempty"`
 	Next            *NextBlock       `json:"next,omitempty"`
+	// personal chat (module answers): the answer's sources, its AnswerJob, a failed answer's code
+	Citations       []Citation `json:"citations,omitempty"`
+	AnswerRequestID string     `json:"answerRequestId,omitempty"`
+	ErrorCode       string     `json:"errorCode,omitempty"`
+}
+
+// Citation is a source fragment an answer is based on. URL is an extension: the link to open.
+type Citation struct {
+	SourceID        string `json:"sourceId"`
+	SourceVersionID string `json:"sourceVersionId"`
+	Title           string `json:"title"`
+	Fragment        string `json:"fragment"`
+	URL             string `json:"url,omitempty"`
 }
 
 type Check struct {

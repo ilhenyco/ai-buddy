@@ -14,10 +14,12 @@ import (
 	"time"
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/access"
+	"github.com/ilhenyco/ai-buddy/backend/internal/answers"
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
+	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
 )
 
 func env(key, def string) string {
@@ -75,6 +77,24 @@ func run(log *slog.Logger) error {
 		log.Warn("ACCESS_SERVICE_URL not set: access requests are switched off")
 	}
 
+	// the knowledge service (Python RAG): the same internal token as for /internal/v1/ai-context
+	var knowledge answers.Knowledge
+	if u, token := os.Getenv("RAG_URL"), os.Getenv("RAG_SERVICE_TOKEN"); u != "" && len(token) >= 24 {
+		timeout, err := time.ParseDuration(env("RAG_CLIENT_TIMEOUT", "270s")) // > RAG_REQUEST_TIMEOUT of the service
+		if err != nil {
+			return err
+		}
+		knowledge = answers.NewHTTPKnowledge(u, token, timeout)
+	} else {
+		log.Warn("RAG_URL or RAG_SERVICE_TOKEN not set: questions get a 'search is not connected' reply")
+	}
+
+	// materials of the lead go to the same service's ingestion queue with a documents:write key
+	var index sources.Index
+	if u, key := os.Getenv("RAG_URL"), os.Getenv("RAG_SOURCES_TOKEN"); u != "" && len(key) >= 24 {
+		index = sources.NewHTTPIndex(u, key, 15*time.Second)
+	}
+
 	a := app.New(d, clock.System{}, app.Config{
 		RAGServiceToken: os.Getenv("RAG_SERVICE_TOKEN"),
 		DemoLogin:       demo,
@@ -83,6 +103,8 @@ func run(log *slog.Logger) error {
 		SecureCookie:    env("SECURE_COOKIE", "false") == "true",
 		Location:        loc,
 		AccessService:   accessService,
+		Knowledge:       knowledge,
+		SourcesIndex:    index,
 	}, log)
 
 	if a.Demo != nil {
@@ -98,6 +120,8 @@ func run(log *slog.Logger) error {
 		return err
 	}
 	go a.Messages.Run(ctx, interval)
+	go a.Answers.Run(ctx, interval)      // and right after each question
+	go a.Sources.Run(ctx, 2*time.Second) // index jobs of materials
 
 	srv := &http.Server{Addr: env("HTTP_ADDR", ":8080"), Handler: a.Handler, ReadHeaderTimeout: 5 * time.Second}
 	go func() {

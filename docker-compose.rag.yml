@@ -4,13 +4,20 @@ services:
   api:
     environment:
       RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
+      # answers module: Go stores questions and jobs, the worker calls the knowledge service
+      RAG_URL: http://knowledge:8090
+      RAG_CLIENT_TIMEOUT: ${RAG_CLIENT_TIMEOUT:-270s}   # longer than RAG_REQUEST_TIMEOUT
+      # sources module: materials go to the ingestion queue with a documents:write client key
+      RAG_SOURCES_TOKEN: ${RAG_SOURCES_TOKEN:-}
 
   knowledge:
     build: ./knowledge
-    environment:
+    environment: &knowledge-env
       RAG_DATABASE_URL: postgresql://homych:homych@db:5432/homych
       RAG_GO_URL: http://api:8080
-      RAG_OLLAMA_URL: http://ollama:11434
+      # Mac: native Ollama uses the GPU (Metal) and answers several times faster than the container:
+      # RAG_OLLAMA_URL=http://host.docker.internal:11434 in .env
+      RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:-http://ollama:11434}
       RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
       RAG_DEMO_MODE: "true"
       RAG_PROVIDER: ${RAG_PROVIDER:-ollama}
@@ -19,6 +26,7 @@ services:
       RAG_REQUEST_TIMEOUT: ${RAG_REQUEST_TIMEOUT:-60}
       RAG_MCP_TOKENS: ${RAG_MCP_TOKENS:-{}}
       RAG_SYNTHETIC_SUBJECTS: ${RAG_SYNTHETIC_SUBJECTS:-[]}
+      RAG_EXTERNAL_CLIENTS: ${RAG_EXTERNAL_CLIENTS:-{}}
     ports:
       - "127.0.0.1:${HOMYCH_RAG_PORT:-8090}:8090"
     depends_on:
@@ -31,6 +39,15 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
+
+  # indexes the lead's materials from the durable queue (one publisher, restart-safe)
+  knowledge-worker:
+    build: ./knowledge
+    command: ["python", "-m", "homych_knowledge.worker"]
+    environment: *knowledge-env
+    depends_on:
+      knowledge:
+        condition: service_healthy
 
   ollama:
     image: ollama/ollama:0.13.5
