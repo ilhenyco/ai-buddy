@@ -4,7 +4,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import pypdfium2 as pdfium
 from xml.sax.saxutils import escape
-R=Path(__file__).resolve().parents[1];D=R/'docs/ai-buddy';T=R/'tmp/team-spec'
+R=Path(__file__).resolve().parents[1];D=R/'docs';T=R/'tmp/team-spec'
 pdfmetrics.registerFont(TTFont('Arial','C:/Windows/Fonts/arial.ttf'))
 W,H=1100,680
 boxes=[(30,220,230,150,['React / TypeScript','Реализован FRONT','Локальный макет → API']),
@@ -28,5 +28,5 @@ for a,b,label in edges:
     ang=math.atan2(b[1]-a[1],b[0]-a[0]);p=c.beginPath();p.moveTo(b[0],H-b[1]);p.lineTo(b[0]-9*math.cos(ang-.4),H-b[1]+9*math.sin(ang-.4));p.lineTo(b[0]-9*math.cos(ang+.4),H-b[1]+9*math.sin(ang+.4));p.close();c.setFillColorRGB(.22,.29,.38);c.drawPath(p,fill=1)
     mx=(a[0]+b[0])/2;my=(a[1]+b[1])/2;c.setFont('Arial',11);c.drawCentredString(mx,H-my+5,label)
     svg.append(f'<path d="M {a[0]} {a[1]} L {b[0]} {b[1]}" stroke="#38495f" fill="none"/><text x="{mx}" y="{my-5}" font-family="Arial" text-anchor="middle" font-size="11">{escape(label)}</text>')
-c.setFont('Arial',12);c.drawString(30,H-30,'Хомыч · схема контейнеров и модулей · проект серверной реализации · 12.11.2026');c.save();svg.append('</svg>');(D/'architecture-current.svg').write_text(''.join(svg),'utf-8')
-doc=pdfium.PdfDocument(str(pdf));doc[0].render(scale=1.7).to_pil().save(D/'architecture-current.png');print('Architecture SVG/PNG written')
+c.setFont('Arial',12);c.drawString(30,H-30,'Хомыч · схема контейнеров и модулей · проект серверной реализации · 12.11.2026');c.save();svg.append('</svg>');(D/'architecture/architecture-current.svg').write_text(''.join(svg),'utf-8')
+doc=pdfium.PdfDocument(str(pdf));doc[0].render(scale=1.7).to_pil().save(D/'architecture/architecture-current.png');print('Architecture SVG/PNG written')

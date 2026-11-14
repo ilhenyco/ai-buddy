@@ -1,6 +1,6 @@
 # FRONT для серверной команды
 
-Актуально: 12.11.2026. Локальный React/TypeScript-прототип. Основные материалы — [концепция](../../docs/ai-buddy/team-specification.md), [полный каталог функций](../../docs/ai-buddy/frontend-functional-specification.md), [подключение сервера](../../docs/ai-buddy/server-handoff.md), [проект OpenAPI](../../docs/ai-buddy/system-analysis/openapi.yaml).
+Актуально: 12.11.2026. Локальный React/TypeScript-прототип. Основные материалы — [концепция](../../docs/product/team-specification.md), [полный каталог функций](../../docs/product/frontend-functional-specification.md), [подключение сервера](../../docs/architecture/server-handoff.md), [проект OpenAPI](../../docs/architecture/openapi.yaml).
 
 `src/App.tsx` — интерфейс/локальные обработчики; `domain.ts` — шаблоны, ролевые пункты, имитация ответов/доступа; `scenarios.ts` — v3, библиотека, публикация и доставка; `suggestions.ts` — темы и стабильные тройки; `ui.tsx` — окна/фокус. `main.jsx → App.jsx → App.tsx` — действительная цепочка входа, JSX-файлы не удалять как якобы устаревшие. CSS подключаются слоями; ассеты и Onest находятся в public.
 

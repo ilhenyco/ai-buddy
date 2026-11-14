@@ -12,11 +12,11 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/apptest"
 )
 
-// Every operation of the contract (docs/ai-buddy/system-analysis/openapi.yaml) has a route on the
+// Every operation of the contract (docs/architecture/openapi.yaml) has a route on the
 // server: an unknown route answers 404 from the catch-all, a wrong method 405. Anonymous requests
 // reach a real handler and stop at authentication (401) or validation (4xx other than 404/405).
 func TestEveryContractOperationHasARoute(t *testing.T) {
-	raw, err := os.ReadFile("../../../docs/ai-buddy/system-analysis/openapi.yaml")
+	raw, err := os.ReadFile("../../../docs/architecture/openapi.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

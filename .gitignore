@@ -39,3 +39,6 @@ coverage.xml
 /output/imagegen/*
 !/output/imagegen/avito-purple-sticker.png
 !/output/imagegen/business-zoomer-hamster.png
+
+.idea/
+.DS_Store

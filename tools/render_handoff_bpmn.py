@@ -13,7 +13,7 @@ from reportlab.lib.colors import HexColor
 import pypdfium2 as pdfium
 R=Path(__file__).resolve().parents[1]
 M=R/'output/bpmn-v3/models'
-O=R/'docs/ai-buddy/bpmn-current/images'
+O=R/'docs/processes/rendered/images'
 T=R/'tmp/team-spec/bpmn-render'
 NS={'b':'http://www.omg.org/spec/BPMN/20100524/MODEL','bd':'http://www.omg.org/spec/BPMN/20100524/DI','dc':'http://www.omg.org/spec/DD/20100524/DC','di':'http://www.omg.org/spec/DD/20100524/DI'}
 pdfmetrics.registerFont(TTFont('Arial','C:/Windows/Fonts/arial.ttf'))

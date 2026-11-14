@@ -2,7 +2,7 @@
 // saves incomplete drafts and publishes a variant, which becomes active for the intern.
 // Contract: openapi.yaml operations listTemplates, listScenarios, createScenario,
 // getScenario, saveDraft, publishScenario. Rules: frontend/src/scenarios.ts and
-// docs/ai-buddy/server-handoff.md ("Обязательные инварианты данных").
+// docs/architecture/server-handoff.md ("Обязательные инварианты данных").
 package scenarios
 
 import "time"

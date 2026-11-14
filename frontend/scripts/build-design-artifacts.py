@@ -83,10 +83,10 @@ def package():
             if path.name.startswith(".env") or path.name == ".npmrc" or path.suffix == ".log":
                 continue
             archive.write(path, "frontend/" + path.relative_to(FRONT).as_posix())
-        archive.write(ROOT / "docs/ai-buddy/functional-requirements.md", "context/functional-requirements.md")
-        archive.write(ROOT / "docs/ai-buddy/decisions/2026-11-12-proactive-bot.md", "context/2026-11-12-proactive-bot.md")
-        archive.write(ROOT / "docs/ai-buddy/decisions/2026-11-12-scenario-library.md", "context/2026-11-12-scenario-library.md")
-        archive.write(ROOT / "docs/ai-buddy/decisions/2026-11-12-stage-suggestions.md", "context/2026-11-12-stage-suggestions.md")
+        archive.write(ROOT / "docs/product/functional-requirements.md", "context/functional-requirements.md")
+        archive.write(ROOT / "docs/product/decisions/2026-11-12-proactive-bot.md", "context/2026-11-12-proactive-bot.md")
+        archive.write(ROOT / "docs/product/decisions/2026-11-12-scenario-library.md", "context/2026-11-12-scenario-library.md")
+        archive.write(ROOT / "docs/product/decisions/2026-11-12-stage-suggestions.md", "context/2026-11-12-stage-suggestions.md")
         for path in sorted((ROOT / "output/bpmn-v3/models").iterdir()):
             if path.is_file():
                 archive.write(path, "context/bpmn-v3/" + path.name)

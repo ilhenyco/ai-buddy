@@ -8,7 +8,7 @@ import json, hashlib, re, csv, math
 from datetime import date
 
 ROOT=Path(__file__).resolve().parents[1]
-DOCS=ROOT/'docs/ai-buddy'
+DOCS=ROOT/'docs'
 OUT=ROOT/'output'
 TMP=ROOT/'tmp/team-spec'
 VERSION='1.0'
@@ -127,7 +127,7 @@ def make_features():
     return cards
 
 def write_catalog(cards):
-    contract=json.loads((DOCS/'system-analysis/openapi.yaml').read_text('utf-8'))
+    contract=json.loads((DOCS/'architecture/openapi.yaml').read_text('utf-8'))
     ops={op['operationId']:op for methods in contract['paths'].values() for op in methods.values()}
     for c in cards:
         inputs=[];outputs=[]
@@ -145,7 +145,7 @@ def write_catalog(cards):
             elif 'S09' in c['screens']:inputs=['выбранные роль/синтетический профиль/дата/состояние проверки']
             else:inputs=['текущий профиль, роль, активная публикация и действие на элементе переписки']
         c['inputs']='; '.join(dict.fromkeys(inputs));c['outputs']=', '.join(dict.fromkeys(outputs)) or 'обновлённый интерфейс/локальное состояние по описанному действию'
-    (DOCS/'frontend-functions.json').write_text(json.dumps({'version':VERSION,'date':'2026-11-12','features':cards},ensure_ascii=False,indent=2),'utf-8')
+    (DOCS/'product/frontend-functions.json').write_text(json.dumps({'version':VERSION,'date':'2026-11-12','features':cards},ensure_ascii=False,indent=2),'utf-8')
     lines=['# Полный каталог функций фронтенда','',f'Версия {VERSION} · {STAMP}. {len(cards)} карточек. Основание: код frontend/src, решения 12 ноября и сохранённые материалы.','',
     'FR-UI дополняют продуктовые FR, не заменяя их номера. Критерии AT — задания на проверку; они не означают, что все UI-сценарии покрыты автоматическими тестами.','',
     'Общие условия: открыт соответствующий экран, выбран синтетический профиль/роль. Для производственного сервера требуется подтверждённая личность и назначение. Локальные операции записываются в v3, если карточка не указывает память/демо. Ошибка записи показывается без потери введённой редакции.','']
@@ -156,7 +156,7 @@ def write_catalog(cards):
             f"**Сохранение, ошибки и ограничения:** {c['limits']}",'',
             f"**Приёмка {c['check']}:** воспроизвести описанное действие, проверить указанный результат и ограничение; для долговечных данных повторить после перезагрузки. Автоматизированные доменные тесты — frontend/tests; визуальные и серверные негативные проверки ещё должны выполняться командой.",'',
             f"**Связи:** {c['parent']} · {', '.join(c['screens'])} · {', '.join(c['bpmn'])}.",'']
-    (DOCS/'frontend-functional-specification.md').write_text('\n'.join(lines),'utf-8')
+    (DOCS/'product/frontend-functional-specification.md').write_text('\n'.join(lines),'utf-8')
 
 if __name__=='__main__':
     TMP.mkdir(parents=True,exist_ok=True)
