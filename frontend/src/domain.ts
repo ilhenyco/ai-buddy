@@ -5,7 +5,9 @@ export type LinkKind = 'team' | 'intern' | 'buddy' | 'lead' | 'access' | 'task' 
 export type Task = { id: string; title: string; description: string; link: string; kind: LinkKind; url?: string; actions?: Partial<Record<'buddy'|'lead',string>> };
 export type Block = { id: string; stageKind?: StageKind; title: string; eyebrow: string; date: string; endDate: string; intern: string; buddy: string; lead: string; tasks: Task[]; process: string };
 export type Plan = { name: string; intern: string; buddy: string; lead: string; team: string; start: string; months: 6 | 9; version: number; blocks: Block[] };
-export type ChatMessage = { id: string; role: 'user' | 'assistant'; text: string; source?: string; time: string; error?: boolean };
+export type Citation = { title: string; fragment: string; url?: string };
+// server mode: citations come with the answer, answerId links a question to its answer job
+export type ChatMessage = { id: string; role: 'user' | 'assistant'; text: string; source?: string; time: string; error?: boolean; citations?: Citation[]; answerId?: string };
 export type Source = { id: string; title: string; category: string; body: string; team: string; status: 'ready' | 'indexing' | 'error' | 'excluded'; updated: string };
 export type Access = { operationId: string | null; number: string | null; status: 'none' | 'pending' | 'approved' | 'denied' | 'unknown'; resource: string; reason: string };
 export const roleNames: Record<Role, string> = { intern: 'Стажёр', buddy: 'Бадди', lead: 'Руководитель', hr: 'HR' };

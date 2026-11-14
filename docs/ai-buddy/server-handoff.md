@@ -1,10 +1,8 @@
 # Передача FRONT серверной команде
 
-Дополнение RAG/MCP: Python-сервис и внутренний Go `ai-context` описаны в
-[knowledge/README.md](../../knowledge/README.md). Этот модуль не реализует публичные
-`askQuestion/getAnswer`, AnswerJob и подключение AI к FRONT; их добавляет Go-команда.
+> **14.11.2026: передача выполнена.** Все 23 операции реализованы в Go ([backend/README.md](../../backend/README.md)), FRONT работает через них при `VITE_API=on`, AI-ответы идут через Python RAG ([knowledge/README.md](../../knowledge/README.md)). Текущее состояние и отступления — [аудит на 14 ноября](implementation-audit-2026-11-14.md). Ниже — исходный план передачи 12.11.2026, сохранён как основание решений.
 
-12.11.2026 · Проект реализации, backend ещё отсутствует.
+12.11.2026 · Проект реализации (исходная редакция).
 
 Основная концепция: [team-specification.md](team-specification.md). Полный перечень поведения: [frontend-functional-specification.md](frontend-functional-specification.md). [OpenAPI](system-analysis/openapi.yaml) — новый проект прикладного API, 23 операции; прежние семь операций сохранены в [openapi-legacy.yaml](system-analysis/openapi-legacy.yaml). Контракт подходит при Qwen или DeepSeek: провайдер вызывается серверным адаптером. MCP и OpenAPI — разные интерфейсы.
 

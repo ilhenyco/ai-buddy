@@ -63,15 +63,24 @@ func nextCursor(offset, limit, got int) *string {
 
 func scanMessage(rows *sql.Rows) (Message, error) {
 	var m Message
-	var block []byte
-	var next sql.NullString
-	if err := rows.Scan(&m.ID, &m.AssignmentID, &m.Kind, &m.RecipientUserID, &m.CreatedAt, &m.Text, &block, &next, &m.ScenarioID, &m.RevisionID); err != nil {
+	var block, citations []byte
+	var next, scenario, revision, request, errCode sql.NullString
+	if err := rows.Scan(&m.ID, &m.AssignmentID, &m.Kind, &m.RecipientUserID, &m.CreatedAt, &m.Text, &block, &next, &scenario, &revision,
+		&citations, &request, &errCode); err != nil {
 		return m, err
 	}
 	m.CreatedAt = m.CreatedAt.UTC()
-	m.Block = &scenarios.Block{}
-	if err := json.Unmarshal(block, m.Block); err != nil {
-		return m, err
+	m.ScenarioID, m.RevisionID, m.AnswerRequestID, m.ErrorCode = scenario.String, revision.String, request.String, errCode.String
+	if citations != nil {
+		if err := json.Unmarshal(citations, &m.Citations); err != nil {
+			return m, err
+		}
+	}
+	if block != nil {
+		m.Block = &scenarios.Block{}
+		if err := json.Unmarshal(block, m.Block); err != nil {
+			return m, err
+		}
 	}
 	if next.Valid {
 		m.Next = &NextBlock{}
@@ -82,7 +91,7 @@ func scanMessage(rows *sql.Rows) (Message, error) {
 	return m, nil
 }
 
-const messageColumns = `id, assignment_id, kind, recipient_user_id, created_at, text, block, next_block, scenario_id, revision_id`
+const messageColumns = `id, assignment_id, kind, recipient_user_id, created_at, text, block, next_block, scenario_id, revision_id, citations, answer_request_id, error_code`
 
 // Feed — GET /assignments/{id}/messages: the subject's own messages in time order, with own checks.
 func (s *Service) Feed(ctx context.Context, subject, assignmentID, cursor string, limit int) (FeedPage, error) {
@@ -159,7 +168,7 @@ func (s *Service) Feed(ctx context.Context, subject, assignmentID, cursor string
 func (s *Service) SetCheck(ctx context.Context, subject, messageID, taskID string, checked bool) (Check, error) {
 	var role string
 	var block []byte
-	err := s.DB.QueryRowContext(ctx, `SELECT recipient_role, block FROM messages WHERE id=$1 AND recipient_user_id=$2`, messageID, subject).
+	err := s.DB.QueryRowContext(ctx, `SELECT recipient_role, block FROM messages WHERE id=$1 AND recipient_user_id=$2 AND kind='checkpoint'`, messageID, subject).
 		Scan(&role, &block)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Check{}, httpx.NotFound()
@@ -208,7 +217,7 @@ func (s *Service) Notifications(ctx context.Context, subject, cursor string, lim
 	}
 	rows, err := s.DB.QueryContext(ctx, `SELECT m.id, m.assignment_id, m.created_at, m.block->>'title', m.recipient_role, u.display_name
 		FROM messages m JOIN assignments a ON a.id=m.assignment_id JOIN users u ON u.id=a.intern_id
-		WHERE m.recipient_user_id=$1 ORDER BY m.created_at DESC, m.id DESC OFFSET $2 LIMIT $3`, subject, offset, limit+1)
+		WHERE m.recipient_user_id=$1 AND m.kind='checkpoint' ORDER BY m.created_at DESC, m.id DESC OFFSET $2 LIMIT $3`, subject, offset, limit+1)
 	if err != nil {
 		return NotificationPage{}, err
 	}

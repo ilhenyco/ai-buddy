@@ -3,8 +3,9 @@
 
 import { makePlan, type Block, type Plan, type Role } from './domain.ts';
 import { checkId, emptyRuntime, type AppState, type FeedEntry, type Runtime, type Snapshot } from './scenarios.ts';
-import { pickQuestions, suggestionStage, validSelection } from './suggestions.ts';
-import type { Assignment, FeedPage, SessionContext } from './api.ts';
+import { pickQuestions, suggestionStage, validSelection, type QuestionSelection } from './suggestions.ts';
+import type { ApiMessage, Assignment, FeedPage, SessionContext } from './api.ts';
+import type { ChatMessage } from './domain.ts';
 import { blockFromServer } from './serverScenarios.ts';
 
 /** The subject's assignment for the intern shown on screen. */
@@ -30,12 +31,36 @@ function nextStub(next: NonNullable<FeedPage['items'][number]['next']>): Block {
   return { id: next.id, title: next.title, date: next.date, endDate: '', eyebrow: '', process: '', intern: '', buddy: '', lead: '', tasks: [] };
 }
 
+const moscowTime = (iso: string) => new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }).format(new Date(iso));
+
+/** A question or an answer of the personal chat, as the chat bubbles show it. */
+export function chatFromServer(m: ApiMessage): ChatMessage {
+  return {
+    id: m.id, role: m.kind === 'user' ? 'user' : 'assistant', text: m.text, time: moscowTime(m.createdAt),
+    ...(m.answerRequestId ? { answerId: m.answerRequestId } : {}),
+    ...(m.errorCode ? { error: true } : {}),
+    ...(m.citations?.length ? { citations: m.citations.map(c => {
+      const title = c.title.trim();
+      // the section path starts with the document title: show only the part inside it
+      const fragment = c.fragment.trim() === title ? '' : c.fragment.trim().replace(title + ' / ', '');
+      return { title, fragment, ...(c.url ? { url: c.url } : {}) };
+    }) } : {}),
+  };
+}
+
+/** Questions still waiting for an answer: the answer job ids, oldest first. */
+export function pendingAnswers(feed: FeedPage): string[] {
+  const answered = new Set(feed.items.filter(m => m.kind === 'assistant' && m.answerRequestId).map(m => m.answerRequestId));
+  return feed.items.filter(m => m.kind === 'user' && m.answerRequestId && !answered.has(m.answerRequestId)).map(m => m.answerRequestId!);
+}
+
 /**
  * Replace the checkpoint part of the intern's runtime with the server feed:
- * server messages become snapshots and feed entries (new ones are appended, so local AI chat stays in place),
+ * server messages become snapshots and feed entries in the server's order, together with the personal chat
+ * (questions and answers are stored on the server too),
  * checks are the server's. Suggestions for the intern follow the latest delivered block.
  */
-export function applyServerFeed(state: AppState, internId: string, role: Role, a: Assignment, feed: FeedPage, today: string, random: () => number = Math.random): AppState {
+export function applyServerFeed(state: AppState, internId: string, role: Role, a: Assignment, feed: FeedPage, today: string, random: () => number = Math.random, serverSuggestions?: QuestionSelection): AppState {
   const runtime: Runtime = state.runtimes[internId] ?? emptyRuntime();
   const checkpoints = feed.items.filter(m => m.kind === 'checkpoint' && m.block);
   const months = feed.activePlan?.months ?? 6;
@@ -46,16 +71,15 @@ export function applyServerFeed(state: AppState, internId: string, role: Role, a
   checkpoints.forEach((m, i) => {
     snapshots[m.id] = { scenarioId: m.scenarioId ?? '', block: blocks[i], plan, ...(m.next ? { next: nextStub(m.next) } : {}) };
   });
-  const serverIds = new Set(checkpoints.map(m => m.id));
-  const kept: FeedEntry[] = runtime.feed.filter(e => e.kind === 'chat' || serverIds.has(e.id));
-  const known = new Set(kept.filter(e => e.kind === 'checkpoint').map(e => (e as { id: string }).id));
-  const feedEntries = [...kept, ...checkpoints.filter(m => !known.has(m.id)).map(m => ({ kind: 'checkpoint' as const, id: m.id }))];
+  const feedEntries: FeedEntry[] = feed.items.flatMap((m): FeedEntry[] =>
+    m.kind === 'checkpoint' ? (m.block ? [{ kind: 'checkpoint', id: m.id }] : []) : [{ kind: 'chat', message: chatFromServer(m) }]);
 
   const checks: Record<string, boolean> = {};
   for (const c of feed.checks) checks[checkId(role, c.messageId, c.taskId)] = c.checked;
 
   let suggestions = runtime.suggestions;
-  if (role === 'intern' && feed.activePlan) {
+  if (role === 'intern' && serverSuggestions) suggestions = serverSuggestions; // getSuggestions: stored on the server
+  else if (role === 'intern' && feed.activePlan) {
     const stage = suggestionStage({ ...plan, blocks }, today);
     if (!validSelection(suggestions, stage)) {
       const previous = Array.isArray(suggestions?.questions) ? suggestions!.questions : [];

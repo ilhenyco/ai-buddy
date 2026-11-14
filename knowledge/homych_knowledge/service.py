@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 from typing import Literal
 
@@ -16,10 +17,13 @@ from .models import (
 )
 from .provider import SYSTEM, ProviderError
 
+log = logging.getLogger(__name__)
+
 
 class ModelReply(StrictModel):
+    answered: bool = True
     reply: str = Field(min_length=1, max_length=6000)
-    sourceIds: list[str] = Field(min_length=1, max_length=5)
+    sourceIds: list[str] = Field(max_length=5)
     conflict: bool
 
 
@@ -58,7 +62,13 @@ class GoIdentity:
         return access
 
 
+CONTEXT_CHARS = 1000
+
+
 def build_prompt(question: str, context: str | None, hits: list, budget: int):
+    # The stage message is background: it must not crowd excerpts out of the budget.
+    if context and len(context) > CONTEXT_CHARS:
+        context = context[:CONTEXT_CHARS].rstrip() + "…"
     selected = list(hits)
     while selected:
         prompt = json.dumps(
@@ -146,14 +156,31 @@ class KnowledgeService:
                 if not selected:
                     return fallback("no_evidence")
                 generated = ModelReply.model_validate(await self.provider.generate(prompt))
+                # Metadata only: no question, excerpt or reply text in logs.
+                log.info(
+                    "answer request=%s mode=%s excerpts=%s answered=%s cited=%s matched=%s",
+                    request.requestId,
+                    result.retrievalMode,
+                    [h.chunkId for h in selected],
+                    generated.answered,
+                    len(generated.sourceIds),
+                    len({h.chunkId for h in selected} & set(generated.sourceIds)),
+                )
                 if generated.conflict:
                     return fallback("conflicting_sources")
-                if not generated.reply.strip() or re.search(r"https?://|www\.", generated.reply):
+                # The model found no answer in the excerpts: honest fallback, no sources.
+                if not generated.answered:
+                    return fallback("no_evidence")
+                # Links come only from citations: a URL in the text is removed, not trusted.
+                reply = re.sub(r"(https?://|www\.)\S+", "", generated.reply).strip()
+                if not reply:
                     return fallback("unavailable")
                 by_id = {h.chunkId: h for h in selected}
-                if any(key not in by_id for key in generated.sourceIds):
-                    return fallback("unavailable")
-                ids = list(dict.fromkeys(generated.sourceIds))
+                # Only excerpts that were actually given count as sources. A reply that cites none
+                # of them is not grounded: the honest outcome is "no evidence", not an outage.
+                ids = [key for key in dict.fromkeys(generated.sourceIds) if key in by_id]
+                if not ids:
+                    return fallback("no_evidence")
                 access = await self.identity.resolve(request.subjectId)
                 if not await self.store.permitted(access, result.snapshotId, ids):
                     return fallback("no_evidence")
@@ -164,7 +191,7 @@ class KnowledgeService:
                 return AnswerResult(
                     requestId=request.requestId,
                     status="answered",
-                    reply=generated.reply,
+                    reply=reply,
                     citations=citations,
                     snapshotId=result.snapshotId,
                     retrievalMode=result.retrievalMode,

@@ -1,26 +1,33 @@
 # AI-buddy — Хомыч
 
-Бот от команды Origination для Avito Hack&Change. Концепция: стажёр получает сообщения-чек-листы по календарю и задаёт личные вопросы; бадди и руководитель получают отдельные действия помощи. Отметки не блокируют этапы. Актуально: **13 ноября 2026**.
+Бот от команды Origination для Avito Hack&Change. Стажёр получает сообщения-чек-листы по календарю и задаёт личные вопросы AI-наставнику, который отвечает по материалам команды со ссылками на источники; бадди и руководитель получают свои действия помощи. Отметки не блокируют этапы. Актуально: **14 ноября 2026**.
 
-**Текущая интеграция:** основной FRONT связан с Go для входа, сценариев, сообщений и заявок на доступ. Python RAG/MCP использует Go для проверки назначений, но ответы в основном чате ещё демонстрационные. Для живого RAG есть отдельная тестовая страница на `8092`, включаемая профилем `rag-demo`. Код этой ветки — `codex/rag-mcp`; он ещё не слит в `main`.
+```text
+React (frontend/) ──cookie+CSRF──> Go API (backend/) ──> PostgreSQL 16 + pgvector
+                                      │  ├─ планировщик этапов, лента, отметки, уведомления
+                                      │  ├─ вопросы: AnswerJob → worker → Python RAG → ответ с источниками
+                                      │  ├─ материалы: версии → очередь индексации Python RAG
+                                      │  └─ заявки на доступ → мок-сервис доступов (OQ08)
+Python RAG/MCP (knowledge/) ──ai-context──> Go: права и назначения стажёра
+                            └─> Ollama: BGE-M3 (поиск), Qwen3:4b (ответ); MCP search_knowledge для агентов
+```
+
+Все **23 операции контракта** реализованы в Go и проверяются тестом маршрутов по `openapi.yaml`; покрытие Go ~89 %.
 
 ## Начать здесь
 
-1. [Полная спецификация в Word](output/ai-buddy-team-specification.docx) — самостоятельный документ для команды.
-2. [Каноническая концепция](docs/ai-buddy/team-specification.md), [97 карточек функций](docs/ai-buddy/frontend-functional-specification.md), [матрица связей](docs/ai-buddy/traceability.csv).
-3. [Подключение сервера](docs/ai-buddy/server-handoff.md), [OpenAPI — проект 23 операций](docs/ai-buddy/system-analysis/openapi.yaml).
-4. [BPMN P00–P17](docs/ai-buddy/bpmn-v3/README.md), [редактируемые модели](output/bpmn-v3/models/), [изображения и увеличенные фрагменты](docs/ai-buddy/bpmn-current/images/).
-5. [47 продуктовых требований 0.4](docs/ai-buddy/functional-requirements.md), [Q&A](docs/ai-buddy/avito-qa.md), [расшифровка](docs/ai-buddy/avito-qa-transcript.md).
-6. [Backend: запуск, тестовые учётки, демо-сценарии, как добавить свой модуль](backend/README.md).
-7. [FRONT: работа с сервером, общий клиент `api.ts`](frontend/README.md#работа-с-сервером-vite_apion).
-8. [RAG/MCP: запуск и контракт для Go](knowledge/README.md), [аудит по всем 47 требованиям](docs/ai-buddy/implementation-audit-2026-11-13.md).
+1. [Backend: запуск, модули, тестовые учётки, демо-сценарии](backend/README.md).
+2. [FRONT: работа с сервером, общий клиент `api.ts`](frontend/README.md#работа-с-сервером-vite_apion).
+3. [RAG/MCP: устройство, запуск, внешние агенты](knowledge/README.md), [отдельный сервер знаний](knowledge/EXTERNAL.md).
+4. [OpenAPI сервера](docs/ai-buddy/system-analysis/openapi.yaml), [подключение сервера](docs/ai-buddy/server-handoff.md), [аудит реализации на 14 ноября](docs/ai-buddy/implementation-audit-2026-11-14.md).
+5. [Полная спецификация в Word](output/ai-buddy-team-specification.docx), [каноническая концепция](docs/ai-buddy/team-specification.md), [97 карточек функций](docs/ai-buddy/frontend-functional-specification.md), [матрица связей](docs/ai-buddy/traceability.csv).
+6. [BPMN P00–P17](docs/ai-buddy/bpmn-v3/README.md), [47 продуктовых требований 0.4](docs/ai-buddy/functional-requirements.md), [Q&A](docs/ai-buddy/avito-qa.md).
 
-## Запуск всего проекта
+## Запуск
 
-Python RAG/MCP: [запуск, контракты и передача Go-разработчику](knowledge/README.md).
-Это отдельный opt-in стек `docker-compose.rag.yml`; базовый запуск ниже не требует модели.
+Нужен Docker. Из корня репозитория.
 
-Нужен Docker. Из корня репозитория:
+### Без модели (быстро)
 
 ```sh
 docker compose up --build
@@ -29,121 +36,117 @@ docker compose up --build
 | Что | Адрес | Переменная для смены порта |
 |---|---|---|
 | Приложение: фронт + API через nginx | http://localhost:8088 | `HOMYCH_WEB_PORT` |
-| API напрямую | http://localhost:8080 (проверка: `curl localhost:8080/healthz`) | `HOMYCH_API_PORT` |
+| API напрямую | http://localhost:8080 (`curl localhost:8080/healthz`) | `HOMYCH_API_PORT` |
+| Мок сервиса доступов | http://localhost:8091 | `HOMYCH_MOCK_PORT` |
 | PostgreSQL с pgvector | localhost:55432 | `HOMYCH_DB_PORT` |
 
-**Вход** — демо-учётки вместо SSO, экран «Кто входит?». Руководитель Алексей, бадди Даша, стажёры Саша, Маша, Илья; вторая команда для проверки изоляции — руководитель Ирина, бадди Олег, стажёр Кирилл; HR Анна.
+Всё, кроме ответов AI, работает. На вопрос стажёра Хомыч честно отвечает, что поиск по материалам на этом стенде не подключён, — вопрос сохраняется.
 
-**Демо-данные** создаются при первом запуске: опубликованный сценарий Саши (в ленте сразу два сообщения), черновик Маши и сценарий Кирилла у Ирины — [подробно](backend/README.md#демо-сценарии). Начать с чистого листа: `docker compose down -v`, затем снова `docker compose up --build`.
+### С AI: RAG и живая модель
 
-Порядок показа:
+Нужны две модели Ollama: `bge-m3:567m` (поиск, ~1,2 ГБ) и `qwen3:4b` (ответы, ~2,5 ГБ). Команды ниже вводить по одной: zsh на macOS по умолчанию не понимает комментарии `#` в интерактивной строке.
 
-1. Войти Сашей: лента «по плану» с чек-листами и подсказками вопросов, отметить пункт.
-2. Войти Дашей: те же этапы в формулировке «помоги стажёру».
-3. Войти Алексеем: «Сценарий» → создать или открыть сценарий, выбрать стажёра, «Опубликовать».
-4. «Состояния» → «Демонстрационная дата» → на неделю вперёд → «Применить дату»: всем трём ролям приходит новый этап, отметки на это не влияют.
+**1. Настройки.** `cp .env.example .env` (PowerShell: `Copy-Item .env.example .env`), затем в `.env`:
 
-Тесты backend: `cd backend && make db && make test`. Подробно — [backend/README.md](backend/README.md).
+- `RAG_SERVICE_TOKEN` — любая случайная строка от 24 символов;
+- для экрана «Материалы»: `python knowledge/examples/keygen.py`, «Client token» → `RAG_SOURCES_TOKEN`, «Server token_sha256» → в `RAG_EXTERNAL_CLIENTS` по образцу из `.env.example`.
 
-## Запуск RAG с живой моделью и тестовой страницей
+**2. Модель — один из вариантов.**
 
-Нужен работающий Docker с Compose. Команды первого запуска после клонирования:
+*Вариант А — Ollama на компьютере (рекомендуется на Mac: работает на GPU, ответ за секунды).* Установить с [ollama.com](https://ollama.com) или `brew install ollama`, затем:
 
 ```sh
-git clone https://github.com/ilhenyco/ai-buddy.git
-cd ai-buddy
-git switch codex/rag-mcp
+ollama serve
 ```
 
-Создать `.env` из `.env.example`: в PowerShell `Copy-Item .env.example .env`, в bash `cp .env.example .env`. Это шаг для нового клона; существующий `.env` сохраняется. Заменить `RAG_SERVICE_TOKEN` случайной строкой не короче 24 символов. Один и тот же внутренний credential автоматически передаётся Go и Python; `.env` не коммитится. Значения тайм-аутов в примере рассчитаны на локальную пробу на CPU, не являются SLA.
+В другом терминале (если приложение Ollama уже запущено, `ollama serve` не нужен):
 
 ```sh
-docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo up -d --build --wait
+ollama pull bge-m3:567m
+ollama pull qwen3:4b
+echo 'RAG_OLLAMA_URL=http://host.docker.internal:11434' >> .env
+```
+
+Прерванная загрузка продолжается с того же места: повторить `ollama pull`.
+
+*Вариант Б — Ollama в Docker.* Docker Desktop с памятью от 8 ГБ. Модели скачиваются после запуска стенда (шаг 3).
+
+**3. Запуск и индексация Playbook** (индексация — только в первый раз):
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.rag.yml up -d --build --wait
+```
+
+Только для варианта Б:
+
+```sh
 docker compose -f docker-compose.yml -f docker-compose.rag.yml exec ollama ollama pull bge-m3:567m
 docker compose -f docker-compose.yml -f docker-compose.rag.yml exec ollama ollama pull qwen3:4b
+```
+
+Для обоих вариантов:
+
+```sh
 docker compose -f docker-compose.yml -f docker-compose.rag.yml exec knowledge python -m homych_knowledge.ingest playbook
+curl http://localhost:8090/readyz
 ```
 
-Модели и первая индексация требуют времени и нескольких ГБ свободного диска. До успешной индексации `/readyz` возвращает 503 — запущенный процесс ещё не означает готовую базу знаний.
+Готовность — `200` от `/readyz`. Индексация Playbook заменяет весь корпус: выполнять до добавления материалов через экран. Для проверки без модели — `RAG_PROVIDER=deterministic` в `.env` и повторить индексацию: ответы будут помечены как тестовые.
 
-| Что открыть | Адрес | Что проверяем |
-|---|---|---|
-| Отдельная страница вопросов к RAG | http://127.0.0.1:8092/ | Реальная генерация и ссылки на Playbook; демо-стажёр `u-sasha` |
-| Готовность индекса | http://localhost:8090/readyz | После ingestion — `200`, `status=ok` |
-| Основное приложение | http://localhost:8088/ | Вход и сценарии через Go; основной AI-чат пока локальный |
-| MCP | http://localhost:8090/mcp/ | Протокольный endpoint, требуется отдельный MCP credential; это не веб-страница |
-
-Проверочные вопросы: «Что такое Avito PaaS?», «Какие правила действуют при изменении чужого кода?», «Какие возможности обучения описаны в Playbook?». Корпус — публичный справочник, а не полная внутренняя HR-база; некоторые сведения исторические.
-
-Логи и остановка (данные БД/модели в volumes сохраняются):
+**4. Проверка.** Войти Сашей и спросить «Что такое Avito PaaS?» — ответ со ссылкой на Playbook; «Сколько дней отгула в первый месяц?» — «нет подтверждённого ответа, уточни у бадди». Если что-то не так:
 
 ```sh
-docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo logs --tail 100 knowledge api rag-demo
-docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo down
+docker compose -f docker-compose.yml -f docker-compose.rag.yml logs --tail 50 api knowledge knowledge-worker
 ```
 
-Повторный запуск — первая команда `up`; повторно скачивать уже сохранённые модели и индексировать неизменный корпус не нужно. Профиль `rag-demo` — локальный операторский стенд, не интерфейс с пользовательской авторизацией; его порт привязан к loopback. Это замена прежней локальной страницы из `tmp`, теперь она входит в Git и Compose.
+Строки `answer request=…` в логе `knowledge` показывают, что нашёл поиск и что решила модель (без текста вопросов).
 
-Подробные варианты запуска без модели и native Python, MCP-авторизация и контракт интеграции — в [knowledge/README.md](knowledge/README.md).
+На CPU ответ модели занимает до минуты: в чате Хомыч показывает «Ищу в материалах команды», ответ сохраняется на сервере и приходит, даже если закрыть вкладку. Тайм-ауты в `.env.example` рассчитаны на CPU.
 
-## Что нужно соединить для основного чата
+Остановка: `docker compose -f docker-compose.yml -f docker-compose.rag.yml down` (данные и модели остаются в volumes). Отдельная операторская страница вопросов к RAG — профиль `rag-demo`, http://127.0.0.1:8092.
 
-```text
-Уже работает: React → Go (вход, сценарии)
-Уже работает: Python RAG → Go (проверка текущих назначений)
-Уже работает: тестовая страница → Python RAG → PostgreSQL/Ollama
-Предстоит:   React → Go askQuestion/AnswerJob → Python RAG → Go история/getAnswer → React
-```
+**Вход** — демо-учётки вместо SSO. Руководитель Алексей, бадди Даша, стажёры Саша, Маша, Илья; вторая команда для проверки изоляции — руководитель Ирина, бадди Олег, стажёр Кирилл; HR Анна. **Демо-данные** создаются при первом запуске: опубликованный сценарий Саши, черновик Маши, сценарий Кирилла — [подробно](backend/README.md#демо-сценарии).
 
-Go должен сохранять вопросы и задания, повторять обработку после сбоя и возвращать статус/ответ через публичный API. FRONT должен перейти с `demoAnswer` на этот API и восстанавливать ожидание ответа после reload. В Python передаётся проверенный серверный контекст стажёра/сообщения. Контракты подготовлены, но сквозная интеграция ещё не реализована и требует E2E-проверки прав, повторов, тайм-аутов и источников.
+### Порядок показа
 
-## Запуск FRONT без сервера
+1. Профиль → «Демо-стенд» → «Начать демо заново».
+2. **Саша:** лента этапов с чек-листами, вкладка «План», вопрос Хомычу — ответ со ссылками на источники; «Инструкция по доступам» → заявка → через 20 с «Доступ одобрен», открылась первая задача.
+3. **Даша:** колонка «Мои стажёры», те же этапы в формулировке «помоги стажёру», статус заявки Саши; личного чата Саши не видно.
+4. **Алексей:** «Сценарий» → создать и опубликовать; «Материалы» → добавить памятку → «В поиске» через несколько секунд → Саша получает ответ по ней.
+5. «Демо-стенд» → дата на неделю вперёд: всем трём ролям приходит новый этап и уведомление в колокольчике, подсказки вопросов меняются.
 
-Node **22.18+**, npm. После клонирования:
+## Проверки
 
 ```sh
-cd frontend
-npm ci
-npm run dev -- --host 127.0.0.1 --port 4173
+cd backend && make db && make test && make cover   # Go: тесты на PostgreSQL, -race, покрытие
+cd frontend && npm ci && npm run check && npm test && npm run build
+cd knowledge && uv sync --frozen && uv run ruff check . && uv run pytest   # TEST_DATABASE_URL с pgvector для интеграционных
 ```
 
-Открыть http://127.0.0.1:4173 . Так фронт работает без сервера, все данные в браузере; для работы с сервером — `VITE_API=on`, см. [frontend/README.md](frontend/README.md#работа-с-сервером-vite_apion). Внешний ключ не нужен. Роли, стажёры и дата переключаются в панели проверки макета. Для списка сценариев выбрать руководителя и вкладку «Сценарий». Данные — browser localStorage `homych.frontend.bot.v3`; сброс удаляет локальную демонстрацию.
+CI (`.github/workflows`): `backend.yml`, `frontend.yml`, `knowledge.yml` (включая Compose smoke) и структурная проверка передачи `python tools/verify_team_handoff.py`.
 
-```sh
-npm run check
-npm test
-npm run build
-npm run test:sites
-```
-
-Сборка — `frontend/dist/client`; worker сохранён для существующей упаковки Sites. [Инструкция FRONT](frontend/README.md). CI выполняет эти проверки и структурную проверку передачи.
-
-## Статус разработки
+## Статус
 
 | Часть | Операции контракта | Статус |
 |---|---|---|
-| Каркас backend, демо-вход, `sessionContext` | sessionContext | ✅ в `main` |
-| Сценарии руководителя | listTemplates, listScenarios, createScenario, getScenario, saveDraft, publishScenario | ✅ в `main` |
-| FRONT ↔ API: демо-вход, экран сценариев, весь проект в Docker, демо-сценарии | — | ✅ в `main` |
-| Сообщения по календарю: планировщик, лента всех ролей, отметки, уведомления, демо-дата | listMessages, setCheck, listNotifications | ✅ в `main` |
-| Подсказки вопросов | getSuggestions | ⏳ не начато |
-| Публичные вопросы и ответы AI | askQuestion, getAnswer | ⏳ Go AnswerJob и подключение FRONT; Python API реализован отдельно |
-| Источники знаний | listSources, createSource, getSource, updateSource, excludeSource, getSourceJob | ⏳ не начато |
-| Python RAG и MCP поиска | внутренние search/answer, MCP search_knowledge, Go ai-context | Реализация в `knowledge/`; публичные askQuestion/getAnswer и FRONT ещё требуют подключения |
-| Заявка на доступ через сервис (OQ08): мок-сервис доступов, черновик → подтверждение человеком → статус, защищённая первая задача | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ✅ в `main` |
-| Вкладка «План» рядом с «Сообщениями»: текущий этап, все ссылки, этапы с отметками, что впереди (только FRONT, данные из ленты) | — | ✅ в ветке `feat/plan-panel` |
-| Итоговый вид продукта: без служебной полосы макета, колонка «Мои стажёры» у бадди и руководителя, профиль по блокам, колокольчик из уведомлений сервера; демо-стенд в меню профиля — дата сохраняется на сервере, «Начать демо заново» (`/demo/reset`) | — | ✅ в ветке `feat/demo-polish` |
+| Вход, сессия, CSRF/Origin | sessionContext | ✅ |
+| Сценарии руководителя | listTemplates, listScenarios, createScenario, getScenario, saveDraft, publishScenario | ✅ |
+| Сообщения по календарю: планировщик, лента всех ролей, отметки, уведомления | listMessages, setCheck, listNotifications | ✅ |
+| Подсказки вопросов текущего этапа | getSuggestions | ✅ |
+| Вопросы к AI: AnswerJob, worker с повторами, ответ RAG с источниками, история на сервере | askQuestion, getAnswer | ✅ |
+| Материалы команды: версии, индексация в RAG, исключение | listSources, createSource, getSource, updateSource, excludeSource, getSourceJob | ✅ |
+| Заявка на доступ через мок-сервис (OQ08), защищённая первая задача | createAccessDraft, confirmAccess, getAccess, getProtectedTask | ✅ |
+| Python RAG: гибридный поиск с ACL, Qwen3:4b, MCP `search_knowledge` | внутренний API | ✅ |
+| FRONT: вкладка «План», колонка «Мои стажёры», колокольчик, демо-стенд | — | ✅ |
 
-Новый модуль добавляется в `backend/internal/<модуль>/` по образцу сценариев — см. [backend/README.md](backend/README.md). Обновляйте эту таблицу в своём PR.
+Новый модуль добавляется в `backend/internal/<модуль>/` по образцу существующих — см. [backend/README.md](backend/README.md). Обновляйте эту таблицу в своём PR.
 
 ## Границы готовности
 
-Готов FRONT. **Backend в работе**: готовы каркас на Go + PostgreSQL, демо-вход вместо SSO, `sessionContext` модуль сценариев, сообщения по календарю и заявка на доступ через мок-сервис — 13 из 23 операций контракта (шаблоны, список, создание, черновик с проверкой версии, публикация с заменой и датой отсечки; планировщик без дублей, лента всех ролей, отметки, уведомления; черновик заявки, подтверждение человеком, статус со сверкой по `correlationId`, защищённая первая задача), тесты с покрытием ~89% и CI. Предстоят: подсказки, вопросы и ответы (RAG, Qwen/DeepSeek), источники. Python RAG/MCP работает отдельно в knowledge/; основной AI-чат пока не подключён. FRONT подключён к API для входа, сценариев, ленты и заявки; ответы AI и материалы пока работают в браузере (localStorage) до появления своих модулей. Демо-вход, демо-дата, переключатель мока (`/demo/access-mode`), список заявок назначения и расширения `Message.next`, `FeedPage.activePlan` отсутствуют в `openapi.yaml` — добавить вместе с контрактом. Контакты условные; сервис доступов — мок до ответа на OQ08. Контракт API — проект реализации. Панель HR не утверждает права HR. Количество тестов не является отчётом >80% покрытия.
+Сделано для демо, а в продукте заменяется: демо-вход вместо SSO (OQ02), мок вместо сервиса доступов Авито (OQ08), веб-канал вместо пуша/мессенджера (OQ02), публичный Avito Playbook вместо внутренней базы знаний. Контакты и тексты сценариев условные. Не реализованы: событийная шина (outbox → Kafka) и метрики пользы, фича-флаги, переназначение бадди через интерфейс, HR-рассылки (предложения). Подробно, с проверкой по всем 47 требованиям, — [аудит на 14 ноября](docs/ai-buddy/implementation-audit-2026-11-14.md).
 
-Канонические данные: `team-specification.md`, `frontend-functions.json`, `system-analysis/openapi.yaml`, `bpmn-v3/processes.py`. Скрипты сборки в tools; [сборка и рендер Word](docs/ai-buddy/document-build.md). Структурная проверка: `python tools/verify_team_handoff.py`.
+Канонические данные: `team-specification.md`, `frontend-functions.json`, `system-analysis/openapi.yaml`, `bpmn-v3/processes.py`. Скрипты сборки в tools; [сборка и рендер Word](docs/ai-buddy/document-build.md). История: [прежний общий Word](output/ai-buddy-product-bpmn.docx), [прежние семь операций](docs/ai-buddy/system-analysis/openapi-legacy.yaml).
 
-История сохранена: [прежний общий Word](output/ai-buddy-product-bpmn.docx), [прежние семь операций](docs/ai-buddy/system-analysis/openapi-legacy.yaml), старые схемы и T1–T5. Актуальная передача заменяет их в качестве основания новой разработки. Онлайн-лист представлен локальным снимком; более поздние изменения не подтверждены. PR в main не сливается автоматически. Доступы команде выдаёт владелец.
-# Подключение внешних агентов
+## Подключение внешних агентов
 
-Для отдельного сервера знаний без установки нашего фронтенда и Go-приложения:
-[развёртывание, авторизация, MCP/HTTP и пополнение базы](knowledge/EXTERNAL.md).
+Агенты Авито подключаются к базе знаний Хомыча по MCP (`search_knowledge`) или HTTP без нашего фронтенда и Go: [развёртывание, авторизация, пополнение базы](knowledge/EXTERNAL.md).
