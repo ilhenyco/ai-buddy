@@ -4,6 +4,8 @@ Go 1.24, PostgreSQL 16 (с pgvector), одна зависимость — дра
 
 **Сейчас готово:** каркас сервиса, демо-вход, `sessionContext`, модуль сценариев (6 операций), модуль сообщений по календарю (3 операции + планировщик) и заявка на доступ через мок-сервис (4 операции) из `docs/ai-buddy/system-analysis/openapi.yaml`. Покрытие тестами ~89 % (порог в CI — 80 %).
 
+Python RAG/MCP: see ../knowledge/README.md. Internal ai-context uses RAG_SERVICE_TOKEN; public AI chat integration remains pending.
+
 ## Запуск
 
 ```sh
@@ -159,3 +161,5 @@ POST /api/v1/demo/reset   # {"today":"…","shifted":false,"created":9}
 - **Список сценариев фильтруется в памяти.** У одного руководителя их немного; при росте нужно перенести фильтрацию в SQL.
 - **«Прочитано» (read receipts) не хранится** — в контракте этого нет.
 - **Остальные 14 операций контракта** — подсказки, вопросы и ответы, источники, доступы.
+
+Python RAG/MCP: see ../knowledge/README.md. Internal ai-context uses RAG_SERVICE_TOKEN; public AI chat integration remains pending.

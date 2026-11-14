@@ -27,11 +27,12 @@ import (
 const APIPrefix = "/api/v1"
 
 type Config struct {
-	DemoLogin      bool
-	SessionSecret  []byte
-	AllowedOrigins []string
-	SecureCookie   bool
-	Location       *time.Location
+	RAGServiceToken string
+	DemoLogin       bool
+	SessionSecret   []byte
+	AllowedOrigins  []string
+	SecureCookie    bool
+	Location        *time.Location
 	// AccessService is the external access request service (the mock in the demo).
 	// nil switches the access module off: its routes answer 404.
 	AccessService access.External
@@ -90,6 +91,7 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 		return nil
 	}))
 	id.Routes(mux, APIPrefix, cfg.DemoLogin)
+	id.AIRoutes(mux, cfg.RAGServiceToken)
 	sc.Routes(mux, APIPrefix, id.Authenticate)
 	var demoClock *clock.Offset
 	if cfg.DemoLogin {

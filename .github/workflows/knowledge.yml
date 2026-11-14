@@ -1,0 +1,81 @@
+name: Knowledge RAG and MCP
+on:
+  push:
+    branches: [main, codex/rag-mcp]
+    paths: ['knowledge/**', 'backend/**', '.github/workflows/knowledge.yml', 'docker-compose*.yml']
+  pull_request:
+    branches: [main]
+    paths: ['knowledge/**', 'backend/**', '.github/workflows/knowledge.yml', 'docker-compose*.yml']
+permissions:
+  contents: read
+jobs:
+  knowledge:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: homych
+          POSTGRES_PASSWORD: homych
+          POSTGRES_DB: homych
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U homych" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://homych:homych@localhost:5432/postgres?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.8'
+      - name: Python checks, real PostgreSQL and MCP protocol
+        working-directory: knowledge
+        run: |
+          uv sync --frozen
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest --cov=homych_knowledge --cov-report=term-missing --cov-report=xml
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Go compatibility and identity bridge
+        working-directory: backend
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -race -count=1 ./...
+      - name: Compose configuration
+        run: |
+          RAG_SERVICE_TOKEN=ci-only-service-token-at-least-24 docker compose -f docker-compose.yml -f docker-compose.rag.yml config --quiet
+      - name: Python image build
+        run: docker build -t homych-knowledge:test knowledge
+      - name: Standalone external Compose configuration
+        env:
+          KNOWLEDGE_DOMAIN: knowledge.example.org
+          KNOWLEDGE_DB_PASSWORD: ci-only-configuration-password
+          RAG_SERVICE_TOKEN: ci-only-separate-internal-service-token
+          RAG_EXTERNAL_CLIENTS: '{}'
+        run: docker compose -f docker-compose.knowledge.yml config --quiet
+      - name: Compose smoke with real Playbook and deterministic model
+        env:
+          RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
+          RAG_PROVIDER: deterministic
+          RAG_MCP_TOKENS: '{"ci-mcp-token-with-at-least-24-characters":"u-sasha"}'
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo up -d --build --wait db api knowledge rag-demo
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python -m homych_knowledge.ingest playbook
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python smoke.py
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T rag-demo python -c "import httpx; r=httpx.post('http://localhost:8092/ask', headers={'Origin':'http://localhost:8092'}, json={'query':'Как устроено обучение и развитие?'}, timeout=65); r.raise_for_status(); assert r.json()['status']=='answered'; print('Demo page smoke passed')"
+      - name: Stop smoke services
+        if: always()
+        env:
+          RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
+        run: docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo down
+      - uses: actions/upload-artifact@v4
+        with:
+          name: knowledge-coverage
+          path: knowledge/coverage.xml

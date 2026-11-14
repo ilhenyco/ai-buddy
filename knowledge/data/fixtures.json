@@ -1,0 +1,16 @@
+[
+  {
+    "documentId": "fixture-platform", "revision": "fixture-v1",
+    "title": "Тестовая инструкция команды platform",
+    "text": "# Тестовая инструкция\nУчебный код платформы: platform-cedar-481. Это синтетический пример для проверки изоляции, не регламент Авито.",
+    "url": "https://example.invalid/fixtures/platform", "scope": "team", "scopeId": "platform",
+    "synthetic": true, "validFrom": "2026-01-01T00:00:00Z", "expiresAt": "2100-01-01T00:00:00Z"
+  },
+  {
+    "documentId": "fixture-mobile", "revision": "fixture-v1",
+    "title": "Тестовая инструкция команды mobile",
+    "text": "# Тестовая инструкция\nУчебный код мобильной команды: mobile-birch-923. Это синтетический пример для проверки изоляции, не регламент Авито.",
+    "url": "https://example.invalid/fixtures/mobile", "scope": "team", "scopeId": "mobile",
+    "synthetic": true, "validFrom": "2026-01-01T00:00:00Z", "expiresAt": "2100-01-01T00:00:00Z"
+  }
+]
