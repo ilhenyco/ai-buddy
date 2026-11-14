@@ -33,6 +33,29 @@ export type ApiScenario = {
 export type ScenarioPage = { items: ApiScenario[]; nextCursor: string | null; counts: { all: number; drafts: number; published: number } };
 export type Publication = { scenario: ApiScenario; replacedScenarioId: string | null; cutoffDate: string | null; activeRevisionId: string };
 
+// messages (contract + two extensions: Message.next and FeedPage.activePlan, see backend/README.md)
+export type ApiMessage = {
+  id: string; assignmentId: string; kind: 'checkpoint' | 'user' | 'assistant'; recipientUserId: string; createdAt: string; text: string;
+  scenarioId?: string; revisionId?: string; block?: ApiBlock; next?: { id: string; title: string; date: string };
+};
+export type ApiCheck = { messageId: string; taskId: string; userId: string; checked: boolean; updatedAt: string };
+export type FeedPage = {
+  items: ApiMessage[]; nextCursor: string | null; checks: ApiCheck[]; serverTime: string;
+  activePlan: { scenarioId: string; revisionId: string; start: string; months: 6 | 9 } | null;
+};
+export type ApiNotification = { id: string; messageId: string; assignmentId: string; title: string; createdAt: string; deliveryStatus: string };
+export type ClockState = { today: string; shifted: boolean; created: number };
+
+// access requests (OQ08): the server stores the operation first, then calls the access service
+export type AccessStatus = 'pending' | 'approved' | 'denied' | 'unknown';
+export type AccessDraft = { id: string; assignmentId: string; resourceId: string; reason: string; version: number; expiresAt: string };
+export type AccessOperation = {
+  id: string; assignmentId: string; resourceId: string; correlationId: string;
+  externalNumber: string | null; status: AccessStatus; submissionConfirmed: boolean; updatedAt: string;
+};
+export type ProtectedTask = { id: string; title: string; description: string; requiredResourceId: string };
+export type AccessMode = 'approve' | 'deny' | 'lost';
+
 // ---------- errors ----------
 
 export class ApiError extends Error {
@@ -57,7 +80,7 @@ let fetchImpl: Fetch = (...args) => fetch(...args);
 /** For tests: replace the network. */
 export function setFetch(f: Fetch) { fetchImpl = f; }
 
-function newKey() {
+export function newKey() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random();
 }
 
@@ -121,6 +144,33 @@ export const api = {
     request<Publication>('POST', `/scenarios/${encodeURIComponent(id)}/publications`,
       { draftVersion: version, expectedActiveScenarioId, confirmReplacement },
       { ...ifMatch(version), 'Idempotency-Key': key }),
+
+  // messages by the calendar
+  listMessages: (assignmentId: string, limit = 200) =>
+    request<FeedPage>('GET', `/assignments/${encodeURIComponent(assignmentId)}/messages?limit=${limit}`),
+  setCheck: (messageId: string, taskId: string, checked: boolean) =>
+    request<ApiCheck>('PUT', `/messages/${encodeURIComponent(messageId)}/tasks/${encodeURIComponent(taskId)}/check`, { checked }),
+  listNotifications: () => request<{ items: ApiNotification[]; nextCursor: string | null }>('GET', '/notifications'),
+
+  // demo clock (DEMO_MODE): move "today" for the scheduler, null returns to real time
+  getClock: () => request<ClockState>('GET', '/demo/clock'),
+  setClock: (date: string | null) => request<ClockState>('POST', '/demo/clock', { date }),
+  /** Deletes everything done on the stand: demo scenarios again, real date, due messages sent. */
+  resetDemo: () => request<ClockState>('POST', '/demo/reset'),
+
+  // access requests: draft -> explicit confirmation by the person -> status reconciled by correlationId
+  createAccessDraft: (body: { assignmentId: string; resourceId: string; reason: string }, key = newKey()) =>
+    request<AccessDraft>('POST', '/access-drafts', body, { 'Idempotency-Key': key }),
+  confirmAccess: (draftId: string, draftVersion: number, reason: string, key = newKey()) =>
+    request<AccessOperation>('POST', `/access-drafts/${encodeURIComponent(draftId)}/confirm`,
+      { draftVersion, reason, confirmed: true }, { 'Idempotency-Key': key }),
+  getAccessOperation: (id: string) => request<AccessOperation>('GET', `/access-operations/${encodeURIComponent(id)}`),
+  listAccessOperations: (assignmentId: string) =>
+    request<{ items: AccessOperation[] }>('GET', `/assignments/${encodeURIComponent(assignmentId)}/access-operations`),
+  getProtectedTask: (assignmentId: string) =>
+    request<ProtectedTask>('GET', `/assignments/${encodeURIComponent(assignmentId)}/protected-first-task`),
+  // demo only: what the access mock answers to the next requests
+  setAccessMode: (mode: AccessMode) => request<{ mode: AccessMode }>('POST', '/demo/access-mode', { mode }),
 };
 
 /** A short message for the UI, by error code from the contract. */
@@ -130,6 +180,7 @@ export function errorText(e: unknown): string {
   if (e.reason === 'REPLACEMENT_NOT_CONFIRMED') return 'У стажёра уже есть опубликованный сценарий. Подтвердите замену.';
   if (e.reason === 'ACTIVE_SCENARIO_CHANGED') return 'Действующий сценарий стажёра изменился. Обновите список и проверьте выбор.';
   if (e.reason === 'PUBLISHED_INTERN_LOCKED') return 'У опубликованного сценария нельзя сменить стажёра.';
+  if (e.reason === 'DRAFT_EXPIRED') return 'Черновик заявки устарел. Отправьте заявку ещё раз.';
   if (e.status === 401) return 'Сессия закончилась. Войдите снова.';
   return e.message;
 }

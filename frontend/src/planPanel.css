@@ -1,0 +1,63 @@
+/* "План" tab next to "Сообщения": the plan without the chat around it. */
+.plan-page{flex:1;min-height:0;display:flex;overflow:hidden;background:var(--origin-paper)}
+.plan-scroll{flex:1;min-width:0;overflow:auto;scrollbar-width:thin}
+.plan-view{max-width:1080px;margin:0 auto;padding:32px 32px 48px;display:flex;flex-direction:column;gap:26px}
+.plan-view-head h2{font-size:34px!important;font-weight:500!important;letter-spacing:-1px!important;margin-bottom:12px}
+.plan-view-head .plan-progress{max-width:520px}
+.plan-columns{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:36px;align-items:start}
+.plan-col-main,.plan-col-side{display:flex;flex-direction:column;gap:26px;min-width:0}
+.plan-progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--origin-gray700)}
+.plan-progress-bar{flex:1;height:8px;border:2px solid var(--origin-line);background:var(--origin-paper);position:relative;overflow:hidden}
+.plan-progress-bar>span{position:absolute;inset:0 auto 0 0;background:var(--origin-green)}
+.plan-section>h3{font-size:12px!important;letter-spacing:.04em;text-transform:uppercase;font-weight:700;color:var(--origin-gray700);margin-bottom:10px}
+.plan-now{border:2px solid var(--origin-line);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.plan-now strong{font-size:17px;line-height:1.3}
+.plan-now-meta{font-size:13px;color:var(--origin-gray700)}
+.plan-now-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.plan-now-row>svg{flex-shrink:0}
+.plan-now-row .text-link{font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.plan-access{background:var(--origin-gray100);padding:8px 10px}
+.plan-access-approved{background:#e3f8e5}
+.plan-access-denied{background:var(--origin-pink200)}
+.plan-to-chat{align-self:flex-start;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;text-decoration:underline;text-underline-offset:3px}
+.plan-links{display:flex;flex-direction:column}
+.plan-link{display:flex;align-items:center;gap:9px;padding:9px 0;text-align:left;border-bottom:1px solid var(--origin-gray200);font-size:14px;line-height:1.35}
+.plan-link:last-child{border-bottom:0}
+.plan-link>span{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.plan-link small{font-size:12px;color:var(--origin-gray700)}
+.plan-link>svg{flex-shrink:0;color:var(--origin-gray700)}
+.plan-link:hover{color:var(--origin-ink);background:var(--origin-gray100)}
+.plan-stage{border:2px solid var(--origin-line);margin-bottom:8px}
+.plan-stage>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:15px;font-weight:600}
+.plan-stage>summary::-webkit-details-marker{display:none}
+.plan-stage>summary>span{display:flex;flex-direction:column;margin-right:auto;min-width:0}
+.plan-stage>summary small{font-size:12px;font-weight:400;color:var(--origin-gray700)}
+.plan-stage>summary>svg{flex-shrink:0;transition:transform .15s}
+.plan-stage[open]>summary>svg{transform:rotate(180deg)}
+.plan-stage-count{font-size:12px;font-weight:700;padding:2px 6px;background:var(--origin-gray200)}
+.plan-stage-count.complete{background:var(--origin-green)}
+.plan-stage-body{border-top:1px solid var(--origin-gray200);padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.plan-task{display:flex;gap:10px;align-items:flex-start}
+.plan-task label{font-size:14px;font-weight:400;line-height:1.4}
+.plan-upcoming{display:flex;flex-direction:column;gap:2px;padding:0;margin:0}
+.plan-upcoming li{list-style:none;display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px;color:var(--origin-gray700);border-bottom:1px dashed var(--origin-gray200)}
+.plan-upcoming li:last-child{border-bottom:0}
+.plan-upcoming time{white-space:nowrap;font-size:13px}
+.checkpoint-highlight .bot-checkpoint{outline:3px solid var(--origin-blue);outline-offset:3px;transition:outline-color 1s}
+
+@container prototype (max-width:1160px){
+  .plan-columns{grid-template-columns:minmax(0,1fr) 300px;gap:24px}
+}
+@container prototype (max-width:860px){
+  .plan-columns{grid-template-columns:1fr}
+}
+@container prototype (max-width:760px){
+  .plan-view{padding:20px 15px 32px;gap:22px}
+  .plan-view-head h2{font-size:26px!important}
+}
+
+.dark-theme .plan-page{background:#171717}
+.dark-theme .plan-now,.dark-theme .plan-stage,.dark-theme .plan-progress-bar{border-color:#555}
+.dark-theme .plan-access,.dark-theme .plan-stage-count{background:#2a2a2a}
+.dark-theme .plan-access-approved,.dark-theme .plan-stage-count.complete{background:#163c29}
+.dark-theme .plan-link:hover{background:#242424}

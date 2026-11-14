@@ -26,6 +26,8 @@ type Service struct {
 	Clock clock.Clock
 	// Loc is the calendar of the assignment, used for the replacement cutoff date.
 	Loc *time.Location
+	// AfterPublish is called after a successful publication (wakes the messages scheduler).
+	AfterPublish func()
 }
 
 // Result is a ready HTTP answer; Body is JSON. ETag is set for single-scenario answers.
@@ -561,6 +563,9 @@ func (s *Service) Publish(ctx context.Context, subject, id, key string, ifMatch 
 		res = Result{Status: 201, Body: body, ETag: ETag(r.version)}
 		return err
 	})
+	if err == nil && s.AfterPublish != nil {
+		s.AfterPublish()
+	}
 	return res, err
 }
 

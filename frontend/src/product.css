@@ -1,0 +1,69 @@
+/* Server mode: the product without the prototype's review bar. */
+.notification-list{display:flex;flex-direction:column}
+.notification-button{width:100%;text-align:left;align-items:center}
+.notification-button>div{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+.notification-button:hover{background:var(--origin-gray100)}
+.notification-new strong::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--origin-blue);margin-right:7px;vertical-align:2px}
+.profile-demo-link{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--origin-gray700)!important}
+.dark-theme .notification-button:hover{background:#242424}
+
+/* Buddy and lead: their interns on the left of the chat and the plan */
+.with-rail.bot-workspace{justify-content:flex-start}
+.with-rail .chat-pane{margin:0 auto}
+.interns-rail{width:280px;flex-shrink:0;border-right:2px solid var(--origin-line);padding:22px 16px;overflow:auto;background:var(--origin-paper)}
+.interns-rail h2{font-size:12px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase;color:var(--origin-gray700);margin:0 4px 12px}
+.interns-rail ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.intern-card{width:100%;display:flex;align-items:center;gap:11px;padding:10px;text-align:left;border:2px solid transparent}
+.intern-card:hover{background:var(--origin-gray100)}
+.intern-card-active{border-color:var(--origin-line);background:var(--origin-paper)!important}
+.intern-initials{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid var(--origin-line);background:var(--origin-gray100);font-size:13px;font-weight:700}
+.intern-card-active .intern-initials{background:var(--origin-green)}
+.intern-card-text{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.intern-card-text strong{font-size:15px;font-weight:600;line-height:1.3}
+.intern-card-text small{font-size:12px;color:var(--origin-gray700);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.intern-fresh{min-width:22px;height:22px;padding:0 6px;display:flex;align-items:center;justify-content:center;background:var(--origin-blue);color:#111;font-size:12px;font-weight:700}
+@container prototype (max-width:1000px){
+  .with-rail.bot-workspace,.plan-page.with-rail{flex-direction:column}
+  .interns-rail{width:auto;border-right:0;border-bottom:2px solid var(--origin-line);padding:10px 12px;overflow-x:auto;overflow-y:hidden}
+  .interns-rail h2{display:none}
+  .interns-rail ul{flex-direction:row;gap:6px}
+  .intern-card{width:auto;padding:6px 10px 6px 6px;white-space:nowrap}
+  .intern-initials{width:30px;height:30px;font-size:12px}
+  .intern-card-text small{display:none}
+  .with-rail .chat-pane{margin:0;flex:1;min-height:0;max-width:none}
+}
+
+/* Profile: clear blocks instead of a list of controls */
+.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.profile-head>div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.profile-head strong{font-size:20px;font-weight:600;line-height:1.2}
+.profile-section{border-top:1px solid var(--origin-gray200);padding-top:16px;margin-top:18px}
+.profile-section h3{font-size:12px!important;font-weight:700!important;letter-spacing:.04em;text-transform:uppercase;color:var(--origin-gray700);margin-bottom:10px}
+.profile-facts{margin:0;display:flex;flex-direction:column}
+.profile-facts>div{display:flex;justify-content:space-between;gap:16px;padding:7px 0;font-size:15px}
+.profile-facts dt{color:var(--origin-gray700)}
+.profile-facts dd{margin:0;text-align:right;font-weight:500}
+.profile-setting{display:flex!important;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;font-size:15px!important;font-weight:400!important}
+.profile-setting>span{display:flex;flex-direction:column}
+.profile-setting small{font-size:12px;color:var(--origin-gray700)}
+.segmented{display:flex;border:2px solid var(--origin-line)}
+.segmented>button{padding:5px 12px;font-size:13px;font-weight:600}
+.segmented>button[aria-pressed=true]{background:var(--origin-ink);color:#fff}
+.profile-demo{width:100%;display:flex;align-items:center;gap:12px;margin-top:20px;padding:12px 14px;text-align:left;background:var(--origin-gray100);border:1px dashed #bbb}
+.profile-demo>span{display:flex;flex-direction:column;margin-right:auto}
+.profile-demo strong{font-size:14px;font-weight:600}
+.profile-demo small{font-size:12px;color:var(--origin-gray700)}
+.profile-demo:hover{background:var(--origin-gray200)}
+.dark-theme .interns-rail{background:#171717;border-color:#555}
+.dark-theme .intern-card:hover,.dark-theme .profile-demo{background:#242424}
+.dark-theme .intern-card-active{border-color:#ddd;background:#171717!important}
+.dark-theme .intern-initials{border-color:#ddd;background:#2a2a2a}
+.dark-theme .intern-card-active .intern-initials{background:#3B6D11}
+.dark-theme .segmented{border-color:#ddd}
+.dark-theme .segmented>button[aria-pressed=true]{background:#f0f0f0;color:#111}
+.dark-theme .profile-section{border-color:#3a3a3a}
+
+@container prototype (max-width:430px){
+  .brand>span:nth-child(2){display:none}
+  .main-nav{gap:12px}
+}
