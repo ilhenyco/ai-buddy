@@ -1,7 +1,7 @@
 // Package messages: Хомыч writes by the calendar. When a block of the active plan is due,
 // the scheduler creates one event and a message for each participant (intern, buddy, lead)
 // with that role's text and checklist. Contract: listMessages, setCheck, listNotifications.
-// Rules: docs/ai-buddy/server-handoff.md ("Обязательные инварианты данных").
+// Rules: docs/architecture/server-handoff.md ("Обязательные инварианты данных").
 package messages
 
 import (

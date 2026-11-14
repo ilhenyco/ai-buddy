@@ -13,11 +13,11 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.enum.table import WD_TABLE_ALIGNMENT,WD_CELL_VERTICAL_ALIGNMENT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-R=Path(__file__).resolve().parents[1];D=R/'docs/ai-buddy';O=R/'output';T=R/'tmp/team-spec'
-F=json.loads((D/'frontend-functions.json').read_text('utf-8'))['features']
-API=json.loads((D/'system-analysis/openapi.yaml').read_text('utf-8'))
+R=Path(__file__).resolve().parents[1];D=R/'docs';O=R/'output';T=R/'tmp/team-spec'
+F=json.loads((D/'product/frontend-functions.json').read_text('utf-8'))['features']
+API=json.loads((D/'architecture/openapi.yaml').read_text('utf-8'))
 MODELS=json.loads((O/'bpmn-v3/models/model-index.json').read_text('utf-8'))
-RENDERS={m['id']:m for m in json.loads((D/'bpmn-current/render-index.json').read_text('utf-8'))}
+RENDERS={m['id']:m for m in json.loads((D/'processes/rendered/render-index.json').read_text('utf-8'))}
 OP={op['operationId']:(method.upper(),path,op) for path,methods in API['paths'].items() for method,op in methods.items()}
 SOURCE=O/'ai-buddy-product-bpmn.docx'
 TARGET=O/'ai-buddy-team-specification.docx'
@@ -159,7 +159,7 @@ def io(c):
     return '; '.join(dict.fromkeys(inputs)), ', '.join(dict.fromkeys(outputs)) or 'обновлённый интерфейс/локальное состояние по описанному действию'
 
 def trace(cards):
-    path=D/'traceability.csv'
+    path=D/'product/traceability.csv'
     with path.open('w',encoding='utf-8-sig',newline='') as f:
         w=csv.writer(f,delimiter=';');w.writerow(['Функция','Требование / продуктовый FR','Экран','BPMN','API operationId (проект)','Данные','Проверка / статус'])
         for c in cards:
@@ -186,7 +186,7 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
     doc.add_page_break();toc_title=doc.add_paragraph('Содержание',style='Title')
     for run in toc_title.runs:run.font.size=Pt(18)
     p=doc.add_paragraph();fld=element('fldSimple',instr='TOC \\o "1-1" \\h \\z \\u');p._p.append(fld)
-    doc.add_page_break();md(doc,D/'team-specification.md')
+    doc.add_page_break();md(doc,D/'product/team-specification.md')
     doc.add_page_break();doc.add_heading('13. Экраны прототипа с пояснениями',1)
     screens=[('S01 · Сообщения и вопросы этапа','suggestions-start.png','Снимок текущей редакции подсказок: три кнопки, единая лента и поле ввода. Сообщение этапа инициируется календарём, а не выбором этапа в интерфейсе.'),
       ('S02 · Сообщение бадди','friends-buddy.png','Снимок базового chat-first оформления: отдельные действия помощи по пунктам стажёра. Личный AI-чат стажёра помощнику не показывается.'),
@@ -198,7 +198,7 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
     for index,(title,img,caption) in enumerate(screens):
         if index:doc.add_page_break()
         doc.add_heading(title,2);para(doc,caption).paragraph_format.keep_with_next=True;picture(doc,R/'frontend/design/screenshots'/img,6.65,7.8)
-    arch=D/'architecture-current.png'
+    arch=D/'architecture/architecture-current.png'
     if arch.exists():
         doc.add_page_break();doc.add_heading('Архитектура: границы ответственности',2);picture(doc,arch,6.65,5.0);para(doc,'Схема проектная: во FRONT сейчас работает только левый компонент и локальные имитации. Сетевые стрелки показывают будущие взаимодействия. Инструмент вызывается Go API после подтверждения человека, а не календарным worker. В альбомном приложении схема повторена крупнее.')
     doc.add_page_break();doc.add_heading('14. Полный каталог функций и требований',1)
@@ -210,7 +210,7 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
         inputs,outputs=io(c);para(doc,'**Вход:** '+inputs+'. **Выход:** '+outputs+'.')
         para(doc,'**Сохранение, ошибки и ограничения:** '+c['limits'])
         para(doc,f"**Приёмка {c['check']}:** выполнить описанное действие и проверить конкретный ожидаемый результат и ограничение. Для сохранённых данных повторить после перезагрузки. Связь: {c['parent']}; API: {', '.join(c['api']) or 'локально/демо, отдельный вызов не нужен'}.")
-    doc.add_heading('15. Передача серверной команде',1);md(doc,D/'server-handoff.md',level=2)
+    doc.add_heading('15. Передача серверной команде',1);md(doc,D/'architecture/server-handoff.md',level=2)
     doc.add_heading('16. Проект API: операции, примеры и ошибки',1)
     para(doc,'Все операции имеют базовый путь /api/v1 и проверенную сессию. Это проект, а не описание существующего сервера. В JSON ниже синтетические примеры формы обмена, не реальные данные. Для GET вход — путь/параметры; для мутаций — тело и обязательные заголовки. Общие ошибки перечислены в конце раздела и полностью представлены в машиночитаемом контракте.')
     for oid,(method,path,op) in OP.items():
@@ -235,7 +235,7 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
         table(doc,['Поле','Тип / допустимые значения','Обяз.'],rows,[1.7,4.1,.85])
     doc.add_heading('18. Все 40 шагов листа 3 и актуальные поправки',1)
     para(doc,'Далее сохранён исходный снимок каждого пункта со всеми шестью полями. Это исторический источник, а не автоматически действующая спецификация. Поправки: AI не обязан составлять план; checklist не управляет этапами; результаты/встречи вне продукта; личный чат приватен; HR и управление знаниями условны. В случае расхождения применять текущие требования, а не старое описание результата.')
-    checklist=json.loads((D/'bpmn-v2/checklist-source.json').read_text('utf-8'))
+    checklist=json.loads((D/'processes/bpmn-v2/checklist-source.json').read_text('utf-8'))
     for i,row in enumerate(checklist[1:],2):
         doc.add_heading(f'Строка {i} · {row[0]}',2)
         for title,value in zip(checklist[0][1:],row[1:]):para(doc,'**'+title+':** '+value)
@@ -262,7 +262,7 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
             inputs,outputs=io(c);rows.append([c['id']+' '+c['name'],c['requirement']+'\n'+c['parent'],', '.join(c['screens']),', '.join(c['bpmn']),', '.join(c['api']) or 'Локально/демо',outputs,c['check']+'\nКритерий'])
         table(doc,['Функция','Требование','Экран','BPMN','API (проект)','Данные / выход','Проверка'],rows,[3.1,1.65,.65,.85,2.85,3.0,1.55],8.5)
     doc.add_page_break();doc.add_heading('Архитектура · увеличенная схема',2)
-    picture(doc,D/'architecture-current.png',15.05,8.7)
+    picture(doc,D/'architecture/architecture-current.png',15.05,8.7)
     para(doc,'Проект серверной реализации. Существующий FRONT слева; остальные компоненты предстоит реализовать. MCP — опциональный адаптер инструментов Go API, не отдельный пользовательский интерфейс и не полномочия модели.')
     doc.add_page_break();doc.add_heading('21. Полный графический комплект BPMN',1)
     para(doc,'Каждый процесс показан полностью. У широких схем после общей карты идут увеличенные фрагменты слева направо с перекрытием. Общая карта нужна для навигации; читать подписи следует на увеличенных страницах. Переход через границу фрагмента — та же стрелка одной модели, а не новое событие. Редактируемые XML находятся в output/bpmn-v3/models/P00.bpmn … P17.bpmn.')
@@ -271,12 +271,12 @@ Rendering: packaged render_docx.py diagnosed missing LibreOffice; actual Windows
         r=RENDERS[m['id']]
         doc.add_page_break();doc.add_heading(m['id']+' · '+m['title'],2)
         para(doc,'Полная схема · слева направо. '+('Обзор: подписи увеличены на следующих страницах.' if r['panels'] else 'Читаемая полная модель.'))
-        picture(doc,D/'bpmn-current/images'/r['image'],15.05,8.7)
+        picture(doc,D/'processes/rendered/images'/r['image'],15.05,8.7)
         if not r['panels']:para(doc,m['acceptance'])
         for i,img in enumerate(r['panels'],1):
             doc.add_page_break();doc.add_heading(f"{m['id']} · увеличенный фрагмент {i}/{len(r['panels'])}",2)
             para(doc,'Продолжение общей модели слева направо. Дорожки по вертикали те же, что в полной схеме; соседние фрагменты перекрываются. Все переходы сохранены.')
-            picture(doc,D/'bpmn-current/images'/img,15.05,8.7)
+            picture(doc,D/'processes/rendered/images'/img,15.05,8.7)
     doc.save(TARGET)
     assert hashlib.sha256(SOURCE.read_bytes()).hexdigest()==sha,'Reference changed'
     print(json.dumps({'output':str(TARGET),'features':len(F),'bpmn':len(MODELS['models']),'operations':len(OP),'reference_unchanged':True},ensure_ascii=False))

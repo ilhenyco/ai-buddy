@@ -2,7 +2,7 @@ from pathlib import Path
 import json,hashlib,re
 R=Path(__file__).resolve().parents[1]
 chosen=[R/'.gitignore',R/'README.md',R/'.github/workflows/frontend.yml',R/'output/ai-buddy-team-specification.docx']
-for folder in ('frontend','docs/ai-buddy','tools','output/bpmn-v3/models'):
+for folder in ('frontend','docs','tools','output/bpmn-v3/models'):
     for p in (R/folder).rglob('*'):
         if not p.is_file():continue
         rel=p.relative_to(R)

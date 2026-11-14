@@ -16,7 +16,7 @@ def bounds(el):
     return {k:float(el.get(k)) for k in ('x','y','width','height')}
 
 def read(name,title):
-    tree=E.parse(ROOT/'docs'/'ai-buddy'/f'{name}.bpmn')
+    tree=E.parse(ROOT/'docs'/'archive'/'bpmn-v1'/f'{name}.bpmn')
     sem={e.get('id'):e for e in tree.iter() if e.get('id')}
     items=[]; edges=[]
     for di in tree.findall('.//d:BPMNShape',NS):

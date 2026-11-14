@@ -1,0 +1,298 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Entry" targetNamespace="https://ai-buddy.example/bpmn" exporter="AI-buddy analysis">
+  <bpmn:collaboration id="Collaboration_Entry">
+    <bpmn:participant id="Pool_Entry" name="01 · Первый вход" processRef="Process_Entry" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Entry" name="01 · Первый вход" isExecutable="false">
+    <bpmn:laneSet id="Lanes_Entry">
+      <bpmn:lane id="Entry_intern" name="Стажёр">
+        <bpmn:flowNodeRef>D01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D05</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D09</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D11</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D12</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D13</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D14</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Entry_ai" name="AI-buddy">
+        <bpmn:flowNodeRef>D02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D03</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D08</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D04</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D10A</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D10B</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Entry_lead" name="Руководитель">
+        <bpmn:flowNodeRef>D06</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>D07</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="D01" name="Первый вход">
+      <bpmn:outgoing>Flow_D01_D02</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="D02" name="Загрузить план и права">
+      <bpmn:incoming>Flow_D01_D02</bpmn:incoming>
+      <bpmn:outgoing>Flow_D02_D03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="D03" name="План доступен?" gatewayDirection="Diverging">
+      <bpmn:incoming>Flow_D02_D03</bpmn:incoming>
+      <bpmn:outgoing>Flow_D03_D08</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D03_D04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="D08" name="Показать этап, бадди и следующий шаг">
+      <bpmn:incoming>Flow_D03_D08</bpmn:incoming>
+      <bpmn:outgoing>Flow_D08_D09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="D04" name="Показать, что план недоступен">
+      <bpmn:incoming>Flow_D03_D04</bpmn:incoming>
+      <bpmn:outgoing>Flow_D04_D05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="D05" name="Открыть контакт руководителя">
+      <bpmn:incoming>Flow_D04_D05</bpmn:incoming>
+      <bpmn:outgoing>Flow_D05_D06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="D06" name="Уточнить план вне AI-buddy">
+      <bpmn:incoming>Flow_D05_D06</bpmn:incoming>
+      <bpmn:outgoing>Flow_D06_D07</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="D07" name="План требует уточнения">
+      <bpmn:incoming>Flow_D06_D07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="D09" name="Выбрать карточку или задать вопрос">
+      <bpmn:incoming>Flow_D08_D09</bpmn:incoming>
+      <bpmn:outgoing>Flow_D09_D10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="D10" name="Какой сценарий?" gatewayDirection="Diverging">
+      <bpmn:incoming>Flow_D09_D10</bpmn:incoming>
+      <bpmn:outgoing>Flow_D10_D11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D10_D12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D10_D13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D10_D14</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D10_D10A</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="D11" name="Открыта «Команда»">
+      <bpmn:incoming>Flow_D10_D11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="D12" name="Открыты «Доступы»">
+      <bpmn:incoming>Flow_D10_D12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="D13" name="Открыта первая задача">
+      <bpmn:incoming>Flow_D10_D13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="D14" name="Сеанс завершён">
+      <bpmn:incoming>Flow_D10_D14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="D10A" name="Уточнить вопрос или показать контакт бадди">
+      <bpmn:incoming>Flow_D10_D10A</bpmn:incoming>
+      <bpmn:outgoing>Flow_D10A_D10B</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="D10B" name="Возврат в «Мой старт»">
+      <bpmn:incoming>Flow_D10A_D10B</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_D01_D02" sourceRef="D01" targetRef="D02" />
+    <bpmn:sequenceFlow id="Flow_D02_D03" sourceRef="D02" targetRef="D03" />
+    <bpmn:sequenceFlow id="Flow_D03_D08" sourceRef="D03" targetRef="D08" name="Да" />
+    <bpmn:sequenceFlow id="Flow_D03_D04" sourceRef="D03" targetRef="D04" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_D04_D05" sourceRef="D04" targetRef="D05" />
+    <bpmn:sequenceFlow id="Flow_D05_D06" sourceRef="D05" targetRef="D06" />
+    <bpmn:sequenceFlow id="Flow_D06_D07" sourceRef="D06" targetRef="D07" />
+    <bpmn:sequenceFlow id="Flow_D08_D09" sourceRef="D08" targetRef="D09" />
+    <bpmn:sequenceFlow id="Flow_D09_D10" sourceRef="D09" targetRef="D10" />
+    <bpmn:sequenceFlow id="Flow_D10_D11" sourceRef="D10" targetRef="D11" name="Команда" />
+    <bpmn:sequenceFlow id="Flow_D10_D12" sourceRef="D10" targetRef="D12" name="Доступы" />
+    <bpmn:sequenceFlow id="Flow_D10_D13" sourceRef="D10" targetRef="D13" name="Первая задача" />
+    <bpmn:sequenceFlow id="Flow_D10_D14" sourceRef="D10" targetRef="D14" name="Выход" />
+    <bpmn:sequenceFlow id="Flow_D10_D10A" sourceRef="D10" targetRef="D10A" name="Вопрос без ответа" />
+    <bpmn:sequenceFlow id="Flow_D10A_D10B" sourceRef="D10A" targetRef="D10B" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_Entry" name="01 · Первый вход">
+    <bpmndi:BPMNPlane id="Plane_Entry" bpmnElement="Collaboration_Entry">
+      <bpmndi:BPMNShape id="DI_Pool_Entry" bpmnElement="Pool_Entry" isHorizontal="true" bioc:fill="#ffffff" bioc:stroke="#40506a">
+        <dc:Bounds x="36" y="42" width="1390" height="582" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Entry_intern" bpmnElement="Entry_intern" isHorizontal="true" bioc:fill="#f5f9ff" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="42" width="1360" height="246" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Entry_ai" bpmnElement="Entry_ai" isHorizontal="true" bioc:fill="#f5f2ff" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="288" width="1360" height="208" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Entry_lead" bpmnElement="Entry_lead" isHorizontal="true" bioc:fill="#eff2fb" bioc:stroke="#62728b">
+        <dc:Bounds x="66" y="496" width="1360" height="128" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D01" bpmnElement="D01" bioc:fill="#d9f9e4" bioc:stroke="#334867">
+        <dc:Bounds x="123.0" y="117.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="83" y="157" width="113" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D02" bpmnElement="D02" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="235.0" y="329.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D03" bpmnElement="D03" bioc:fill="#fff4d2" bioc:stroke="#334867">
+        <dc:Bounds x="452.0" y="338.0" width="46" height="46" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="424" y="321" width="103" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D08" bpmnElement="D08" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="568.0" y="329.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D04" bpmnElement="D04" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="568.0" y="418.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D05" bpmnElement="D05" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="742.0" y="194.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D06" bpmnElement="D06" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="918.0" y="522.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D07" bpmnElement="D07" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1164.0" y="536.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1110" y="578" width="146" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D09" bpmnElement="D09" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="742.0" y="101.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D10" bpmnElement="D10" bioc:fill="#fff4d2" bioc:stroke="#334867">
+        <dc:Bounds x="966.0" y="110.0" width="46" height="46" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="893" y="80" width="95" height="23" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D11" bpmnElement="D11" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1140.0" y="59.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1185" y="66" width="152" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D12" bpmnElement="D12" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1140.0" y="110.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1185" y="117" width="150" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D13" bpmnElement="D13" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1140.0" y="162.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1185" y="169" width="155" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D14" bpmnElement="D14" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1140.0" y="216.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1185" y="223" width="146" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D10A" bpmnElement="D10A" bioc:fill="#ffffff" bioc:stroke="#334867">
+        <dc:Bounds x="1085.0" y="329.0" width="152" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_D10B" bpmnElement="D10B" bioc:fill="#ffe9e6" bioc:stroke="#334867">
+        <dc:Bounds x="1319.0" y="343.0" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1270" y="384" width="134" height="35" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Flow_D01_D02" bpmnElement="Flow_D01_D02">
+        <di:waypoint x="159.0" y="135" />
+        <di:waypoint x="197.0" y="135" />
+        <di:waypoint x="197.0" y="361" />
+        <di:waypoint x="235.0" y="361" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D02_D03" bpmnElement="Flow_D02_D03">
+        <di:waypoint x="387.0" y="361" />
+        <di:waypoint x="452.0" y="361" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D03_D08" bpmnElement="Flow_D03_D08">
+        <di:waypoint x="498.0" y="361" />
+        <di:waypoint x="568.0" y="361" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="523" y="337" width="44" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D03_D04" bpmnElement="Flow_D03_D04">
+        <di:waypoint x="475" y="384.0" />
+        <di:waypoint x="475" y="450" />
+        <di:waypoint x="568.0" y="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="483" y="420" width="45" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D04_D05" bpmnElement="Flow_D04_D05">
+        <di:waypoint x="720.0" y="450" />
+        <di:waypoint x="735" y="450" />
+        <di:waypoint x="735" y="226" />
+        <di:waypoint x="742.0" y="226" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D05_D06" bpmnElement="Flow_D05_D06">
+        <di:waypoint x="894.0" y="226" />
+        <di:waypoint x="904" y="226" />
+        <di:waypoint x="904" y="554" />
+        <di:waypoint x="918.0" y="554" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D06_D07" bpmnElement="Flow_D06_D07">
+        <di:waypoint x="1070.0" y="554" />
+        <di:waypoint x="1164.0" y="554" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D08_D09" bpmnElement="Flow_D08_D09">
+        <di:waypoint x="720.0" y="361" />
+        <di:waypoint x="728" y="361" />
+        <di:waypoint x="728" y="133" />
+        <di:waypoint x="742.0" y="133" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D09_D10" bpmnElement="Flow_D09_D10">
+        <di:waypoint x="894.0" y="133" />
+        <di:waypoint x="966.0" y="133" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10_D11" bpmnElement="Flow_D10_D11">
+        <di:waypoint x="989" y="110.0" />
+        <di:waypoint x="989" y="77" />
+        <di:waypoint x="1140.0" y="77" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1030" y="52" width="75" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10_D12" bpmnElement="Flow_D10_D12">
+        <di:waypoint x="1012.0" y="133" />
+        <di:waypoint x="1084" y="133" />
+        <di:waypoint x="1084" y="128" />
+        <di:waypoint x="1140.0" y="128" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1020" y="106" width="67" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10_D13" bpmnElement="Flow_D10_D13">
+        <di:waypoint x="1001" y="144" />
+        <di:waypoint x="1072" y="144" />
+        <di:waypoint x="1072" y="180" />
+        <di:waypoint x="1140.0" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1043" y="154" width="96" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10_D14" bpmnElement="Flow_D10_D14">
+        <di:waypoint x="994" y="151" />
+        <di:waypoint x="1040" y="151" />
+        <di:waypoint x="1040" y="234" />
+        <di:waypoint x="1140.0" y="234" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1057" y="209" width="68" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10_D10A" bpmnElement="Flow_D10_D10A">
+        <di:waypoint x="989" y="156.0" />
+        <di:waypoint x="989" y="361" />
+        <di:waypoint x="1085.0" y="361" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1003" y="317" width="113" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_D10A_D10B" bpmnElement="Flow_D10A_D10B">
+        <di:waypoint x="1237.0" y="361" />
+        <di:waypoint x="1319.0" y="361" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

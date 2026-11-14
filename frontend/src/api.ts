@@ -1,4 +1,4 @@
-// HTTP client for the Хомыч backend (docs/ai-buddy/system-analysis/openapi.yaml).
+// HTTP client for the Хомыч backend (docs/architecture/openapi.yaml).
 // Shared by all screens: add your module's calls to `api` below.
 //
 // Enabled with VITE_API=on. Without it the prototype keeps working on localStorage.

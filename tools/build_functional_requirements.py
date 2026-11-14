@@ -11,7 +11,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'output' / 'ai-buddy-functional-requirements.docx'
-MD = ROOT / 'docs' / 'ai-buddy' / 'functional-requirements.md'
+MD = ROOT / 'docs' / 'product' / 'functional-requirements.md'
 REQS = []
 doc = Document()
 section = doc.sections[0]
