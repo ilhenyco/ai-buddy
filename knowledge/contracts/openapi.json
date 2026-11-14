@@ -128,6 +128,297 @@
           }
         }
       }
+    },
+    "/v1/search": {
+      "post": {
+        "summary": "Search",
+        "operationId": "search_v1_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Query"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/documents/{document_id}": {
+      "put": {
+        "summary": "Upsert",
+        "operationId": "upsert_v1_documents__document_id__put",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "documentId": {
+                    "pattern": "^[a-zA-Z0-9_-]{1,48}$",
+                    "title": "Documentid",
+                    "type": "string"
+                  },
+                  "revision": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "title": "Revision",
+                    "type": "string"
+                  },
+                  "title": {
+                    "title": "Title",
+                    "type": "string"
+                  },
+                  "text": {
+                    "title": "Text",
+                    "type": "string"
+                  },
+                  "url": {
+                    "title": "Url",
+                    "type": "string"
+                  },
+                  "scope": {
+                    "default": "common",
+                    "enum": [
+                      "common",
+                      "team",
+                      "internship"
+                    ],
+                    "title": "Scope",
+                    "type": "string"
+                  },
+                  "scopeId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Scopeid"
+                  },
+                  "synthetic": {
+                    "default": false,
+                    "title": "Synthetic",
+                    "type": "boolean"
+                  },
+                  "validFrom": {
+                    "format": "date-time",
+                    "title": "Validfrom",
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "format": "date-time",
+                    "title": "Expiresat",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "documentId",
+                  "revision",
+                  "title",
+                  "text",
+                  "url",
+                  "validFrom",
+                  "expiresAt"
+                ],
+                "title": "Document",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete",
+        "operationId": "delete_v1_documents__document_id__delete",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "summary": "Job",
+        "operationId": "job_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}/retry": {
+      "post": {
+        "summary": "Retry",
+        "operationId": "retry_v1_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -350,6 +641,29 @@
         ],
         "title": "Hit"
       },
+      "Query": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "Query"
+      },
       "SearchInput": {
         "properties": {
           "subjectId": {
@@ -454,6 +768,13 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "ExternalBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Pre-issued service client key; see EXTERNAL.md. Not OAuth."
       }
     }
   }

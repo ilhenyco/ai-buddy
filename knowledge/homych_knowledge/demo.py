@@ -23,7 +23,7 @@ class DemoSettings(BaseSettings):
     mode: bool = Field(default=False, validation_alias="RAG_DEMO_MODE")
     api_url: str = "http://127.0.0.1:8090"
     subject_id: str = Field(default="u-sasha", min_length=1, max_length=80)
-    port: int = Field(default=8091, ge=1, le=65535)
+    port: int = Field(default=8092, ge=1, le=65535)
     public_origins: list[str] = []
     timeout: float = Field(default=250, gt=0)
 
@@ -94,7 +94,7 @@ def main():
     )
     parser.add_argument("--env-file", help="Local dotenv file, e.g. ../.env")
     parser.add_argument("--host", choices=["127.0.0.1", "0.0.0.0"], default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8091)
+    parser.add_argument("--port", type=int, default=8092)
     args = parser.parse_args()
     settings = DemoSettings(_env_file=args.env_file, port=args.port)
     uvicorn.run(

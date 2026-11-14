@@ -53,6 +53,13 @@ jobs:
           RAG_SERVICE_TOKEN=ci-only-service-token-at-least-24 docker compose -f docker-compose.yml -f docker-compose.rag.yml config --quiet
       - name: Python image build
         run: docker build -t homych-knowledge:test knowledge
+      - name: Standalone external Compose configuration
+        env:
+          KNOWLEDGE_DOMAIN: knowledge.example.org
+          KNOWLEDGE_DB_PASSWORD: ci-only-configuration-password
+          RAG_SERVICE_TOKEN: ci-only-separate-internal-service-token
+          RAG_EXTERNAL_CLIENTS: '{}'
+        run: docker compose -f docker-compose.knowledge.yml config --quiet
       - name: Compose smoke with real Playbook and deterministic model
         env:
           RAG_SERVICE_TOKEN: ci-only-service-token-at-least-24
@@ -62,7 +69,7 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.rag.yml --profile rag-demo up -d --build --wait db api knowledge rag-demo
           docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python -m homych_knowledge.ingest playbook
           docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T knowledge python smoke.py
-          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T rag-demo python -c "import httpx; r=httpx.post('http://localhost:8091/ask', headers={'Origin':'http://localhost:8091'}, json={'query':'Как устроено обучение и развитие?'}, timeout=65); r.raise_for_status(); assert r.json()['status']=='answered'; print('Demo page smoke passed')"
+          docker compose -f docker-compose.yml -f docker-compose.rag.yml exec -T rag-demo python -c "import httpx; r=httpx.post('http://localhost:8092/ask', headers={'Origin':'http://localhost:8092'}, json={'query':'Как устроено обучение и развитие?'}, timeout=65); r.raise_for_status(); assert r.json()['status']=='answered'; print('Demo page smoke passed')"
       - name: Stop smoke services
         if: always()
         env:

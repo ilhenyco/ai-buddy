@@ -16,11 +16,15 @@ SELECT c.* FROM rag.chunk c
 JOIN rag.active a ON a.snapshot_id = c.snapshot_id
 WHERE c.valid_from <= now() AND c.expires_at > now()
   AND NOT EXISTS (SELECT 1 FROM rag.revocation r WHERE r.document_id = c.document_id)
+  AND NOT EXISTS (SELECT 1 FROM rag.ingestion_job j
+                  WHERE j.document_id = c.document_id AND j.status <> 'completed')
   AND (NOT c.synthetic OR %(synthetic)s)
   AND (c.scope = 'common'
        OR (c.scope = 'team' AND c.scope_id = ANY(%(teams)s))
        OR (c.scope = 'internship' AND c.scope_id = ANY(%(internships)s)))
 """
+
+UNSET = object()
 
 
 def acl_params(access: AccessContext) -> dict:
@@ -203,9 +207,38 @@ class Store:
             ).fetchall()
         return {r["chunk_id"] for r in rows} == set(chunk_ids)
 
-    async def publish(self, documents: list[Document], provider) -> str:
-        if not documents:
+    async def document(
+        self, access: AccessContext, document_id: str, revision: str
+    ) -> SearchResult:
+        async with await self.connect() as conn:
+            await conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+            active = await (await conn.execute("SELECT snapshot_id FROM rag.active")).fetchone()
+            rows = await (
+                await conn.execute(
+                    "SELECT c.*, 0.0 AS score FROM (" + ALLOWED + ") c "
+                    "WHERE document_id=%(document)s AND revision=%(revision)s "
+                    "ORDER BY chunk_id LIMIT 20",
+                    {**acl_params(access), "document": document_id, "revision": revision},
+                )
+            ).fetchall()
+        return SearchResult(
+            snapshotId=active["snapshot_id"] if active else None, items=[hit(row) for row in rows]
+        )
+
+    async def publish(
+        self,
+        documents: list[Document],
+        provider,
+        job_id: str | None = None,
+        base_snapshot=UNSET,
+    ) -> str:
+        if not documents and job_id is None:
             raise ValueError("refusing to publish an empty corpus")
+        # Optimistic concurrency: a concurrent publisher must not overwrite a newer corpus.
+        async with await self.connect() as conn:
+            before = await (await conn.execute("SELECT snapshot_id FROM rag.active")).fetchone()
+        if base_snapshot is not UNSET:
+            before = {"snapshot_id": base_snapshot} if base_snapshot else None
         digest = await provider.identity()
         prepared = []
         seen = set()
@@ -246,6 +279,9 @@ class Store:
         snapshot = "snap-" + uuid4().hex
         async with await self.connect() as conn:
             await conn.execute("SELECT pg_advisory_xact_lock(8213642)")
+            current = await (await conn.execute("SELECT snapshot_id FROM rag.active")).fetchone()
+            if current != before:
+                raise ValueError("corpus changed concurrently; retry publication")
             await conn.execute(
                 "INSERT INTO rag.snapshot(id,embedding_digest) VALUES (%s,%s)", (snapshot, digest)
             )
@@ -309,6 +345,18 @@ class Store:
                 "DO UPDATE SET snapshot_id=excluded.snapshot_id",
                 (snapshot,),
             )
+            await conn.execute("DELETE FROM rag.corpus_document")
+            for doc in documents:
+                await conn.execute(
+                    "INSERT INTO rag.corpus_document VALUES (%s,%s::jsonb)",
+                    (doc.documentId, doc.model_dump_json()),
+                )
+            if job_id:
+                await conn.execute(
+                    "UPDATE rag.ingestion_job SET status='completed', error_code=NULL, "
+                    "finished_at=now() WHERE id=%s",
+                    (job_id,),
+                )
         return snapshot
 
     async def revoke(self, document_id: str):

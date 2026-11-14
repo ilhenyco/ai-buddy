@@ -1,0 +1,12 @@
+{
+  "documentId": "corporate-onboarding",
+  "revision": "v1",
+  "title": "Корпоративное обучение",
+  "text": "# Обучение\nРасписание вводных курсов публикуется на учебном портале.",
+  "url": "https://example.org/onboarding",
+  "scope": "common",
+  "scopeId": null,
+  "synthetic": false,
+  "validFrom": "2026-01-01T00:00:00Z",
+  "expiresAt": "2030-01-01T00:00:00Z"
+}

@@ -12,7 +12,7 @@ class AccessContext(StrictModel):
     subjectId: str
     teamIds: list[str]
     internshipIds: list[str]
-    role: Literal["intern"]
+    role: Literal["intern", "service"]
     synthetic: bool = False
 
 

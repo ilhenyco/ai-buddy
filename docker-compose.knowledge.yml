@@ -1,0 +1,53 @@
+# Standalone external service: no product frontend or Go backend required.
+x-knowledge-env: &knowledge-env
+  RAG_DATABASE_URL: postgresql://homych:${KNOWLEDGE_DB_PASSWORD:?Set password}@db:5432/homych
+  RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set separate internal credential}
+  RAG_EXTERNAL_CLIENTS: ${RAG_EXTERNAL_CLIENTS:?Configure client hashes, scopes and expiry}
+  RAG_ALLOWED_HOSTS: '["${KNOWLEDGE_DOMAIN:?Set DNS domain}","localhost:*","knowledge:8090"]'
+  RAG_ALLOWED_ORIGINS: '["https://${KNOWLEDGE_DOMAIN}"]'
+  RAG_OLLAMA_URL: http://ollama:11434
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: homych
+      POSTGRES_PASSWORD: ${KNOWLEDGE_DB_PASSWORD:?Set password}
+      POSTGRES_DB: homych
+    volumes: [knowledge-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U homych"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+  knowledge:
+    build: ./knowledge
+    environment: *knowledge-env
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  worker:
+    build: ./knowledge
+    environment: *knowledge-env
+    command: [python, -m, homych_knowledge.worker]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  ollama:
+    image: ollama/ollama:0.13.5
+    volumes: [knowledge-models:/root/.ollama]
+    restart: unless-stopped
+  gateway:
+    image: caddy:2.10.2
+    environment:
+      KNOWLEDGE_DOMAIN: ${KNOWLEDGE_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./knowledge/Caddyfile:/etc/caddy/Caddyfile:ro
+      - knowledge-tls:/data
+    depends_on: [knowledge]
+    restart: unless-stopped
+volumes:
+  knowledge-db:
+  knowledge-models:
+  knowledge-tls:

@@ -15,6 +15,98 @@ from homych_knowledge.store import Store
 pytestmark = pytest.mark.integration
 
 
+async def test_incremental_jobs_retries_delete_and_reembedding(store, doc, access):
+    from fastapi import HTTPException
+
+    from homych_knowledge.external import enqueue
+    from homych_knowledge.worker import process_one
+
+    provider = DeterministicProvider()
+    await store.publish([doc], provider)
+    uploaded = doc.model_copy(update={"documentId": "uploaded"})
+    receipt = await enqueue(store, "writer", "first", "uploaded", uploaded.model_dump(mode="json"))
+    assert (
+        await enqueue(store, "writer", "first", "uploaded", uploaded.model_dump(mode="json"))
+        == receipt
+    )
+    with pytest.raises(HTTPException) as error:
+        await enqueue(store, "writer", "first", "uploaded", None)
+    assert error.value.status_code == 409
+    await process_one(store, provider)
+    assert (await store.document(access, "uploaded", "v1")).items
+    # Exact content under a new revision reuses stored embeddings.
+    provider.embed = AsyncMock(side_effect=AssertionError("unchanged text must reuse vectors"))
+    updated = uploaded.model_copy(update={"revision": "v2"})
+    await enqueue(store, "writer", "second", "uploaded", updated.model_dump(mode="json"))
+    assert not (await store.document(access, "uploaded", "v1")).items
+    await process_one(store, provider)
+    assert (await store.document(access, "uploaded", "v2")).items
+    assert (await store.document(access, doc.documentId, "v1")).items
+
+    await enqueue(store, "writer", "delete", "uploaded", None)
+    assert not (await store.document(access, "uploaded", "v2")).items
+    await process_one(store, provider)
+    assert not (await store.document(access, "uploaded", "v2")).items
+    assert (await store.document(access, doc.documentId, "v1")).items
+
+
+async def test_external_upload_retry_receipt_and_ownership(store, doc):
+    import hashlib
+
+    import httpx
+
+    from homych_knowledge.app import create_app
+    from homych_knowledge.config import Settings
+    from homych_knowledge.service import GoIdentity, KnowledgeService
+    from homych_knowledge.worker import process_one
+
+    token = "writer-credential-with-at-least-32-random-chars"
+    settings = Settings(
+        database_url=store.database_url,
+        service_token="internal-separate-credential-32-chars",
+        external_clients={
+            "writer": {
+                "token_sha256": hashlib.sha256(token.encode()).hexdigest(),
+                "scopes": ["documents:write", "knowledge:search"],
+                "expires_at": "2030-01-01T00:00:00Z",
+            }
+        },
+    )
+    provider = DeterministicProvider()
+    service = KnowledgeService(settings, store, provider, GoIdentity(settings, None))
+    app = create_app(settings, service)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://localhost",
+        headers={"Authorization": "Bearer " + token, "Idempotency-Key": "first"},
+    ) as client:
+        uploaded = await client.put(
+            "/v1/documents/" + doc.documentId, json=doc.model_dump(mode="json")
+        )
+        assert uploaded.status_code == 202
+        job_id = uploaded.json()["jobId"]
+        broken = AsyncMock()
+        broken.identity.side_effect = ProviderError("offline")
+        for _ in range(3):
+            assert await process_one(store, broken)
+        assert not await process_one(store, provider)
+        status = (await client.get("/v1/jobs/" + job_id)).json()
+        assert status["status"] == "failed" and status["attempts"] == 3
+        assert (await client.post("/v1/jobs/" + job_id + "/retry")).status_code == 202
+        assert await process_one(store, provider)
+        assert (await client.get("/v1/jobs/" + job_id)).json()["status"] == "completed"
+        result = await client.post("/v1/search", json={"query": "cedar"})
+        assert result.status_code == 200 and result.json()["items"]
+        assert (await client.get("/v1/jobs/missing")).status_code == 404
+        changed = doc.model_copy(update={"text": "different"})
+        client.headers["Idempotency-Key"] = "changed"
+        assert (
+            await client.put(
+                "/v1/documents/" + doc.documentId, json=changed.model_dump(mode="json")
+            )
+        ).status_code == 409
+
+
 @pytest_asyncio.fixture
 async def store():
     url = os.getenv("TEST_DATABASE_URL")

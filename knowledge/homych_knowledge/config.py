@@ -1,5 +1,23 @@
-from pydantic import Field, model_validator
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class ExternalClient(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Store only SHA-256 of a randomly generated high-entropy credential.
+    token_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    scopes: list[Literal["knowledge:search", "knowledge:read", "documents:write"]]
+    team_ids: list[str] = []
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def timezone_required(self):
+        if self.expires_at.tzinfo is None:
+            raise ValueError("expires_at must include timezone")
+        return self
 
 
 class Settings(BaseSettings):
@@ -8,8 +26,11 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://homych:homych@localhost:55432/homych"
     go_url: str = "http://localhost:8080"
     service_token: str = Field(min_length=24)
-    # Demo only: token -> Go user ID. Empty mapping disables external MCP access.
+    # Demo only: token -> Go user ID. Production clients use external_clients.
     mcp_tokens: dict[str, str] = {}
+    external_clients: dict[str, ExternalClient] = {}
+    allowed_hosts: list[str] = ["localhost:*", "127.0.0.1:*", "[::1]:*"]
+    allowed_origins: list[str] = ["http://localhost:*", "http://127.0.0.1:*"]
     demo_mode: bool = False
     synthetic_subjects: list[str] = []
     ollama_url: str = "http://localhost:11434"
@@ -24,6 +45,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_demo(self):
+        import hashlib
+
+        digests = [client.token_sha256 for client in self.external_clients.values()]
+        reserved = [self.service_token, *self.mcp_tokens]
+        if len(set(digests)) != len(digests) or any(
+            hashlib.sha256(token.encode()).hexdigest() in digests for token in reserved
+        ):
+            raise ValueError(
+                "client credentials must be unique and separate from internal/demo tokens"
+            )
+        if any(not key or key.startswith("service:") for key in self.external_clients):
+            raise ValueError("invalid external client ID")
         if self.provider not in {"ollama", "deterministic"}:
             raise ValueError("provider must be ollama or deterministic")
         if not self.demo_mode and (

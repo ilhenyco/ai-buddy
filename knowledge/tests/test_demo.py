@@ -37,7 +37,7 @@ async def test_demo_keeps_credential_and_subject_on_server():
         app = create_demo_app(settings, upstream)
         async with app.router.lifespan_context(app):
             async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(app=app), base_url="http://localhost:8091"
+                transport=httpx.ASGITransport(app=app), base_url="http://localhost:8092"
             ) as client:
                 page = await client.get("/")
                 assert page.status_code == 200 and settings.service_token not in page.text
@@ -45,7 +45,7 @@ async def test_demo_keeps_credential_and_subject_on_server():
                 assert (await client.post("/ask", json={"query": "Вопрос"})).status_code == 403
                 client.headers["Origin"] = "https://untrusted.example"
                 assert (await client.post("/ask", json={"query": "Вопрос"})).status_code == 403
-                client.headers["Origin"] = "http://localhost:8091"
+                client.headers["Origin"] = "http://localhost:8092"
                 assert (
                     await client.post("/ask", json={"query": "Вопрос", "subjectId": "u-alex"})
                 ).status_code == 422
@@ -66,10 +66,10 @@ async def test_demo_sanitizes_upstream_failure():
         app = create_demo_app(settings, upstream)
         async with app.router.lifespan_context(app):
             async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(app=app), base_url="http://localhost:8091"
+                transport=httpx.ASGITransport(app=app), base_url="http://localhost:8092"
             ) as client:
                 response = await client.post(
-                    "/ask", json={"query": "Вопрос"}, headers={"Origin": "http://localhost:8091"}
+                    "/ask", json={"query": "Вопрос"}, headers={"Origin": "http://localhost:8092"}
                 )
                 assert response.status_code == 503
                 assert "private backend" not in response.text

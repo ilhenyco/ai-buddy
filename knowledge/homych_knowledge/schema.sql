@@ -44,3 +44,24 @@ CREATE TABLE IF NOT EXISTS rag.revocation (
 );
 CREATE INDEX IF NOT EXISTS chunk_fts_ru ON rag.chunk USING gin(fts_ru);
 CREATE INDEX IF NOT EXISTS chunk_fts_simple ON rag.chunk USING gin(fts_simple);
+-- One organization per deployment. Writer credentials administer the entire corpus.
+CREATE TABLE IF NOT EXISTS rag.corpus_document (
+    document_id text PRIMARY KEY,
+    payload jsonb NOT NULL
+);
+CREATE TABLE IF NOT EXISTS rag.ingestion_job (
+    id text PRIMARY KEY,
+    client_id text NOT NULL,
+    request_key text NOT NULL,
+    document_id text NOT NULL,
+    payload jsonb,
+    status text NOT NULL DEFAULT 'pending',
+    attempts integer NOT NULL DEFAULT 0,
+    error_code text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    finished_at timestamptz,
+    UNIQUE (client_id, request_key)
+);
+CREATE INDEX IF NOT EXISTS ingestion_pending ON rag.ingestion_job(created_at) WHERE status <> 'completed';
+CREATE INDEX IF NOT EXISTS ingestion_hidden_document ON rag.ingestion_job(document_id)
+    WHERE status <> 'completed';

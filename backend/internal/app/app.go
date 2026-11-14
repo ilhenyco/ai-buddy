@@ -28,11 +28,11 @@ const APIPrefix = "/api/v1"
 
 type Config struct {
 	RAGServiceToken string
-	DemoLogin      bool
-	SessionSecret  []byte
-	AllowedOrigins []string
-	SecureCookie   bool
-	Location       *time.Location
+	DemoLogin       bool
+	SessionSecret   []byte
+	AllowedOrigins  []string
+	SecureCookie    bool
+	Location        *time.Location
 	// AccessService is the external access request service (the mock in the demo).
 	// nil switches the access module off: its routes answer 404.
 	AccessService access.External

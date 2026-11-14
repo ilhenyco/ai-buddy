@@ -38,7 +38,10 @@ async def test_real_mcp_initialize_discover_call_matches_http(settings, service)
                 async with ClientSession(streams[0], streams[1]) as session:
                     await session.initialize()
                     tools = await session.list_tools()
-                    assert [tool.name for tool in tools.tools] == ["search_knowledge"]
+                    assert [tool.name for tool in tools.tools] == [
+                        "search_knowledge",
+                        "get_knowledge_document",
+                    ]
                     tool = tools.tools[0]
                     assert "subjectId" not in tool.inputSchema["properties"]
                     result = await session.call_tool("search_knowledge", {"query": "доступ"})

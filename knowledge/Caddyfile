@@ -1,0 +1,12 @@
+{$KNOWLEDGE_DOMAIN} {
+    request_body {
+        max_size 1MB
+    }
+    @external path /mcp /mcp/* /v1/*
+    handle @external {
+        reverse_proxy knowledge:8090
+    }
+    handle {
+        respond 404
+    }
+}

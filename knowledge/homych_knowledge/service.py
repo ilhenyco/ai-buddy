@@ -33,6 +33,13 @@ class GoIdentity:
         self.settings, self.client = settings, client
 
     async def resolve(self, subject_id: str) -> AccessContext:
+        if subject_id.startswith("service:"):
+            client = self.settings.external_clients.get(subject_id.removeprefix("service:"))
+            if client is None:
+                raise IdentityError(403)
+            return AccessContext(
+                subjectId=subject_id, role="service", teamIds=client.team_ids, internshipIds=[]
+            )
         response = await self.client.post(
             f"{self.settings.go_url}/internal/v1/ai-context",
             headers={"Authorization": f"Bearer {self.settings.service_token}"},
