@@ -224,6 +224,11 @@ func TestFailuresAreRetriedThenReportedHonestly(t *testing.T) {
 	if step(t, env) {
 		t.Fatal("a failed job is final")
 	}
+	// metrics: two retries before the first answer, two before the final failure
+	mt := env.App.Metrics
+	if got := [3]float64{mt.JobCount("answer", "completed"), mt.JobCount("answer", "retry"), mt.JobCount("answer", "failed")}; got != [3]float64{1, 4, 1} {
+		t.Fatalf("job metrics completed/retry/failed = %v, want [1 4 1]", got)
+	}
 }
 
 func TestOutcomes(t *testing.T) {
@@ -263,6 +268,13 @@ func TestOutcomes(t *testing.T) {
 			if (c.code != "") != (job.Status == "failed") {
 				t.Fatalf("status %s for code %q", job.Status, c.code)
 			}
+			outcome := "completed"
+			if c.code != "" {
+				outcome = "failed"
+			}
+			if got := env.App.Metrics.JobCount("answer", outcome); got != 1 {
+				t.Fatalf("answer jobs %s = %v, want 1", outcome, got)
+			}
 		})
 	}
 }
@@ -292,6 +304,10 @@ func TestLateWorkerDoesNotStoreTwice(t *testing.T) {
 	var n int
 	if err := env.DB.QueryRow(`SELECT count(*) FROM messages WHERE answer_request_id=$1 AND kind='assistant'`, id).Scan(&n); err != nil || n != 1 {
 		t.Fatalf("answers stored: %d %v", n, err)
+	}
+	// the late worker did not store an answer, so it is not counted either
+	if got := env.App.Metrics.JobCount("answer", "completed"); got != 1 {
+		t.Fatalf("completed answer jobs = %v, want 1", got)
 	}
 	sasha = env.Login(t, "u-sasha")
 	if got := sasha.Do(t, "GET", base+"/answers/"+id, nil, nil); got.JSON["answer"].(map[string]any)["text"] != "ответ второго воркера" {

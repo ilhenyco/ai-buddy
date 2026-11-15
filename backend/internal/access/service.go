@@ -19,6 +19,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 )
 
 type Resource struct {
@@ -88,6 +89,7 @@ type Service struct {
 	// InFlight: an unknown outcome younger than this is not reconciled yet, because the original
 	// call may still be running (it must be longer than the client timeout).
 	InFlight time.Duration
+	Metrics  *metrics.Metrics // nil: no metrics
 }
 
 func newID(prefix string) string {
@@ -273,7 +275,11 @@ func (s *Service) ConfirmDraft(ctx context.Context, subject, draftID, key string
 			if err := s.applyExternal(ctx, op.ID, ext); err != nil {
 				return 0, Operation{}, err
 			}
-		} // otherwise the outcome stays "unknown" and getAccess reconciles it
+		} else {
+			// the outcome stays "unknown" and getAccess reconciles it later (usually approved),
+			// so it is a retry, not a failure: otherwise one request would be in failed and completed
+			s.Metrics.Job(metrics.KindAccess, metrics.OutcomeRetry)
+		}
 	}
 	op, err = s.load(ctx, opID)
 	return status, op, err
@@ -292,8 +298,14 @@ func (s *Service) applyExternal(ctx context.Context, id string, ext ExternalRequ
 	if status != "pending" && status != "approved" && status != "denied" {
 		status = "unknown"
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE access_operations SET external_number=$2, status=$3, submission_confirmed=true, updated_at=$4
+	res, err := s.DB.ExecContext(ctx, `UPDATE access_operations SET external_number=$2, status=$3, submission_confirmed=true, updated_at=$4
 		WHERE id=$1 AND (status<>$3 OR external_number IS DISTINCT FROM $2 OR NOT submission_confirmed)`, id, ext.Number, status, s.now())
+	if err == nil && (status == "approved" || status == "denied") {
+		// counted once: a repeated identical update changes no row
+		if n, _ := res.RowsAffected(); n > 0 {
+			s.Metrics.Job(metrics.KindAccess, metrics.OutcomeCompleted)
+		}
+	}
 	return err
 }
 
@@ -319,6 +331,7 @@ func (s *Service) reconcile(ctx context.Context, op Operation) (Operation, error
 		if err := s.DB.QueryRowContext(ctx, `SELECT requester_id, reason FROM access_operations WHERE id=$1`, op.ID).Scan(&requester, &reason); err != nil {
 			return op, err
 		}
+		s.Metrics.Job(metrics.KindAccess, metrics.OutcomeRetry) // the same correlationId is submitted again
 		ext, err = s.External.Submit(ctx, ExternalRequest{CorrelationID: op.CorrelationID, UserID: requester, ResourceID: op.ResourceID, Reason: reason})
 		if err != nil {
 			return op, nil

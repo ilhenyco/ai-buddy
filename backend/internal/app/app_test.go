@@ -34,6 +34,37 @@ func TestHealthAndUnknownRoutes(t *testing.T) {
 	}
 }
 
+func TestMetricsEndpoint(t *testing.T) {
+	env := apptest.New(t)
+	c := env.Anonymous()
+	c.Do(t, "GET", "/healthz", nil, nil)
+	c.Do(t, "GET", "/api/v1/nope/42", nil, nil) // unknown API path: the route label is the pattern, not the path
+
+	r := c.Do(t, "GET", "/metrics", nil, nil)
+	if r.Status != http.StatusOK {
+		t.Fatalf("/metrics: %d %s", r.Status, r.Raw)
+	}
+	body := string(r.Raw)
+	for _, want := range []string{
+		`homych_http_requests_total{method="GET",route="GET /healthz",status="200"} 1`,
+		`homych_http_requests_total{method="GET",route="/api/v1/",status="404"} 1`,
+		"homych_http_request_duration_seconds_bucket",
+		`homych_jobs_total{kind="answer",outcome="completed"} 0`,
+		"homych_answer_duration_seconds_count 0",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("/metrics lacks %q", want)
+		}
+	}
+	if strings.Contains(body, "/nope/42") {
+		t.Error("the real path must not be a label")
+	}
+	// /metrics lives outside the API prefix and is not a business endpoint: no session is needed
+	if r := c.Do(t, "GET", "/api/v1/metrics", nil, nil); r.Status != http.StatusNotFound {
+		t.Fatalf("/api/v1/metrics: %d", r.Status)
+	}
+}
+
 func TestDemoLoginAndSessionContext(t *testing.T) {
 	env := apptest.New(t)
 	anon := env.Anonymous()

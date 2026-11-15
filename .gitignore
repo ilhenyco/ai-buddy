@@ -42,3 +42,6 @@ coverage.xml
 
 .idea/
 .DS_Store
+
+# local working notes
+/CLAUDE.md

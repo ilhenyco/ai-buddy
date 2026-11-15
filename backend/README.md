@@ -181,6 +181,29 @@ POST /api/v1/demo/reset   # {"today":"…","shifted":false,"created":9}
 
 Worker индексации отправляет версию в очередь загрузки Python-сервиса (`PUT /v1/documents/{id}`, ключ идемпотентности = id задания), затем следит за её статусом и по готовности делает версию активной. Нужен ключ клиента с правом `documents:write`: `RAG_SOURCES_TOKEN` у Go и его SHA-256 в `RAG_EXTERNAL_CLIENTS` у Python (см. корневой `.env.example`). «Начать демо заново» материалы не удаляет: они уже в индексе и относятся к команде, а не к прогону демо.
 
+## Метрики
+
+Prometheus-метрики API отдаёт `GET /metrics` (текстовый формат Prometheus). Маршрут лежит вне `/api/v1`, сессия не нужна. Фронтовый nginx проксирует наружу только `/api/`, поэтому `/metrics` доступен на порту API (`:8080`) внутри сети, но не через страницу приложения. Пакет — `internal/platform/metrics`, реестр свой, не глобальный.
+
+| Метрика | Тип | Метки | Что считает |
+|---|---|---|---|
+| `homych_http_requests_total` | counter | `method`, `route`, `status` | запросы к API |
+| `homych_http_request_duration_seconds` | histogram | `method`, `route` | время обработки запроса |
+| `homych_jobs_total` | counter | `kind`, `outcome` | шаги фоновых заданий |
+| `homych_answer_duration_seconds` | histogram | — | сколько сервис ждёт ответ базы знаний (RAG) |
+
+- `route` — шаблон маршрута из `http.ServeMux` (`GET /api/v1/answers/{answerId}`), а не реальный путь, иначе каждый id стал бы отдельной серией. Запрос, который не подошёл ни под один шаблон, получает `unmatched`.
+- `kind` — `answer` (ответ на вопрос), `index` (индексация материала), `access` (заявка на доступ). `outcome` — `completed` (задание завершено: ответ сохранён, материал проиндексирован, решение по заявке получено), `failed` (завершено с ошибкой), `retry` (запланирована повторная попытка).
+- Считаются только настоящие завершения: опоздавший воркер, который не сохранил ответ, и повторное закрытие уже закрытого задания в счётчик не попадают. Заявка, отклонённая сервисом доступов, — это завершённое задание (`completed`).
+- Middleware стоит внутри `httpx.Middleware`, прямо вокруг mux: только там виден `r.Pattern`.
+- Модули получают `*metrics.Metrics` полем `Metrics`; `nil` допустим, метрики тогда не собираются.
+
+```sh
+curl localhost:8080/metrics | grep '^homych_'
+```
+
+Проверка без базы: `go test ./internal/platform/metrics/ ./internal/app/ -run 'Metrics'`.
+
 ## Как добавить свой модуль
 
 1. Создать `internal/<модуль>/` с типом `Service` и методом `Routes(mux, prefix, auth)`, по образцу `internal/scenarios`.

@@ -15,6 +15,7 @@ import (
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/access"
 	"github.com/ilhenyco/ai-buddy/backend/internal/apptest"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 )
 
 const base = "/api/v1"
@@ -90,6 +91,9 @@ func TestRequestApprovedOpensProtectedTask(t *testing.T) {
 	got := sasha.Do(t, "GET", base+"/access-operations/"+op.ID, nil, nil)
 	if got.Status != http.StatusOK || got.JSON["status"] != "approved" {
 		t.Fatalf("status: %d %s", got.Status, got.Raw)
+	}
+	if n := env.App.Metrics.JobCount("access", "completed"); n != 1 {
+		t.Fatalf("completed access jobs = %v, want 1", n)
 	}
 	task = sasha.Do(t, "GET", base+"/assignments/assignment-sasha/protected-first-task", nil, nil)
 	if task.Status != http.StatusOK || task.JSON["requiredResourceId"] != "repo-learning-read" {
@@ -218,6 +222,9 @@ func TestDeniedKeepsTaskClosed(t *testing.T) {
 	if got.JSON["status"] != "denied" {
 		t.Fatalf("status: %s", got.Raw)
 	}
+	if n := env.App.Metrics.JobCount("access", "completed"); n != 1 {
+		t.Fatalf("a denied request is a finished one: completed access jobs = %v, want 1", n)
+	}
 	if task := kirill.Do(t, "GET", base+"/assignments/assignment-kirill/protected-first-task", nil, nil); task.Status != http.StatusForbidden {
 		t.Fatalf("task: %d", task.Status)
 	}
@@ -256,7 +263,8 @@ func TestUnavailableServiceRetriesWithSameCorrelation(t *testing.T) {
 	env := apptest.New(t)
 	down := errors.New("connection refused")
 	f := &fake{submitErr: down}
-	s := &access.Service{DB: env.DB, Clock: env.Clock, External: f, DraftTTL: time.Hour}
+	mt := metrics.New()
+	s := &access.Service{DB: env.DB, Clock: env.Clock, External: f, DraftTTL: time.Hour, Metrics: mt}
 	ctx := context.Background()
 
 	status, body, err := s.CreateDraft(ctx, "u-sasha", key(), access.DraftInput{AssignmentID: "assignment-sasha", ResourceID: "repo-learning-read", Reason: "r"})
@@ -303,6 +311,11 @@ func TestUnavailableServiceRetriesWithSameCorrelation(t *testing.T) {
 	}
 	if _, err := s.Get(ctx, "u-oleg", op.ID); err == nil {
 		t.Fatalf("stranger sees the operation")
+	}
+	// metrics: an unknown outcome is a retry, not a failure (the request is reconciled later):
+	// the first submission with no answer, two resubmissions (one failed again), one final decision
+	if got := [3]float64{mt.JobCount("access", "failed"), mt.JobCount("access", "retry"), mt.JobCount("access", "completed")}; got != [3]float64{0, 3, 1} {
+		t.Fatalf("access job metrics failed/retry/completed = %v, want [0 3 1]", got)
 	}
 }
 

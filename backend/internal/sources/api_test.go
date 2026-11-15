@@ -127,6 +127,9 @@ func TestLifecycle(t *testing.T) {
 	if j := alex.Do(t, "GET", base+"/source-jobs/"+job, nil, nil); j.JSON["status"] != "ready" || j.JSON["activeVersionId"] != v1 {
 		t.Fatalf("job: %s", j.Raw)
 	}
+	if got := env.App.Metrics.JobCount("index", "completed"); got != 1 {
+		t.Fatalf("completed index jobs = %v, want 1", got)
+	}
 
 	// edit: a new version; answers keep the old one until it is indexed
 	edited := map[string]any{"title": "Доступы v2", "body": "Новый текст.", "category": "Инструменты", "acl": map[string]any{"teamIds": []string{"platform"}}}
@@ -310,6 +313,11 @@ func TestWithoutIndexAndSubmitFailures(t *testing.T) {
 	j := alex.Do(t, "GET", base+"/source-jobs/"+r.JSON["id"].(string), nil, nil)
 	if j.JSON["error"].(map[string]any)["code"] != "INDEX_DISABLED" || !strings.Contains(j.JSON["error"].(map[string]any)["message"].(string), "не подключён") {
 		t.Fatalf("no index: %s", j.Raw)
+	}
+	// metrics: the first job was submitted 5 times (4 retries) and failed, the second failed at once
+	mt := env.App.Metrics
+	if got := [2]float64{mt.JobCount("index", "retry"), mt.JobCount("index", "failed")}; got != [2]float64{4, 2} {
+		t.Fatalf("index job metrics retry/failed = %v, want [4 2]", got)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})

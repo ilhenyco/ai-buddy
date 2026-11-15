@@ -26,6 +26,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 )
 
 const (
@@ -58,6 +59,7 @@ type Service struct {
 	Calendar  clock.Clock
 	Knowledge Knowledge // nil: AI is switched off on this stand, questions get an honest reply
 	Log       *slog.Logger
+	Metrics   *metrics.Metrics // nil: no metrics
 
 	MaxAttempts int           // default 3
 	Backoff     time.Duration // default 5s, doubled after each failed attempt
@@ -292,7 +294,9 @@ func (s *Service) process(ctx context.Context, c claimed) error {
 	} else if mc != "" {
 		in.MessageContext = &mc
 	}
+	asked := time.Now()
 	res, err := s.Knowledge.Answer(ctx, in)
+	s.Metrics.AnswerDuration(time.Since(asked)) // real wait for the knowledge service, also when it failed
 	var rejected *RejectedError
 	switch {
 	case errors.As(err, &rejected):
@@ -334,13 +338,17 @@ func (s *Service) retry(ctx context.Context, c claimed) error {
 	delay := s.Backoff << (c.attempt - 1)
 	_, err := s.DB.ExecContext(ctx, `UPDATE answer_jobs SET status='queued', lease_until=NULL, available_at=$3, updated_at=$2
 		WHERE id=$1 AND status='running' AND attempts=$4`, c.id, s.now(), s.now().Add(delay), c.attempt)
+	if err == nil {
+		s.Metrics.Job(metrics.KindAnswer, metrics.OutcomeRetry)
+	}
 	return err
 }
 
 // finish stores the answer message and the final status in one transaction, only if this
 // worker still holds the job (same attempt): a late duplicate does nothing.
 func (s *Service) finish(ctx context.Context, c claimed, status, text, errCode string, citations []messages.Citation, res *RAGResult) error {
-	return db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
+	finished := false
+	err := db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
 		var held bool
 		if err := tx.QueryRowContext(ctx, `SELECT status='running' AND attempts=$2 FROM answer_jobs WHERE id=$1 FOR UPDATE`, c.id, c.attempt).Scan(&held); err != nil || !held {
 			return err
@@ -364,8 +372,13 @@ func (s *Service) finish(ctx context.Context, c claimed, status, text, errCode s
 		}
 		_, err := tx.ExecContext(ctx, `UPDATE answer_jobs SET status=$2, answer_message_id=$3, error_code=NULLIF($4,''), outcome=$5,
 			retrieval_mode=$6, snapshot_id=$7, lease_until=NULL, updated_at=$8 WHERE id=$1`, c.id, status, msgID, errCode, outcome, mode, snapshot, s.now())
+		finished = err == nil
 		return err
 	})
+	if err == nil && finished { // only a job this worker still held; status is "completed" or "failed"
+		s.Metrics.Job(metrics.KindAnswer, status)
+	}
+	return err
 }
 
 func (s *Service) fail(ctx context.Context, c claimed, code string) error {

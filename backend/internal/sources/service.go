@@ -26,6 +26,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 )
 
 const MaxBody = 1_000_000 // bytes, as the contract and the knowledge service accept
@@ -82,7 +83,8 @@ type Service struct {
 	// URLBase + source id is the link stored with the document: the app opens such links itself.
 	URLBase string
 	Log     *slog.Logger
-	Poll    time.Duration // how often a running index job is checked; default 2s
+	Metrics *metrics.Metrics // nil: no metrics
+	Poll    time.Duration    // how often a running index job is checked; default 2s
 
 	once sync.Once
 	wake chan struct{}
@@ -580,6 +582,9 @@ func (s *Service) submit(ctx context.Context, p pending) error {
 		}
 		_, err = s.DB.ExecContext(ctx, `UPDATE source_jobs SET attempts=attempts+1, available_at=$2 WHERE id=$1 AND status='queued'`,
 			p.id, s.now().Add(s.poll()<<(p.attempts+1)))
+		if err == nil {
+			s.Metrics.Job(metrics.KindIndex, metrics.OutcomeRetry)
+		}
 		return err
 	}
 	_, err = s.DB.ExecContext(ctx, `UPDATE source_jobs SET status='running', external_job_id=$2, attempts=attempts+1 WHERE id=$1 AND status='queued'`, p.id, ext)
@@ -606,13 +611,16 @@ func (s *Service) document(ctx context.Context, p pending) (Document, error) {
 
 // finish: the final status of the job; an indexed version becomes the one answers use.
 func (s *Service) finish(ctx context.Context, p pending, status, code string) error {
-	return db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
+	finished := false
+	err := db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
 		res, err := tx.ExecContext(ctx, `UPDATE source_jobs SET status=$2, error_code=NULLIF($3,''), updated_at=$4 WHERE id=$1 AND status IN ('queued','running')`,
 			p.id, status, code, s.now())
 		if err != nil {
 			return err
 		}
-		if n, _ := res.RowsAffected(); n == 0 || status != "ready" {
+		n, _ := res.RowsAffected()
+		finished = n > 0
+		if n == 0 || status != "ready" {
 			return nil
 		}
 		if p.action == "remove" {
@@ -622,4 +630,12 @@ func (s *Service) finish(ctx context.Context, p pending, status, code string) er
 		}
 		return err
 	})
+	if err == nil && finished { // a repeated finish of an already closed job is not counted
+		outcome := metrics.OutcomeFailed
+		if status == "ready" {
+			outcome = metrics.OutcomeCompleted
+		}
+		s.Metrics.Job(metrics.KindIndex, outcome)
+	}
+	return err
 }

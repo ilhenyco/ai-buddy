@@ -20,6 +20,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
 	"github.com/ilhenyco/ai-buddy/backend/internal/suggestions"
@@ -58,6 +59,7 @@ type App struct {
 	Demo      *demo.Service   // nil outside DEMO_MODE
 	Answers   *answers.Service
 	Sources   *sources.Service
+	Metrics   *metrics.Metrics // Prometheus metrics, served at GET /metrics
 	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
 	// (POST /demo/clock); sessions keep the real clock.
 	Clock *clock.Offset
@@ -95,7 +97,10 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	ms := &messages.Service{DB: d, Clock: calendar, Loc: cfg.Location, Plans: sc, Log: log}
 	sc.AfterPublish = ms.Trigger
 
+	m := metrics.New()
 	mux := http.NewServeMux()
+	// outside /api/v1: scraped by Prometheus, not a part of the product API (nginx proxies only /api/)
+	mux.Handle("GET /metrics", m.Handler())
 	mux.Handle("GET /healthz", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		if err := d.PingContext(r.Context()); err != nil {
 			return &httpx.Error{Status: http.StatusServiceUnavailable, Code: httpx.CodeUnavailable, Message: "База данных недоступна."}
@@ -123,25 +128,28 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	if cfg.AccessService != nil {
 		// real time, not the demo calendar: drafts expire and requests are decided in real time
 		acc = &access.Service{DB: d, Clock: clk, External: cfg.AccessService, DraftTTL: 24 * time.Hour,
-			InFlight: 5 * time.Second}
+			InFlight: 5 * time.Second, Metrics: m}
 		acc.Routes(mux, APIPrefix, id.Authenticate, cfg.DemoLogin)
 		if dm != nil {
 			dm.AccessMode = cfg.AccessService.SetMode
 		}
 	}
 	// personal questions: jobs are stored first, the worker calls the knowledge service
-	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log}
+	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log, Metrics: m}
 	ans.Routes(mux, APIPrefix, id.Authenticate)
 	sg := &suggestions.Service{DB: d, Calendar: calendar, Clock: clk, Loc: cfg.Location}
 	sg.Routes(mux, APIPrefix, id.Authenticate)
 	if cfg.SourcesURLBase == "" {
 		cfg.SourcesURLBase = "https://homych.invalid/sources/"
 	}
-	src := &sources.Service{DB: d, Clock: clk, Index: cfg.SourcesIndex, URLBase: cfg.SourcesURLBase, Log: log}
+	src := &sources.Service{DB: d, Clock: clk, Index: cfg.SourcesIndex, URLBase: cfg.SourcesURLBase, Log: log, Metrics: m}
 	src.Routes(mux, APIPrefix, id.Authenticate)
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
 		return httpx.NotFound()
 	}))
-	return &App{Handler: httpx.Middleware(log, mux), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm, Answers: ans, Sources: src, Clock: calendar}
+	// the metrics middleware wraps the mux directly: httpx.Middleware copies the request, and only
+	// the request the mux itself received carries the route pattern (r.Pattern)
+	return &App{Handler: httpx.Middleware(log, m.Middleware(mux)), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm,
+		Answers: ans, Sources: src, Metrics: m, Clock: calendar}
 }
