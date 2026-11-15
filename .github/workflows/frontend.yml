@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
+      # coverage of the logic modules (src/*.ts loaded by the tests): lines >= 90 %, branches >= 80 %
+      - run: npm run test:coverage
       - run: npm run build
       - run: npm run test:sites
       - name: Check specification links and contracts

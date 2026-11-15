@@ -21,7 +21,7 @@ from prometheus_client import (
 )
 from pydantic import Field, ValidationError
 
-from .config import Settings
+from .config import Settings, feature_on
 from .models import AnswerInput, AnswerResult, SearchInput, SearchResult
 from .provider import DeterministicProvider, OllamaProvider, ProviderError
 from .service import GoIdentity, IdentityError, KnowledgeService
@@ -237,7 +237,8 @@ def create_app(settings: Settings | None = None, service=None) -> FastAPI:
         requests.labels("answer", result.status).inc()
         return result
 
-    app.mount("/mcp", mcp_app)
+    if feature_on(settings.features, "mcp_server"):  # off: /mcp answers 404
+        app.mount("/mcp", mcp_app)
     from .external import register_routes
 
     register_routes(app, store, service, settings)

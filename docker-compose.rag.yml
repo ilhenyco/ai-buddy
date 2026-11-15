@@ -20,6 +20,8 @@ services:
       RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:-http://ollama:11434}
       RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?Set a dedicated token with at least 24 characters}
       RAG_DEMO_MODE: "true"
+      # the same FEATURES as the API: without mcp_server the /mcp endpoint is not served
+      FEATURES: ${FEATURES:-all}
       RAG_PROVIDER: ${RAG_PROVIDER:-ollama}
       RAG_EMBEDDING_TIMEOUT: ${RAG_EMBEDDING_TIMEOUT:-15}
       RAG_GENERATION_TIMEOUT: ${RAG_GENERATION_TIMEOUT:-45}

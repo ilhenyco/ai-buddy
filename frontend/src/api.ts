@@ -11,7 +11,8 @@ const BASE = '/api/v1';
 
 export type Person = { id: string; displayName: string };
 export type Assignment = { id: string; intern: Person; buddy: Person; lead: Person; teamId: string; capabilities: string[] };
-export type SessionContext = { subject: Person; assignments: Assignment[]; capabilities: string[]; serverTime: string; csrfToken: string };
+// features: enabled feature flags of the stand (ai_chat, access_integration, mcp_server, events_publisher).
+export type SessionContext = { subject: Person; assignments: Assignment[]; capabilities: string[]; features?: string[]; serverTime: string; csrfToken: string };
 
 export type ApiTask = {
   id: string; title: string; description: string; kind: string; link: string;

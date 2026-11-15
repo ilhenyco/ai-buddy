@@ -19,6 +19,8 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/features"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
@@ -43,7 +45,8 @@ func run(log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	demo := env("DEMO_MODE", "true") == "true"
+	// demo login and synthetic data only when asked for explicitly (docker-compose.yml and make run set it)
+	demo := env("DEMO_MODE", "false") == "true"
 	secret := os.Getenv("SESSION_SECRET")
 	if secret == "" {
 		if !demo {
@@ -97,6 +100,13 @@ func run(log *slog.Logger) error {
 		index = sources.NewHTTPIndex(u, key, 15*time.Second)
 	}
 
+	// feature flags of the technical specification: FEATURES=all | none | ai_chat,access_integration,…
+	feats, err := features.Parse(env("FEATURES", "all"))
+	if err != nil {
+		return err
+	}
+	log.Info("features", "enabled", feats.List())
+
 	// business events (outbox): log by default, http to a collector, off to switch them off
 	var events outbox.Publisher
 	switch mode := env("EVENTS_PUBLISHER", "log"); mode {
@@ -124,6 +134,7 @@ func run(log *slog.Logger) error {
 		Knowledge:       knowledge,
 		SourcesIndex:    index,
 		Events:          events,
+		Features:        feats,
 	}, log)
 
 	if a.Demo != nil {
@@ -141,6 +152,8 @@ func run(log *slog.Logger) error {
 	go a.Messages.Run(ctx, interval)
 	go a.Answers.Run(ctx, interval)      // and right after each question
 	go a.Sources.Run(ctx, 2*time.Second) // index jobs of materials
+	// Idempotency-Key results are kept for a week: long enough for any client retry
+	go idempotency.PurgeLoop(ctx, d, 7*24*time.Hour, time.Hour, log)
 	if a.Outbox != nil {
 		go a.Outbox.Run(ctx, time.Second) // business events -> publisher
 	}

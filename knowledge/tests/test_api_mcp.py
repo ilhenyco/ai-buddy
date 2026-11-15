@@ -78,3 +78,22 @@ async def test_identity_denial_is_safe(settings, service, status):
             )
             assert response.status_code == status
             assert response.json() == {"code": "ACCESS_DENIED"}
+
+
+async def test_mcp_server_feature_flag(settings, service):
+    from homych_knowledge.config import feature_on
+
+    assert feature_on("all", "mcp_server") and not feature_on("all,-mcp_server", "mcp_server")
+    assert feature_on("mcp_server", "mcp_server") and not feature_on("none", "mcp_server")
+    with pytest.raises(ValueError):
+        feature_on("mcp-server", "mcp_server")
+    app = create_app(settings.model_copy(update={"features": "all,-mcp_server"}), service)
+    async with app.router.lifespan_context(app):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://localhost",
+            headers={"Authorization": "Bearer test-mcp-token-at-least-24"},
+        ) as client:
+            # the HTTP API keeps working, the MCP endpoint is not served
+            assert (await client.get("/healthz")).status_code == 200
+            assert (await client.post("/mcp/", json={})).status_code == 404

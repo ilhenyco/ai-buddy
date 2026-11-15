@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/features"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 )
 
@@ -48,8 +49,10 @@ type Context struct {
 	Subject      Person       `json:"subject"`
 	Assignments  []Assignment `json:"assignments"`
 	Capabilities []string     `json:"capabilities"`
-	ServerTime   time.Time    `json:"serverTime"`
-	CSRFToken    string       `json:"csrfToken"`
+	// Features: enabled feature flags of the stand (x-extension), see platform/features.
+	Features   []string  `json:"features"`
+	ServerTime time.Time `json:"serverTime"`
+	CSRFToken  string    `json:"csrfToken"`
 }
 
 // Service verifies sessions and reads the directory.
@@ -59,6 +62,7 @@ type Service struct {
 	AllowedOrigins []string
 	Now            func() time.Time
 	SecureCookie   bool
+	Features       features.Set // nil: every feature is on
 }
 
 type ctxKey int
@@ -285,6 +289,23 @@ func (s *Service) BuildContext(ctx context.Context, p Person, cookieValue string
 			}
 		}
 	}
-	return Context{Subject: p, Assignments: list, Capabilities: caps,
+	if !s.Features.On(features.AIChat) {
+		// AI switched off: nobody is offered the composer
+		caps = without(caps, CapQuestionsAsk)
+		for i := range list {
+			list[i].Capabilities = without(list[i].Capabilities, CapQuestionsAsk)
+		}
+	}
+	return Context{Subject: p, Assignments: list, Capabilities: caps, Features: s.Features.List(),
 		ServerTime: s.Now().UTC(), CSRFToken: s.CSRFToken(cookieValue)}, nil
+}
+
+func without(list []string, drop string) []string {
+	out := make([]string, 0, len(list))
+	for _, c := range list {
+		if c != drop {
+			out = append(out, c)
+		}
+	}
+	return out
 }

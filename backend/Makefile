@@ -10,7 +10,7 @@ mock:          ## run the access service mock on :8091 (approves after 20s)
 	go run ./cmd/mock-access
 
 run: db        ## run the API locally on :8080 (start `make mock` in another terminal for access requests)
-	DATABASE_URL=postgres://homych:homych@localhost:55432/homych?sslmode=disable ACCESS_SERVICE_URL=http://localhost:8091 go run ./cmd/api
+	DEMO_MODE=true DATABASE_URL=postgres://homych:homych@localhost:55432/homych?sslmode=disable ACCESS_SERVICE_URL=http://localhost:8091 go run ./cmd/api
 
 test:          ## all tests (needs PostgreSQL: make db)
 	go test -race -count=1 ./...
