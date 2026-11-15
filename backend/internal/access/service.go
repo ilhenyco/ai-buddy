@@ -20,6 +20,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 )
 
 type Resource struct {
@@ -90,6 +91,7 @@ type Service struct {
 	// call may still be running (it must be longer than the client timeout).
 	InFlight time.Duration
 	Metrics  *metrics.Metrics // nil: no metrics
+	Events   *outbox.Writer   // nil: no business events
 }
 
 func newID(prefix string) string {
@@ -262,6 +264,11 @@ func (s *Service) ConfirmDraft(ctx context.Context, subject, draftID, key string
 			op.ID, draftID, op.AssignmentID, subject, op.ResourceID, reason, op.CorrelationID, now); err != nil {
 			return err
 		}
+		if err := s.Events.Add(ctx, tx, outbox.Event{Type: outbox.AccessRequested, AggregateType: "access_operation", AggregateID: op.ID,
+			AssignmentID: op.AssignmentID, ActorID: subject, ActorRole: "intern",
+			Data: map[string]any{"operationId": op.ID, "resourceId": op.ResourceID, "correlationId": op.CorrelationID}}); err != nil {
+			return err
+		}
 		opID, submit = op.ID, true
 		_, err = idempotency.Save(ctx, tx, subject, "confirmAccess", key, hash, http.StatusCreated, op)
 		return err
@@ -298,13 +305,28 @@ func (s *Service) applyExternal(ctx context.Context, id string, ext ExternalRequ
 	if status != "pending" && status != "approved" && status != "denied" {
 		status = "unknown"
 	}
-	res, err := s.DB.ExecContext(ctx, `UPDATE access_operations SET external_number=$2, status=$3, submission_confirmed=true, updated_at=$4
-		WHERE id=$1 AND (status<>$3 OR external_number IS DISTINCT FROM $2 OR NOT submission_confirmed)`, id, ext.Number, status, s.now())
-	if err == nil && (status == "approved" || status == "denied") {
-		// counted once: a repeated identical update changes no row
-		if n, _ := res.RowsAffected(); n > 0 {
-			s.Metrics.Job(metrics.KindAccess, metrics.OutcomeCompleted)
+	decided := false
+	err := db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
+		// FOR UPDATE: two reconciles of the same operation record the decision once
+		var prev, assignment string
+		if err := tx.QueryRowContext(ctx, `SELECT status, assignment_id FROM access_operations WHERE id=$1 FOR UPDATE`, id).Scan(&prev, &assignment); err != nil {
+			return err
 		}
+		res, err := tx.ExecContext(ctx, `UPDATE access_operations SET external_number=$2, status=$3, submission_confirmed=true, updated_at=$4
+			WHERE id=$1 AND (status<>$3 OR external_number IS DISTINCT FROM $2 OR NOT submission_confirmed)`, id, ext.Number, status, s.now())
+		if err != nil {
+			return err
+		}
+		// counted once: a repeated identical update changes no row
+		if n, _ := res.RowsAffected(); n == 0 || prev == status || (status != "approved" && status != "denied") {
+			return nil
+		}
+		decided = true
+		return s.Events.Add(ctx, tx, outbox.Event{Type: outbox.AccessDecided, AggregateType: "access_operation", AggregateID: id,
+			AssignmentID: assignment, Data: map[string]any{"operationId": id, "status": status}})
+	})
+	if err == nil && decided {
+		s.Metrics.Job(metrics.KindAccess, metrics.OutcomeCompleted)
 	}
 	return err
 }

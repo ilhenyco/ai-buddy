@@ -29,6 +29,7 @@
 | Документ | Содержание |
 |---|---|
 | [openapi.yaml](architecture/openapi.yaml) | Контракт API: 23 операции и 9 расширений (`x-extension`, `x-demo-only`); тест маршрутов в Go сверяется с ним |
+| [events.md](architecture/events.md) | Бизнес-события (outbox): 14 событий, конверт, публикаторы, как считать метрики пользы |
 | [server-handoff.md](architecture/server-handoff.md) | Обязательные инварианты данных и правила сервера |
 | [ai-rag-mcp.md](architecture/ai-rag-mcp.md) | Техническая документация AI-части: поиск, генерация, MCP, развёртывание, требования к интеграции |
 | [architecture-current.svg](architecture/architecture-current.svg) | Схема контейнеров и модулей |

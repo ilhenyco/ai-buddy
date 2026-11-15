@@ -27,6 +27,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 )
 
 const (
@@ -60,6 +61,7 @@ type Service struct {
 	Knowledge Knowledge // nil: AI is switched off on this stand, questions get an honest reply
 	Log       *slog.Logger
 	Metrics   *metrics.Metrics // nil: no metrics
+	Events    *outbox.Writer   // nil: no business events
 
 	MaxAttempts int           // default 3
 	Backoff     time.Duration // default 5s, doubled after each failed attempt
@@ -164,6 +166,11 @@ func (s *Service) Ask(ctx context.Context, subject, assignmentID, key, text stri
 		}
 		if _, err := tx.ExecContext(ctx, `INSERT INTO answer_jobs(id, assignment_id, author_id, question_message_id, question, status, available_at, created_at, updated_at)
 			VALUES ($1,$2,$3,$4,$5,'queued',$6,$6,$6)`, job.ID, assignmentID, subject, job.QuestionMessageID, text, now); err != nil {
+			return err
+		}
+		// no question text in the event: the personal chat stays private
+		if err := s.Events.Add(ctx, tx, outbox.Event{Type: outbox.QuestionAsked, AggregateType: "answer", AggregateID: job.ID,
+			AssignmentID: assignmentID, ActorID: subject, ActorRole: "intern", Data: map[string]any{"answerId": job.ID}}); err != nil {
 			return err
 		}
 		status = http.StatusAccepted
@@ -370,10 +377,22 @@ func (s *Service) finish(ctx context.Context, c claimed, status, text, errCode s
 		if res != nil {
 			outcome, mode, snapshot = &res.Status, &res.RetrievalMode, res.SnapshotID
 		}
-		_, err := tx.ExecContext(ctx, `UPDATE answer_jobs SET status=$2, answer_message_id=$3, error_code=NULLIF($4,''), outcome=$5,
-			retrieval_mode=$6, snapshot_id=$7, lease_until=NULL, updated_at=$8 WHERE id=$1`, c.id, status, msgID, errCode, outcome, mode, snapshot, s.now())
-		finished = err == nil
-		return err
+		if _, err := tx.ExecContext(ctx, `UPDATE answer_jobs SET status=$2, answer_message_id=$3, error_code=NULLIF($4,''), outcome=$5,
+			retrieval_mode=$6, snapshot_id=$7, lease_until=NULL, updated_at=$8 WHERE id=$1`, c.id, status, msgID, errCode, outcome, mode, snapshot, s.now()); err != nil {
+			return err
+		}
+		typ := outbox.AnswerCompleted
+		if status == "failed" {
+			typ = outbox.AnswerFailed
+		}
+		// outcome: answered | no_evidence | conflicting_sources … (an unanswered question is a gap in the knowledge base)
+		if err := s.Events.Add(ctx, tx, outbox.Event{Type: typ, AggregateType: "answer", AggregateID: c.id, AssignmentID: c.assignment,
+			Data: map[string]any{"answerId": c.id, "outcome": outcome, "retrievalMode": mode, "citations": len(citations),
+				"errorCode": nullIfEmpty(errCode), "attempt": c.attempt}}); err != nil {
+			return err
+		}
+		finished = true
+		return nil
 	})
 	if err == nil && finished { // only a job this worker still held; status is "completed" or "failed"
 		s.Metrics.Job(metrics.KindAnswer, status)
@@ -406,4 +425,11 @@ func (s *Service) complete(ctx context.Context, c claimed, res RAGResult) error 
 		citations = append(citations, messages.Citation{SourceID: rc.DocumentID, SourceVersionID: rc.Revision, Title: rc.Title, Fragment: rc.Section, URL: rc.URL})
 	}
 	return s.finish(ctx, c, "completed", text, "", citations, &res)
+}
+
+func nullIfEmpty(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
 }

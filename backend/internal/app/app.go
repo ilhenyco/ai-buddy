@@ -21,6 +21,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
 	"github.com/ilhenyco/ai-buddy/backend/internal/suggestions"
@@ -48,6 +49,9 @@ type Config struct {
 	SourcesIndex sources.Index
 	// SourcesURLBase + source id is the link stored with an indexed material.
 	SourcesURLBase string
+	// Events publishes business events from the outbox (EVENTS_PUBLISHER: log, http).
+	// nil switches events off: nothing is recorded and no relay runs.
+	Events outbox.Publisher
 }
 
 type App struct {
@@ -60,6 +64,7 @@ type App struct {
 	Answers   *answers.Service
 	Sources   *sources.Service
 	Metrics   *metrics.Metrics // Prometheus metrics, served at GET /metrics
+	Outbox    *outbox.Relay    // nil when Config.Events is nil
 	// Clock is the business calendar: scenarios and the scheduler. In demo mode it can be moved
 	// (POST /demo/clock); sessions keep the real clock.
 	Clock *clock.Offset
@@ -93,8 +98,13 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	id := &identity.Service{DB: d, Secret: cfg.SessionSecret, AllowedOrigins: cfg.AllowedOrigins,
 		Now: clk.Now, SecureCookie: cfg.SecureCookie}
 	calendar := clock.NewOffset(clk)
-	sc := &scenarios.Service{DB: d, Clock: calendar, Loc: cfg.Location}
-	ms := &messages.Service{DB: d, Clock: calendar, Loc: cfg.Location, Plans: sc, Log: log}
+	// business events are written in the same transaction as the change (platform/outbox)
+	var ev *outbox.Writer
+	if cfg.Events != nil {
+		ev = outbox.NewWriter()
+	}
+	sc := &scenarios.Service{DB: d, Clock: calendar, Loc: cfg.Location, Events: ev}
+	ms := &messages.Service{DB: d, Clock: calendar, Loc: cfg.Location, Plans: sc, Log: log, Events: ev}
 	sc.AfterPublish = ms.Trigger
 
 	m := metrics.New()
@@ -128,21 +138,21 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	if cfg.AccessService != nil {
 		// real time, not the demo calendar: drafts expire and requests are decided in real time
 		acc = &access.Service{DB: d, Clock: clk, External: cfg.AccessService, DraftTTL: 24 * time.Hour,
-			InFlight: 5 * time.Second, Metrics: m}
+			InFlight: 5 * time.Second, Metrics: m, Events: ev}
 		acc.Routes(mux, APIPrefix, id.Authenticate, cfg.DemoLogin)
 		if dm != nil {
 			dm.AccessMode = cfg.AccessService.SetMode
 		}
 	}
 	// personal questions: jobs are stored first, the worker calls the knowledge service
-	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log, Metrics: m}
+	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log, Metrics: m, Events: ev}
 	ans.Routes(mux, APIPrefix, id.Authenticate)
 	sg := &suggestions.Service{DB: d, Calendar: calendar, Clock: clk, Loc: cfg.Location}
 	sg.Routes(mux, APIPrefix, id.Authenticate)
 	if cfg.SourcesURLBase == "" {
 		cfg.SourcesURLBase = "https://homych.invalid/sources/"
 	}
-	src := &sources.Service{DB: d, Clock: clk, Index: cfg.SourcesIndex, URLBase: cfg.SourcesURLBase, Log: log, Metrics: m}
+	src := &sources.Service{DB: d, Clock: clk, Index: cfg.SourcesIndex, URLBase: cfg.SourcesURLBase, Log: log, Metrics: m, Events: ev}
 	src.Routes(mux, APIPrefix, id.Authenticate)
 
 	mux.Handle(APIPrefix+"/", httpx.Handler(func(w http.ResponseWriter, r *http.Request) error {
@@ -150,6 +160,11 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	}))
 	// the metrics middleware wraps the mux directly: httpx.Middleware copies the request, and only
 	// the request the mux itself received carries the route pattern (r.Pattern)
+	var relay *outbox.Relay
+	if cfg.Events != nil {
+		// real time: retries of a publisher do not follow the demo calendar
+		relay = &outbox.Relay{DB: d, Clock: clk, Publisher: cfg.Events, Log: log, Observer: m}
+	}
 	return &App{Handler: httpx.Middleware(log, m.Middleware(mux)), Identity: id, Scenarios: sc, Messages: ms, Access: acc, Demo: dm,
-		Answers: ans, Sources: src, Metrics: m, Clock: calendar}
+		Answers: ans, Sources: src, Metrics: m, Outbox: relay, Clock: calendar}
 }

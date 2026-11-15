@@ -40,6 +40,7 @@
 - **Материалы команды** с версиями. Пока новая версия индексируется, ответы используют прежнюю.
 - **Заявка на доступ** через внешний сервис: в демо — мок с подтверждением. Первая задача открывается только после одобрения.
 - **Приватность.** Личный чат стажёра не видят ни бадди, ни руководитель.
+- **Бизнес-события для аналитики.** Публикация этапа, отметки, вопросы и их исходы, материалы, заявки — 14 событий через outbox: пишутся в той же транзакции, что и изменение, и доставляются с повторами в лог или сборщик (Clickstream, Kafka REST). Без текстов вопросов — [каталог](docs/architecture/events.md).
 - **Для агентов Авито.** База знаний доступна по MCP (`search_knowledge`) и HTTP без нашего фронтенда — [подробнее](knowledge/EXTERNAL.md).
 
 ## Архитектура
@@ -57,12 +58,13 @@ flowchart LR
   worker --> ollama
   api -->|"заявки на доступ"| access["mock-access<br/>сервис доступов"]
   agents["Агенты Авито"] -.->|"MCP search_knowledge"| rag
+  api -.->|"бизнес-события<br/>(outbox)"| events["Лог · сборщик<br/>Clickstream / Kafka"]
 ```
 
 | Компонент | Технологии | Что делает |
 |---|---|---|
 | [`frontend/`](frontend/README.md) | React, TypeScript, Vite | Интерфейс трёх ролей. Состояние берётся с сервера через общий клиент `api.ts`. |
-| [`backend/`](backend/README.md) | Go 1.24 (stdlib `net/http`), PostgreSQL 16 | Модульный монолит: identity, scenarios, messages (планировщик и лента), answers, suggestions, sources, access, demo. Фоновые задания с lease и повторами, идемпотентность, ETag/If-Match, CSRF и Origin. |
+| [`backend/`](backend/README.md) | Go 1.24 (stdlib `net/http`), PostgreSQL 16 | Модульный монолит: identity, scenarios, messages (планировщик и лента), answers, suggestions, sources, access, demo. Фоновые задания с lease и повторами, идемпотентность, ETag/If-Match, CSRF и Origin, Prometheus-метрики, outbox бизнес-событий. |
 | [`knowledge/`](knowledge/README.md) | Python, FastAPI, pgvector, Ollama | Гибридный поиск (векторный и полнотекстовый) с фильтром прав до ранжирования. Ответ Qwen3:4b строго в JSON со ссылками только на выданные фрагменты. Очередь индексации и MCP-сервер. |
 | `mock-access` | Go | Замена сервиса доступов Авито для демо: одобрение, отказ, потерянный ответ и сверка по `correlationId`. |
 
@@ -225,11 +227,11 @@ CI — `.github/workflows/`: `backend.yml`, `frontend.yml`, `knowledge.yml` (в�
 
 Из 47 продуктовых требований 39 реализованы, 5 частично, 3 не реализованы: это неутверждённые предложения про HR. Все 23 операции контракта API реализованы. Подробно — [аудит реализации на 14 ноября](docs/reports/implementation-audit-2026-11-14.md).
 
-В продукте Авито заменяется: демо-вход — на SSO, мок — на сервис доступов Авито, веб-уведомления — на пуш или мессенджер, публичный Avito Playbook — на внутреннюю базу знаний. Контакты и тексты сценариев условные. Ещё не сделаны: публикация бизнес-событий (outbox → Kafka) и метрики пользы, Prometheus-метрики Go, фича-флаги, переназначение бадди через интерфейс.
+В продукте Авито заменяется: демо-вход — на SSO, мок — на сервис доступов Авито, веб-уведомления — на пуш или мессенджер, публичный Avito Playbook — на внутреннюю базу знаний. Контакты и тексты сценариев условные. Бизнес-события уходят в лог или HTTP-сборщик; адаптер Kafka — следующий шаг. Ещё не сделаны: экран метрик пользы, фича-флаги, переназначение бадди через интерфейс.
 
 ## Документация
 
 - [Карта документации](docs/README.md) — с чего начать и где что лежит.
 - [Спецификация продукта](docs/product/team-specification.md), [47 требований](docs/product/functional-requirements.md), [Q&A с Авито](docs/product/avito-qa.md).
-- [OpenAPI](docs/architecture/openapi.yaml), [RAG и MCP](docs/architecture/ai-rag-mcp.md), [BPMN P00–P17](docs/processes/bpmn-v3/README.md).
+- [OpenAPI](docs/architecture/openapi.yaml), [бизнес-события](docs/architecture/events.md), [RAG и MCP](docs/architecture/ai-rag-mcp.md), [BPMN P00–P17](docs/processes/bpmn-v3/README.md).
 - [Полная спецификация в Word](output/ai-buddy-team-specification.docx).

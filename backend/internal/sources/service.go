@@ -27,6 +27,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 )
 
 const MaxBody = 1_000_000 // bytes, as the contract and the knowledge service accept
@@ -84,6 +85,7 @@ type Service struct {
 	URLBase string
 	Log     *slog.Logger
 	Metrics *metrics.Metrics // nil: no metrics
+	Events  *outbox.Writer   // nil: no business events
 	Poll    time.Duration    // how often a running index job is checked; default 2s
 
 	once sync.Once
@@ -292,13 +294,23 @@ func (s *Service) insertVersion(ctx context.Context, tx *sql.Tx, sourceID, subje
 	return id, err
 }
 
-func (s *Service) insertJob(ctx context.Context, tx *sql.Tx, sourceID, versionID, action string, now time.Time) (Job, error) {
+func (s *Service) insertJob(ctx context.Context, tx *sql.Tx, subject, sourceID, versionID, action string, now time.Time) (Job, error) {
 	j := Job{ID: newID("idx-"), SourceID: sourceID, CandidateVersionID: versionID, Status: "queued"}
 	if _, err := tx.ExecContext(ctx, `INSERT INTO source_jobs(id, source_id, candidate_version_id, action, status, available_at, created_at, updated_at)
 		VALUES ($1,$2,$3,$4,'queued',$5,$5,$5)`, j.ID, sourceID, versionID, action, now); err != nil {
 		return j, err
 	}
-	return j, tx.QueryRowContext(ctx, `SELECT active_version_id FROM sources WHERE id=$1`, sourceID).Scan(&j.ActiveVersionID)
+	var team, category string
+	if err := tx.QueryRowContext(ctx, `SELECT active_version_id, team_id, category FROM sources WHERE id=$1`, sourceID).
+		Scan(&j.ActiveVersionID, &team, &category); err != nil {
+		return j, err
+	}
+	typ := outbox.SourceVersionCreated
+	if action == "remove" {
+		typ = outbox.SourceExcluded
+	}
+	return j, s.Events.Add(ctx, tx, outbox.Event{Type: typ, AggregateType: "source", AggregateID: sourceID, TeamID: team,
+		ActorID: subject, ActorRole: "lead", Data: map[string]any{"sourceId": sourceID, "versionId": versionID, "category": category, "jobId": j.ID}})
 }
 
 // Create — POST /sources: 202 with the index job.
@@ -336,7 +348,7 @@ func (s *Service) Create(ctx context.Context, subject, key string, in Input) (in
 		if _, err := tx.ExecContext(ctx, `UPDATE sources SET latest_version_id=$2 WHERE id=$1`, id, v); err != nil {
 			return err
 		}
-		j, err := s.insertJob(ctx, tx, id, v, "index", now)
+		j, err := s.insertJob(ctx, tx, subject, id, v, "index", now)
 		if err != nil {
 			return err
 		}
@@ -399,7 +411,7 @@ func (s *Service) Update(ctx context.Context, subject, id, key string, etag int,
 			etag=etag+1, updated_at=$6 WHERE id=$1`, id, v, in.ACL.TeamIDs[0], in.Category, in.Title, now); err != nil {
 			return err
 		}
-		j, err := s.insertJob(ctx, tx, id, v, "index", now)
+		j, err := s.insertJob(ctx, tx, subject, id, v, "index", now)
 		if err != nil {
 			return err
 		}
@@ -450,7 +462,7 @@ func (s *Service) Exclude(ctx context.Context, subject, id, key string, etag int
 			if _, err := tx.ExecContext(ctx, `UPDATE sources SET excluded=true, etag=etag+1, updated_at=$2 WHERE id=$1`, id, now); err != nil {
 				return err
 			}
-			if _, err := s.insertJob(ctx, tx, id, latest, "remove", now); err != nil {
+			if _, err := s.insertJob(ctx, tx, subject, id, latest, "remove", now); err != nil {
 				return err
 			}
 		}
@@ -620,15 +632,32 @@ func (s *Service) finish(ctx context.Context, p pending, status, code string) er
 		}
 		n, _ := res.RowsAffected()
 		finished = n > 0
-		if n == 0 || status != "ready" {
+		if n == 0 {
 			return nil
 		}
-		if p.action == "remove" {
-			_, err = tx.ExecContext(ctx, `UPDATE sources SET active_version_id=NULL WHERE id=$1`, p.source)
-		} else {
-			_, err = tx.ExecContext(ctx, `UPDATE sources SET active_version_id=$2 WHERE id=$1`, p.source, p.version)
+		if status == "ready" {
+			if p.action == "remove" {
+				_, err = tx.ExecContext(ctx, `UPDATE sources SET active_version_id=NULL WHERE id=$1`, p.source)
+			} else {
+				_, err = tx.ExecContext(ctx, `UPDATE sources SET active_version_id=$2 WHERE id=$1`, p.source, p.version)
+			}
+			if err != nil {
+				return err
+			}
 		}
-		return err
+		typ := outbox.SourceIndexFailed
+		switch {
+		case status == "ready" && p.action == "remove":
+			typ = outbox.SourceRemoved
+		case status == "ready":
+			typ = outbox.SourceIndexed
+		}
+		var team string
+		if err := tx.QueryRowContext(ctx, `SELECT team_id FROM sources WHERE id=$1`, p.source).Scan(&team); err != nil {
+			return err
+		}
+		return s.Events.Add(ctx, tx, outbox.Event{Type: typ, AggregateType: "source", AggregateID: p.source, TeamID: team,
+			Data: map[string]any{"sourceId": p.source, "versionId": p.version, "jobId": p.id, "errorCode": nullIfEmpty(code)}})
 	})
 	if err == nil && finished { // a repeated finish of an already closed job is not counted
 		outcome := metrics.OutcomeFailed
@@ -638,4 +667,11 @@ func (s *Service) finish(ctx context.Context, p pending, status, code string) er
 		s.Metrics.Job(metrics.KindIndex, outcome)
 	}
 	return err
+}
+
+func nullIfEmpty(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
 }
