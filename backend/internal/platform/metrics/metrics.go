@@ -37,6 +37,10 @@ type Metrics struct {
 	duration *prometheus.HistogramVec
 	jobs     *prometheus.CounterVec
 	answer   prometheus.Histogram
+
+	outboxPublished *prometheus.CounterVec
+	outboxFailed    prometheus.Counter
+	outboxPending   prometheus.Gauge
 }
 
 // New creates a Metrics with its own registry.
@@ -62,7 +66,19 @@ func New() *Metrics {
 			Buckets: []float64{0.25, 0.5, 1, 2, 5, 10, 20, 30, 60, 120},
 		}),
 	}
-	m.registry.MustRegister(m.requests, m.duration, m.jobs, m.answer)
+	m.outboxPublished = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "homych_outbox_published_total",
+		Help: "Business events published by the outbox relay, by event type.",
+	}, []string{"type"})
+	m.outboxFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "homych_outbox_publish_failures_total",
+		Help: "Batches the publisher rejected; the relay retries them with backoff.",
+	})
+	m.outboxPending = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "homych_outbox_pending",
+		Help: "Business events written but not published yet.",
+	})
+	m.registry.MustRegister(m.requests, m.duration, m.jobs, m.answer, m.outboxPublished, m.outboxFailed, m.outboxPending)
 	// all job series exist from the start (0), so dashboards do not wait for the first job
 	for _, k := range []string{KindAnswer, KindIndex, KindAccess} {
 		for _, o := range []string{OutcomeCompleted, OutcomeFailed, OutcomeRetry} {
@@ -153,3 +169,27 @@ func (s *statusRecorder) Write(b []byte) (int, error) {
 
 // Unwrap lets http.ResponseController reach the real writer (Flush and others).
 func (s *statusRecorder) Unwrap() http.ResponseWriter { return s.ResponseWriter }
+
+// OutboxPublished counts one published business event. Safe on a nil Metrics.
+func (m *Metrics) OutboxPublished(eventType string) {
+	if m == nil {
+		return
+	}
+	m.outboxPublished.WithLabelValues(eventType).Inc()
+}
+
+// OutboxFailed counts one batch the publisher rejected. Safe on a nil Metrics.
+func (m *Metrics) OutboxFailed() {
+	if m == nil {
+		return
+	}
+	m.outboxFailed.Inc()
+}
+
+// OutboxPending sets how many events wait for publication. Safe on a nil Metrics.
+func (m *Metrics) OutboxPending(n int) {
+	if m == nil {
+		return
+	}
+	m.outboxPending.Set(float64(n))
+}

@@ -14,6 +14,7 @@ import (
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 )
 
@@ -31,6 +32,7 @@ type Service struct {
 	Log   *slog.Logger
 	// SaveDemoDate stores the moved "today" so that it survives a restart (demo module); optional.
 	SaveDemoDate func(ctx context.Context, date *string) error
+	Events       *outbox.Writer // nil: no business events
 
 	once sync.Once
 	wake chan struct{}
@@ -170,6 +172,7 @@ func (s *Service) deliver(ctx context.Context, p scenarios.ActivePlan, b scenari
 			next = string(raw)
 		}
 		at := s.sentAt(b.Date, now)
+		var roles []string
 		for _, r := range []struct{ role, user, text string }{
 			{"intern", who.intern, b.Intern},
 			{"buddy", who.buddy, b.Buddy},
@@ -184,9 +187,12 @@ func (s *Service) deliver(ctx context.Context, p scenarios.ActivePlan, b scenari
 				newID("msg-"), eventID, p.AssignmentID, r.user, r.role, r.text, string(block), next, p.ScenarioID, p.RevisionID, at); err != nil {
 				return err
 			}
+			roles = append(roles, r.role)
 			created++
 		}
-		return nil
+		return s.Events.Add(ctx, tx, outbox.Event{Type: outbox.StageDelivered, AggregateType: "stage", AggregateID: eventID,
+			AssignmentID: p.AssignmentID, Data: map[string]any{"scenarioId": p.ScenarioID, "revisionId": p.RevisionID,
+				"blockId": b.ID, "blockDate": b.Date, "tasks": len(b.Tasks), "recipients": roles}})
 	})
 	return created, err
 }

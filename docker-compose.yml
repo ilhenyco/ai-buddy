@@ -30,6 +30,10 @@ services:
       SCHEDULER_INTERVAL: 10s   # how often the scheduler checks due blocks
       ALLOWED_ORIGINS: http://localhost:8088,http://127.0.0.1:8088,http://127.0.0.1:4173,http://localhost:4173
       ACCESS_SERVICE_URL: http://mock-access:8091   # the real access service replaces the mock here
+      # business events (outbox): log | http (EVENTS_HTTP_URL, EVENTS_HTTP_TOKEN) | off — docs/architecture/events.md
+      EVENTS_PUBLISHER: ${EVENTS_PUBLISHER:-log}
+      EVENTS_HTTP_URL: ${EVENTS_HTTP_URL:-}
+      EVENTS_HTTP_TOKEN: ${EVENTS_HTTP_TOKEN:-}
     ports:
       - "${HOMYCH_API_PORT:-8080}:8080"
     depends_on:

@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 )
 
@@ -166,10 +168,10 @@ func (s *Service) Feed(ctx context.Context, subject, assignmentID, cursor string
 // SetCheck — PUT /messages/{id}/tasks/{taskId}/check. Only the recipient marks own visible items.
 // The mark is stored and never read by the scheduler: the next block comes by date anyway.
 func (s *Service) SetCheck(ctx context.Context, subject, messageID, taskID string, checked bool) (Check, error) {
-	var role string
+	var role, assignment string
 	var block []byte
-	err := s.DB.QueryRowContext(ctx, `SELECT recipient_role, block FROM messages WHERE id=$1 AND recipient_user_id=$2 AND kind='checkpoint'`, messageID, subject).
-		Scan(&role, &block)
+	err := s.DB.QueryRowContext(ctx, `SELECT recipient_role, block, assignment_id FROM messages WHERE id=$1 AND recipient_user_id=$2 AND kind='checkpoint'`, messageID, subject).
+		Scan(&role, &block, &assignment)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Check{}, httpx.NotFound()
 	}
@@ -184,9 +186,27 @@ func (s *Service) SetCheck(ctx context.Context, subject, messageID, taskID strin
 		return Check{}, httpx.NotFound()
 	}
 	c := Check{MessageID: messageID, TaskID: taskID, UserID: subject, Checked: checked, UpdatedAt: s.now()}
-	_, err = s.DB.ExecContext(ctx, `INSERT INTO message_checks(message_id, task_id, user_id, checked, updated_at)
-		VALUES ($1,$2,$3,$4,$5) ON CONFLICT (message_id, task_id, user_id) DO UPDATE SET checked=EXCLUDED.checked, updated_at=EXCLUDED.updated_at`,
-		c.MessageID, c.TaskID, c.UserID, c.Checked, c.UpdatedAt)
+	err = db.InTx(ctx, s.DB, func(tx *sql.Tx) error {
+		var was sql.NullBool
+		if err := tx.QueryRowContext(ctx, `SELECT checked FROM message_checks WHERE message_id=$1 AND task_id=$2 AND user_id=$3 FOR UPDATE`,
+			c.MessageID, c.TaskID, c.UserID).Scan(&was); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `INSERT INTO message_checks(message_id, task_id, user_id, checked, updated_at)
+			VALUES ($1,$2,$3,$4,$5) ON CONFLICT (message_id, task_id, user_id) DO UPDATE SET checked=EXCLUDED.checked, updated_at=EXCLUDED.updated_at`,
+			c.MessageID, c.TaskID, c.UserID, c.Checked, c.UpdatedAt); err != nil {
+			return err
+		}
+		if was.Bool == checked { // a repeated tick (or an untick of nothing) is not an event
+			return nil
+		}
+		typ := outbox.ChecklistChecked
+		if !checked {
+			typ = outbox.ChecklistUnchecked
+		}
+		return s.Events.Add(ctx, tx, outbox.Event{Type: typ, AggregateType: "message", AggregateID: messageID, AssignmentID: assignment,
+			ActorID: subject, ActorRole: role, Data: map[string]any{"messageId": messageID, "taskId": taskID, "blockId": b.ID}})
+	})
 	return c, err
 }
 

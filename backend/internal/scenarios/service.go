@@ -18,6 +18,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/idempotency"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 )
 
 // Service implements the scenario operations on PostgreSQL.
@@ -28,6 +29,7 @@ type Service struct {
 	Loc *time.Location
 	// AfterPublish is called after a successful publication (wakes the messages scheduler).
 	AfterPublish func()
+	Events       *outbox.Writer // nil: no business events
 }
 
 // Result is a ready HTTP answer; Body is JSON. ETag is set for single-scenario answers.
@@ -552,6 +554,15 @@ func (s *Service) Publish(ctx context.Context, subject, id, key string, ifMatch 
 		}
 		r.latestRev, r.updatedAt = &rev.ID, now
 		if _, err := tx.ExecContext(ctx, `UPDATE scenarios SET latest_revision_id=$2, updated_at=$3 WHERE id=$1`, r.id, rev.ID, now); err != nil {
+			return err
+		}
+		ev := map[string]any{"scenarioId": r.id, "revisionId": rev.ID, "revisionNumber": number, "blocks": len(r.draft.Blocks),
+			"cutoffDate": cutoff, "replacedScenarioId": nil}
+		if replacing {
+			ev["replacedScenarioId"] = *current
+		}
+		if err := s.Events.Add(ctx, tx, outbox.Event{Type: outbox.ScenarioPublished, AggregateType: "scenario", AggregateID: r.id,
+			AssignmentID: assignment, ActorID: subject, ActorRole: "lead", Data: ev}); err != nil {
 			return err
 		}
 		active := r.id

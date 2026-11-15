@@ -19,6 +19,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/accessmock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/testdb"
 )
 
@@ -50,7 +51,9 @@ func New(t testing.TB) *Env {
 	loc, _ := time.LoadLocation("Europe/Moscow")
 	a := app.New(d, clk, app.Config{DemoLogin: true, SessionSecret: []byte("test-secret"),
 		AllowedOrigins: []string{"http://127.0.0.1:4173"}, Location: loc,
-		AccessService: access.NewHTTPClient(mockSrv.URL, 300*time.Millisecond)},
+		AccessService: access.NewHTTPClient(mockSrv.URL, 300*time.Millisecond),
+		// business events are recorded in every HTTP test; the relay is driven by tests that need it
+		Events: outbox.LogPublisher{Log: slog.New(slog.NewTextHandler(io.Discard, nil))}},
 		slog.New(slog.NewTextHandler(io.Discard, nil)))
 	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)

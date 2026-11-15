@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/app"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
 	"github.com/ilhenyco/ai-buddy/backend/internal/scenarios"
 	"github.com/ilhenyco/ai-buddy/backend/internal/sources"
 )
@@ -95,6 +97,22 @@ func run(log *slog.Logger) error {
 		index = sources.NewHTTPIndex(u, key, 15*time.Second)
 	}
 
+	// business events (outbox): log by default, http to a collector, off to switch them off
+	var events outbox.Publisher
+	switch mode := env("EVENTS_PUBLISHER", "log"); mode {
+	case "off":
+	case "log":
+		events = outbox.LogPublisher{Log: log}
+	case "http":
+		u := os.Getenv("EVENTS_HTTP_URL")
+		if u == "" {
+			return fmt.Errorf("EVENTS_PUBLISHER=http needs EVENTS_HTTP_URL")
+		}
+		events = outbox.HTTPPublisher{URL: u, Token: os.Getenv("EVENTS_HTTP_TOKEN")}
+	default:
+		return fmt.Errorf("EVENTS_PUBLISHER must be off, log or http, got %q", mode)
+	}
+
 	a := app.New(d, clock.System{}, app.Config{
 		RAGServiceToken: os.Getenv("RAG_SERVICE_TOKEN"),
 		DemoLogin:       demo,
@@ -105,6 +123,7 @@ func run(log *slog.Logger) error {
 		AccessService:   accessService,
 		Knowledge:       knowledge,
 		SourcesIndex:    index,
+		Events:          events,
 	}, log)
 
 	if a.Demo != nil {
@@ -122,6 +141,9 @@ func run(log *slog.Logger) error {
 	go a.Messages.Run(ctx, interval)
 	go a.Answers.Run(ctx, interval)      // and right after each question
 	go a.Sources.Run(ctx, 2*time.Second) // index jobs of materials
+	if a.Outbox != nil {
+		go a.Outbox.Run(ctx, time.Second) // business events -> publisher
+	}
 
 	srv := &http.Server{Addr: env("HTTP_ADDR", ":8080"), Handler: a.Handler, ReadHeaderTimeout: 5 * time.Second}
 	go func() {

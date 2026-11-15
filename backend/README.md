@@ -204,6 +204,20 @@ curl localhost:8080/metrics | grep '^homych_'
 
 Проверка без базы: `go test ./internal/platform/metrics/ ./internal/app/ -run 'Metrics'`.
 
+## Бизнес-события (outbox)
+
+Модули записывают бизнес-событие **в той же транзакции**, что и изменение, в таблицу `outbox_events` (миграция `0009_outbox.sql`, пакет `internal/platform/outbox`). Фоновый relay (`Outbox.Run`, раз в секунду) отправляет неотправленные события пачками по 100 с `FOR UPDATE SKIP LOCKED`; при сбое получателя пачка повторяется с паузой 2 с → 4 с → … → 5 мин. Доставка хотя бы один раз, получатель отбрасывает дубли по `id`. Каталог 14 событий, конверт и метрики пользы — [docs/architecture/events.md](../docs/architecture/events.md).
+
+| `EVENTS_PUBLISHER` | Что делает |
+|---|---|
+| `log` (по умолчанию) | строка `"msg":"event"` в лог API: `docker compose logs api \| grep '"event"'` |
+| `http` | `POST $EVENTS_HTTP_URL` с `{"events":[…]}`, необязательный `Authorization: Bearer $EVENTS_HTTP_TOKEN` |
+| `off` | события не записываются, relay не запускается |
+
+- В событиях только идентификаторы, роли и исходы: текст вопроса, ответа или материала не попадает туда никогда (проверяет `TestBusinessEventsOfTheMainPath`).
+- Модули получают `*outbox.Writer` полем `Events`; `nil` допустим — событий нет. Новое событие: константа типа в `outbox.go`, вызов `s.Events.Add(ctx, tx, …)` внутри транзакции модуля, строка в каталоге.
+- Метрики: `homych_outbox_published_total{type}`, `homych_outbox_publish_failures_total`, `homych_outbox_pending`.
+
 ## Как добавить свой модуль
 
 1. Создать `internal/<модуль>/` с типом `Service` и методом `Routes(mux, prefix, auth)`, по образцу `internal/scenarios`.
