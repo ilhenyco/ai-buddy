@@ -30,6 +30,10 @@ def chunk_document(doc: Document, max_chars: int = 1200, overlap: int = 150) -> 
             headings.append((level, heading[2]))
             path = " / ".join(title for _, title in headings)
             current = []
+        elif not fenced and re.fullmatch(r"\s*[-*+]\s+\[[^\]]+\]\(#[^)]+\)\s*", line):
+            # A local-anchor-only bullet is navigation, not a second copy of the rule.
+            # Keep links to other documents, descriptive bullets and fenced code intact.
+            continue
         else:
             current.append(line)
     sections.append((path, current))

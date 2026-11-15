@@ -1,0 +1,14 @@
+{
+  "query": "Какие принципы разработки приняты в Авито?",
+  "subjectId": "u-sasha",
+  "transport": "frontend → Go answer job → knowledge → Ollama",
+  "stage": "Первая неделя",
+  "messageContextPresent": true,
+  "requestId": "ans-9978989f710cce8e",
+  "status": "no_evidence",
+  "reason": "model_abstention",
+  "expectedDocumentInExcerpts": true,
+  "persistedAfterReload": true,
+  "includedIn46CaseTable": false,
+  "note": "Contextless eval dev-04 answered correctly; full chat with stage background abstained. This separate check is an unresolved regression case."
+}

@@ -1,0 +1,14 @@
+{
+  "query": "Какие принципы разработки приняты в Авито?",
+  "subjectId": "u-sasha",
+  "stage": "Первая неделя",
+  "messageContextPresent": true,
+  "requestId": "ans-0e24d0f2effb24cc",
+  "status": "answered",
+  "reply": "В Авито приняты следующие принципы разработки: 1) Если что-то становится ненужным, мы это удаляем; 2) Что не протестировано – то не работает. Что не работает – не катим.",
+  "citationDocument": "development-principles.md",
+  "citationCount": 2,
+  "persistedAfterReload": true,
+  "manuallyCorrect": true,
+  "includedIn46CaseTable": false
+}
