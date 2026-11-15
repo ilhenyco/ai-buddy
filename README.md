@@ -208,7 +208,7 @@ docker compose -f docker-compose.yml -f docker-compose.rag.yml logs --tail 50 ap
 cd backend && make db && make test && make cover
 ```
 ```sh
-cd frontend && npm ci && npm run check && npm test && npm run build
+cd frontend && npm ci && npm run check && npm run test:coverage && npm run build
 ```
 ```sh
 cd knowledge && uv sync --frozen && uv run ruff check . && uv run pytest
@@ -217,8 +217,8 @@ cd knowledge && uv sync --frozen && uv run ruff check . && uv run pytest
 | Часть | Что проверяется | Состояние на 14.11 |
 |---|---|---|
 | Go | тесты на PostgreSQL с `-race`, тест маршрутов по OpenAPI | покрытие 89 % |
-| Python RAG | ruff, тесты с pgvector | покрытие 83 % |
-| Frontend | типы, юнит-тесты, сборка | 57 тестов |
+| Python RAG | ruff, тесты с pgvector, живой eval | покрытие > 80 %; поиск 100 %, 0 выдуманных ответов на 46 вопросах |
+| Frontend | типы, юнит-тесты с порогом покрытия, сборка | 57 тестов, логика 98,6 % строк |
 | Документация | `python tools/verify_team_handoff.py` | связи требований, функций, API и BPMN |
 
 CI — `.github/workflows/`: `backend.yml`, `frontend.yml`, `knowledge.yml` (включая проверку Compose). Новый серверный модуль добавляется в `backend/internal/<модуль>/` по образцу существующих — см. [backend/README.md](backend/README.md).
@@ -227,7 +227,7 @@ CI — `.github/workflows/`: `backend.yml`, `frontend.yml`, `knowledge.yml` (в�
 
 Из 47 продуктовых требований 39 реализованы, 5 частично, 3 не реализованы: это неутверждённые предложения про HR. Все 23 операции контракта API реализованы. Подробно — [аудит реализации на 14 ноября](docs/reports/implementation-audit-2026-11-14.md).
 
-В продукте Авито заменяется: демо-вход — на SSO, мок — на сервис доступов Авито, веб-уведомления — на пуш или мессенджер, публичный Avito Playbook — на внутреннюю базу знаний. Контакты и тексты сценариев условные. Бизнес-события уходят в лог или HTTP-сборщик; адаптер Kafka — следующий шаг. Ещё не сделаны: экран метрик пользы, фича-флаги, переназначение бадди через интерфейс.
+В продукте Авито заменяется: демо-вход — на SSO, мок — на сервис доступов Авито, веб-уведомления — на пуш или мессенджер, публичный Avito Playbook — на внутреннюю базу знаний. Контакты и тексты сценариев условные. Бизнес-события уходят в лог или HTTP-сборщик; адаптер Kafka — следующий шаг. Интеграции включаются фича-флагами (`FEATURES`: `ai_chat`, `access_integration`, `mcp_server`, `events_publisher`). Ещё не сделаны: экран метрик пользы, переназначение бадди через интерфейс.
 
 ## Документация
 

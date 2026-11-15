@@ -87,7 +87,7 @@ native-стендом на этой машине, остановите его п
 RAG_MCP_TOKENS={"replace-with-a-separate-random-mcp-token":"u-sasha"}
 ```
 
-Клиент передаёт `Authorization: Bearer <MCP token>`. Без сопоставлений MCP запрещён.
+Клиент передаёт `Authorization: Bearer <MCP token>`. Без сопоставлений MCP запрещён. Фича-флаг `mcp_server` в общей переменной `FEATURES` (как у Go: `all`, `none`, список, `all,-mcp_server`) выключает публикацию `/mcp`; HTTP API продолжает работать.
 Единственный tool `search_knowledge(query, limit=5)` возвращает до пяти фрагментов с источниками,
 ревизиями, `snapshotId` и режимом поиска. Генерацию не запускает, внешние операции не выполняет.
 `subjectId`, `teamId` и роль не являются аргументами инструмента: пользователь определяется token,

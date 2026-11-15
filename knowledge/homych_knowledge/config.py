@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://homych:homych@localhost:55432/homych"
     go_url: str = "http://localhost:8080"
     service_token: str = Field(min_length=24)
+    # Feature flags shared with Go (FEATURES): the MCP endpoint is served only with mcp_server.
+    features: str = Field(default="all", validation_alias=AliasChoices("FEATURES", "RAG_FEATURES"))
     # Demo only: token -> Go user ID. Production clients use external_clients.
     mcp_tokens: dict[str, str] = {}
     external_clients: dict[str, ExternalClient] = {}
@@ -72,3 +74,24 @@ class Settings(BaseSettings):
         if self.service_token in self.mcp_tokens:
             raise ValueError("MCP and internal service credentials must be different")
         return self
+
+
+def feature_on(features: str, name: str) -> bool:
+    """Same rules as Go platform/features: "all", "none", a comma list, "-name" switches off."""
+    on: dict[str, bool] = {}
+    known = ("ai_chat", "access_integration", "mcp_server", "events_publisher")
+    for part in (features or "all").split(","):
+        item = part.strip()
+        off = item.startswith("-")
+        item = item.removeprefix("-")
+        if not item:
+            continue
+        if item == "all":
+            on.update(dict.fromkeys(known, not off))
+        elif item == "none":
+            on.update(dict.fromkeys(known, False))
+        elif item in known:
+            on[item] = not off
+        else:
+            raise ValueError(f"unknown feature {item!r}")
+    return on.get(name, False)

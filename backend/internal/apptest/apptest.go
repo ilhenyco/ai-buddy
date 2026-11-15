@@ -37,7 +37,10 @@ type Env struct {
 
 const MockApproveAfter = 20 * time.Second
 
-func New(t testing.TB) *Env {
+func New(t testing.TB) *Env { return NewWith(t, nil) }
+
+// NewWith lets a test change the configuration (feature flags, integrations) before start.
+func NewWith(t testing.TB, configure func(*app.Config)) *Env {
 	t.Helper()
 	d := testdb.Open(t)
 	if err := app.Prepare(context.Background(), d, true); err != nil {
@@ -49,12 +52,15 @@ func New(t testing.TB) *Env {
 	mockSrv := httptest.NewServer(mock.Handler())
 	t.Cleanup(mockSrv.Close)
 	loc, _ := time.LoadLocation("Europe/Moscow")
-	a := app.New(d, clk, app.Config{DemoLogin: true, SessionSecret: []byte("test-secret"),
+	cfg := app.Config{DemoLogin: true, SessionSecret: []byte("test-secret"),
 		AllowedOrigins: []string{"http://127.0.0.1:4173"}, Location: loc,
 		AccessService: access.NewHTTPClient(mockSrv.URL, 300*time.Millisecond),
 		// business events are recorded in every HTTP test; the relay is driven by tests that need it
-		Events: outbox.LogPublisher{Log: slog.New(slog.NewTextHandler(io.Discard, nil))}},
-		slog.New(slog.NewTextHandler(io.Discard, nil)))
+		Events: outbox.LogPublisher{Log: slog.New(slog.NewTextHandler(io.Discard, nil))}}
+	if configure != nil {
+		configure(&cfg)
+	}
+	a := app.New(d, clk, cfg, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)
 	return &Env{DB: d, Clock: clk, App: a, Server: srv, AccessMock: mock}

@@ -11,7 +11,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 )
@@ -75,4 +78,33 @@ func Save(ctx context.Context, tx *sql.Tx, subject, operation, key, hash string,
 	_, err = tx.ExecContext(ctx, `INSERT INTO idempotency_records(subject, operation, key, payload_hash, status, response)
 		VALUES ($1,$2,$3,$4,$5,$6)`, subject, operation, key, hash, status, body)
 	return body, err
+}
+
+// Purge deletes stored results older than keep. Retention was an open question
+// (server-handoff.md): a week covers any client retry, and the table no longer grows forever.
+func Purge(ctx context.Context, d *sql.DB, keep time.Duration) (int64, error) {
+	res, err := d.ExecContext(ctx, `DELETE FROM idempotency_records WHERE created_at < now() - $1::interval`,
+		fmt.Sprintf("%d seconds", int64(keep.Seconds())))
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+// PurgeLoop runs Purge every interval until ctx ends.
+func PurgeLoop(ctx context.Context, d *sql.DB, keep, interval time.Duration, log *slog.Logger) {
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for {
+		if n, err := Purge(ctx, d, keep); err != nil && ctx.Err() == nil {
+			log.Error("idempotency purge", "err", err)
+		} else if n > 0 {
+			log.Info("idempotency purge", "deleted", n)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+	}
 }

@@ -5316,6 +5316,19 @@
               "type": "string"
             }
           },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ai_chat",
+                "access_integration",
+                "mcp_server",
+                "events_publisher"
+              ]
+            },
+            "description": "x-extension: включённые фича-флаги стенда (FEATURES). Без ai_chat нет вопросов и подсказок (404), без access_integration — заявок на доступ."
+          },
           "serverTime": {
             "type": "string",
             "format": "date-time"
@@ -6506,7 +6519,7 @@
           "text": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 10000
+            "maxLength": 1000
           }
         },
         "required": [

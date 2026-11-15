@@ -19,6 +19,7 @@ import (
 	"github.com/ilhenyco/ai-buddy/backend/internal/messages"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/clock"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/db"
+	"github.com/ilhenyco/ai-buddy/backend/internal/platform/features"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/httpx"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/metrics"
 	"github.com/ilhenyco/ai-buddy/backend/internal/platform/outbox"
@@ -52,6 +53,10 @@ type Config struct {
 	// Events publishes business events from the outbox (EVENTS_PUBLISHER: log, http).
 	// nil switches events off: nothing is recorded and no relay runs.
 	Events outbox.Publisher
+	// Features are the feature flags (FEATURES). nil: everything on. ai_chat off removes the
+	// question and suggestion routes; access_integration and events_publisher off ignore
+	// AccessService and Events.
+	Features features.Set
 }
 
 type App struct {
@@ -96,7 +101,13 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 		cfg.Location = time.UTC
 	}
 	id := &identity.Service{DB: d, Secret: cfg.SessionSecret, AllowedOrigins: cfg.AllowedOrigins,
-		Now: clk.Now, SecureCookie: cfg.SecureCookie}
+		Now: clk.Now, SecureCookie: cfg.SecureCookie, Features: cfg.Features}
+	if !cfg.Features.On(features.AccessIntegration) {
+		cfg.AccessService = nil
+	}
+	if !cfg.Features.On(features.EventsPublisher) {
+		cfg.Events = nil
+	}
 	calendar := clock.NewOffset(clk)
 	// business events are written in the same transaction as the change (platform/outbox)
 	var ev *outbox.Writer
@@ -146,9 +157,11 @@ func New(d *sql.DB, clk clock.Clock, cfg Config, log *slog.Logger) *App {
 	}
 	// personal questions: jobs are stored first, the worker calls the knowledge service
 	ans := &answers.Service{DB: d, Clock: clk, Calendar: calendar, Knowledge: cfg.Knowledge, Log: log, Metrics: m, Events: ev}
-	ans.Routes(mux, APIPrefix, id.Authenticate)
 	sg := &suggestions.Service{DB: d, Calendar: calendar, Clock: clk, Loc: cfg.Location}
-	sg.Routes(mux, APIPrefix, id.Authenticate)
+	if cfg.Features.On(features.AIChat) { // off: the routes answer 404, nobody gets the composer
+		ans.Routes(mux, APIPrefix, id.Authenticate)
+		sg.Routes(mux, APIPrefix, id.Authenticate)
+	}
 	if cfg.SourcesURLBase == "" {
 		cfg.SourcesURLBase = "https://homych.invalid/sources/"
 	}
