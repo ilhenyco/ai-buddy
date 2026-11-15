@@ -176,6 +176,30 @@ async def test_natural_question_retains_lexical_topic_ranking(store, doc, access
     assert [item.documentId for item in result.items] == ["learning"]
 
 
+async def test_developer_career_question_matches_engineer_profiles(store, doc, access):
+    profiles = doc.model_copy(
+        update={
+            "documentId": "engineering",
+            "title": "Профили инженеров",
+            "text": "# E3\nСамостоятельно решает задачи в своей команде.",
+        }
+    )
+    bi = doc.model_copy(
+        update={
+            "documentId": "bi",
+            "title": "BI разработчики",
+            "text": "# Оценка проекта\nОценивают уровень вклада разработчика в BI-проект.",
+        }
+    )
+    await store.publish([profiles, bi], DeterministicProvider())
+    result = await store.search("Как оценивают уровень разработчика?", access, None, 5, 0.5)
+    assert result.items[0].documentId == "engineering"
+    unrelated = await store.search("Что делает разработчик в BI-проекте?", access, None, 5, 0.5)
+    assert {item.documentId for item in unrelated.items} == {"bi"}
+    specialized = await store.search("Как оценивают уровень BI-разработчика?", access, None, 5, 0.5)
+    assert {item.documentId for item in specialized.items} == {"bi"}
+
+
 async def test_snapshot_rollback_immutable_revision_and_revocation(store, doc, access):
     provider = DeterministicProvider()
     snapshot = await store.publish([doc], provider)

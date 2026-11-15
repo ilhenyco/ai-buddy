@@ -39,6 +39,21 @@ def vector_literal(vector: list[float]) -> str:
     return "[" + ",".join(str(x) for x in vector) + "]"
 
 
+def developer_career(query: str) -> bool:
+    words = re.findall(r"[^\W_]+", query.lower())
+    career = any(
+        re.match(r"(уров|грейд|компетенц|карьер)", word)
+        or (word.startswith("профил") and not word.startswith("профилир"))
+        for word in words
+    )
+    developer = any(
+        word.startswith("разработчик") or word in {"developer", "developers"} for word in words
+    )
+    return bool(
+        career and developer and not {"bi", "qa", "data", "science", "ds"}.intersection(words)
+    )
+
+
 def lexical_queries(query: str) -> tuple[str, str]:
     # Natural questions contain extra words absent from the relevant paragraph.
     # OR matching lets weighted title/section terms contribute instead of losing FTS entirely.
@@ -66,6 +81,10 @@ def lexical_queries(query: str) -> tuple[str, str]:
             word.lower() for word in re.findall(r"[^\W_]+", query) if word.lower() not in filler
         )
     )
+    # The corpus calls software-developer career ladders "Профили инженеров".
+    # Expand role terminology only for career intent, not arbitrary engineering questions.
+    if developer_career(query):
+        words = list(dict.fromkeys([*words, "инженер", "профиль"]))
     russian = " OR ".join(f'"{word}"' for word in words)
     # Keep exact identifiers, without matching Russian stop words in the simple dictionary.
     simple = " OR ".join(f'"{word}"' for word in words if re.search(r"[a-zA-Z]", word))
@@ -175,6 +194,14 @@ class Store:
             if not active or active["embedding_digest"] != digest:
                 params["vector"] = None
             rows = await (await conn.execute(sql, params)).fetchall()
+        if developer_career(query):
+            # Only already retrieved, ACL-filtered candidates participate. Prefer the
+            # unqualified engineer role over specialized BI/QA roles for a general query.
+            rows.sort(
+                key=lambda row: (
+                    not re.search(r"\bпрофил\w*\s+инженер\w*\b", row["title"], re.IGNORECASE)
+                )
+            )
         counts: dict[str, int] = {}
         items = []
         for row in rows:

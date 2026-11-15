@@ -46,9 +46,15 @@ def test_fixture_metadata_and_evaluation_splits():
     fixtures = json.loads(Path("data/fixtures.json").read_text(encoding="utf-8"))
     assert all(Document.model_validate(d).synthetic for d in fixtures)
     cases = json.loads(Path("data/eval.json").read_text(encoding="utf-8"))
-    assert sum(c["split"] == "dev" for c in cases) == 20
-    assert sum(c["split"] == "test" for c in cases) == 20
-    assert len({c["query"] for c in cases}) == 40
+    assert {c["split"] for c in cases} == {"dev", "test"}
+    for split in ("dev", "test"):
+        subset = [c for c in cases if c["split"] == split]
+        assert sum(c.get("answerable", True) for c in subset) >= 20
+        negatives = [c for c in subset if not c.get("answerable", True)]
+        assert len(negatives) >= 3
+        assert all(c["path"] is None for c in negatives)
+    assert len({c["query"] for c in cases}) == len(cases)
+    assert len({c["id"] for c in cases}) == len(cases)
 
 
 def test_demo_features_fail_closed():

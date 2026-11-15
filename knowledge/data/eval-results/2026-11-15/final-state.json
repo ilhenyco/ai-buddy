@@ -1,0 +1,16 @@
+{
+  "baseSystemSha256": "a19ba013b0751a6e090c5cb746825889dbdd67718d1cf3a3f512c2fe8616057b",
+  "contextSystemSha256": "ef021dc4972fffea28ef829f0409053fec36ed7c20caaebe772d08125e7b1cbf",
+  "contextChars": 700,
+  "contextProbeCorrect": 4,
+  "contextProbeCount": 4,
+  "testsPassed": 84,
+  "note": "The 46-case after report was measured before context-only suffix; all 46 questions have null context, so their system and prompts are unchanged. Historical sourceHashes in summary.json identify that benchmark build, not the final context-only revision.",
+  "sourceHashes": {
+    "provider.py": "2a95a65a8e74f46489cfdca67b2f98034b7079c3acfa6b227b0d06ca0f26510b",
+    "service.py": "6324ea79a9f147b039e36e35d752747c02c8ec413ecbf40c625396e13358f270",
+    "store.py": "743552728eae3a2bb9003992a05aa1fcedeb79c9aa7c67a51e504e584cb0997b",
+    "chunking.py": "64598124cc3c798eb9c06779f2445945e560b3d9076a316fb4c9df2760ca4fc2",
+    "evaluate.py": "2cee92c3e51183e252626801001af42c98a9dea6ad3dfd32b0a20cfb7b35527b"
+  }
+}

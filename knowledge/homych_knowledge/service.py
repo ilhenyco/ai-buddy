@@ -15,7 +15,7 @@ from .models import (
     SearchResult,
     StrictModel,
 )
-from .provider import SYSTEM, ProviderError
+from .provider import ProviderError, generation_system
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +62,23 @@ class GoIdentity:
         return access
 
 
-CONTEXT_CHARS = 1000
+CONTEXT_CHARS = 700
+
+
+def excerpt_text(hit):
+    # Question headings are navigation, not factual answers. Preserve declarative rules,
+    # including headings such as "Что не протестировано ...".
+    headings = [
+        part
+        for part in hit.section.split(" / ")
+        if not part.rstrip().endswith("?")
+        and not re.match(
+            r"^(как|где|когда|зачем|почему|кто|какие|какой|какая|что такое|в какие)\b",
+            part,
+            re.IGNORECASE,
+        )
+    ]
+    return " / ".join(headings) + "\n\n" + hit.text if headings else hit.text
 
 
 def build_prompt(question: str, context: str | None, hits: list, budget: int):
@@ -79,19 +95,20 @@ def build_prompt(question: str, context: str | None, hits: list, budget: int):
                     {
                         "id": h.chunkId,
                         "title": h.title,
-                        "section": h.section,
                         "synthetic": h.synthetic,
                         "sourceType": "public_playbook"
                         if h.url.startswith("https://github.com/avito-tech/playbook/")
                         else "knowledge",
-                        "text": h.text,
+                        # Headings often state the rule; keep them inside the evidence text,
+                        # rather than relying on a small model to interpret separate metadata.
+                        "text": excerpt_text(h),
                     }
                     for h in selected
                 ],
             },
             ensure_ascii=False,
         )
-        if len((SYSTEM + prompt).encode()) <= budget:
+        if len((generation_system(context) + prompt).encode()) <= budget:
             return prompt, selected
         selected.pop()
     return None, []
@@ -130,8 +147,17 @@ class KnowledgeService:
 
     async def answer(self, request: AnswerInput) -> AnswerResult:
         result = None
+        selected = []
 
-        def fallback(status: Literal["no_evidence", "conflicting_sources", "unavailable"]):
+        def fallback(status: Literal["no_evidence", "conflicting_sources", "unavailable"], reason):
+            log.info(
+                "answer request=%s outcome=%s reason=%s retrieved=%s selected=%s",
+                request.requestId,
+                status,
+                reason,
+                len(result.items) if result else 0,
+                [h.chunkId for h in selected],
+            )
             replies = {
                 "no_evidence": "В доступных материалах нет подтверждённого ответа. Уточни у бадди.",
                 "conflicting_sources": (
@@ -154,7 +180,9 @@ class KnowledgeService:
                     request.query, request.messageContext, result.items, self.settings.prompt_bytes
                 )
                 if not selected:
-                    return fallback("no_evidence")
+                    return fallback(
+                        "no_evidence", "prompt_budget" if result.items else "empty_retrieval"
+                    )
                 generated = ModelReply.model_validate(await self.provider.generate(prompt))
                 # Metadata only: no question, excerpt or reply text in logs.
                 log.info(
@@ -167,27 +195,42 @@ class KnowledgeService:
                     len({h.chunkId for h in selected} & set(generated.sourceIds)),
                 )
                 if generated.conflict:
-                    return fallback("conflicting_sources")
+                    return fallback("conflicting_sources", "model_conflict")
                 # The model found no answer in the excerpts: honest fallback, no sources.
                 if not generated.answered:
-                    return fallback("no_evidence")
+                    return fallback("no_evidence", "model_abstention")
                 # Links come only from citations: a URL in the text is removed, not trusted.
-                reply = re.sub(r"(https?://|www\.)\S+", "", generated.reply).strip()
+                reply = re.sub(
+                    r"\[([^\]\n]+)\]\((?:https?://|www\.)[^\s)]+\)", r"\1", generated.reply
+                )
+                reply = re.sub(r"(https?://|www\.)\S+", "", reply).strip()
                 if not reply:
-                    return fallback("unavailable")
+                    return fallback("unavailable", "empty_reply")
                 by_id = {h.chunkId: h for h in selected}
                 # Only excerpts that were actually given count as sources. A reply that cites none
                 # of them is not grounded: the honest outcome is "no evidence", not an outage.
-                ids = [key for key in dict.fromkeys(generated.sourceIds) if key in by_id]
-                if not ids:
-                    return fallback("no_evidence")
+                ids = list(dict.fromkeys(generated.sourceIds))
+                if not ids or any(key not in by_id for key in ids):
+                    return fallback("no_evidence", "unmatched_citations")
+                verified = await self.provider.verify(
+                    request.query,
+                    reply,
+                    [{"id": key, "text": excerpt_text(by_id[key])} for key in ids],
+                )
+                if not verified:
+                    return fallback("no_evidence", "unsupported_claims")
                 access = await self.identity.resolve(request.subjectId)
                 if not await self.store.permitted(access, result.snapshotId, ids):
-                    return fallback("no_evidence")
+                    return fallback("no_evidence", "citation_acl")
                 citations = [
                     Citation.model_validate(by_id[key].model_dump(exclude={"text", "score"}))
                     for key in ids
                 ]
+                log.info(
+                    "answer request=%s outcome=answered reason=grounded citations=%s",
+                    request.requestId,
+                    ids,
+                )
                 return AnswerResult(
                     requestId=request.requestId,
                     status="answered",
@@ -196,5 +239,5 @@ class KnowledgeService:
                     snapshotId=result.snapshotId,
                     retrievalMode=result.retrievalMode,
                 )
-        except (ProviderError, ValidationError, TimeoutError):
-            return fallback("unavailable")
+        except (ProviderError, ValidationError, TimeoutError) as exc:
+            return fallback("unavailable", type(exc).__name__)

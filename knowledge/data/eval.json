@@ -38,5 +38,11 @@
   {"id":"test-17","split":"test","query":"Как определяются грейды product manager?","path":"product-levels.md"},
   {"id":"test-18","split":"test","query":"Где посмотреть критерии уровней дизайнера?","path":"design-levels.md"},
   {"id":"test-19","split":"test","query":"Где описаны навыки специалистов Data Science?","path":"ds-skills.md"},
-  {"id":"test-20","split":"test","query":"Как устроено ревью технического дизайна решения?","path":"tech_design_review.md"}
+  {"id":"test-20","split":"test","query":"Как устроено ревью технического дизайна решения?","path":"tech_design_review.md"},
+  {"id":"dev-neg-01","split":"dev","answerable":false,"path":null,"query":"Сколько оплачиваемых отгулов положено стажёру в первый месяц?"},
+  {"id":"dev-neg-02","split":"dev","answerable":false,"path":null,"query":"Какая зарплата в рублях положена стажёру Авито?"},
+  {"id":"dev-neg-03","split":"dev","answerable":false,"path":null,"query":"Где и по каким документам стажёр получает пропуск в офис?"},
+  {"id":"test-neg-01","split":"test","answerable":false,"path":null,"query":"Как оформить отгул на завтра и кто должен его согласовать?"},
+  {"id":"test-neg-02","split":"test","answerable":false,"path":null,"query":"В какие числа стажёрам перечисляют зарплату?"},
+  {"id":"test-neg-03","split":"test","answerable":false,"path":null,"query":"Что делать, если потерял офисный пропуск, и сколько стоит перевыпуск?"}
 ]
