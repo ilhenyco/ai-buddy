@@ -1,0 +1,90 @@
+# AI for the ready-made stand: the knowledge service (RAG + MCP), its worker and Ollama.
+#
+#   curl -O https://raw.githubusercontent.com/ilhenyco/ai-buddy/main/docker-compose.release.yml
+#   curl -O https://raw.githubusercontent.com/ilhenyco/ai-buddy/main/docker-compose.release-ai.yml
+#   docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml up
+#
+# First start downloads the models (bge-m3:567m ~1.2 GB, qwen3:4b ~2.5 GB) and indexes the Avito
+# Playbook baked into the image; later starts take seconds. On CPU an answer takes up to a minute.
+# Mac: native Ollama is several times faster (GPU) — run `ollama serve`, pull both models and
+# start with RAG_OLLAMA_URL=http://host.docker.internal:11434.
+# The tokens below are demo-only values for a local stand; never reuse them anywhere else.
+services:
+  api:
+    environment:
+      RAG_URL: http://knowledge:8090
+      RAG_SERVICE_TOKEN: homych-demo-service-token-not-for-production
+      RAG_CLIENT_TIMEOUT: 270s
+      RAG_SOURCES_TOKEN: homych-demo-sources-key-not-for-production
+
+  ollama:
+    image: ghcr.io/ilhenyco/homych-ollama:0.13.5   # copy of ollama/ollama:0.13.5
+    volumes:
+      - ollama-data:/root/.ollama
+
+  # downloads the two models once (skipped when they are already in the volume)
+  ollama-init:
+    image: ghcr.io/ilhenyco/homych-ollama:0.13.5
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -n "$$RAG_OLLAMA_URL" ]; then echo "external Ollama: $$RAG_OLLAMA_URL, models are pulled there"; exit 0; fi
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull bge-m3:567m && ollama pull qwen3:4b
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:-}
+    depends_on:
+      - ollama
+
+  # indexes the bundled Avito Playbook when the index is empty, then exits
+  knowledge-init:
+    image: ghcr.io/ilhenyco/homych-knowledge:${HOMYCH_VERSION:-latest}
+    command: ["python", "-m", "homych_knowledge.bootstrap"]
+    environment: &knowledge-env
+      RAG_DATABASE_URL: postgresql://homych:homych@db:5432/homych
+      RAG_GO_URL: http://api:8080
+      RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:-http://ollama:11434}
+      RAG_SERVICE_TOKEN: homych-demo-service-token-not-for-production
+      RAG_DEMO_MODE: "true"
+      RAG_PROVIDER: ollama
+      RAG_EMBEDDING_TIMEOUT: "120"
+      RAG_GENERATION_TIMEOUT: "180"
+      RAG_REQUEST_TIMEOUT: "240"
+      RAG_MCP_TOKENS: "{}"
+      RAG_SYNTHETIC_SUBJECTS: "[]"
+      # SHA-256 of RAG_SOURCES_TOKEN of the api: the lead's materials go to the index
+      RAG_EXTERNAL_CLIENTS: '{"homych-go":{"token_sha256":"f6436675822cae54b59d79ad31857f8d8e45c2da74012b91b54da13b8bcdb5c1","scopes":["documents:write"],"expires_at":"2027-12-31T00:00:00Z"}}'
+      FEATURES: ${FEATURES:-all}
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+
+  knowledge:
+    image: ghcr.io/ilhenyco/homych-knowledge:${HOMYCH_VERSION:-latest}
+    environment: *knowledge-env
+    ports:
+      - "127.0.0.1:${HOMYCH_RAG_PORT:-8090}:8090"
+    depends_on:
+      api:
+        condition: service_started
+      knowledge-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  knowledge-worker:
+    image: ghcr.io/ilhenyco/homych-knowledge:${HOMYCH_VERSION:-latest}
+    command: ["python", "-m", "homych_knowledge.worker"]
+    environment: *knowledge-env
+    depends_on:
+      knowledge:
+        condition: service_healthy
+
+volumes:
+  ollama-data:

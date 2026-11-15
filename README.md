@@ -70,6 +70,62 @@ flowchart LR
 
 Контракт API — [OpenAPI](docs/architecture/openapi.yaml): 23 операции из контракта и 9 расширений, тест проверяет маршрут каждой. Подробности — в [карте документации](docs/README.md).
 
+## Запуск для жюри (готовые образы)
+
+Ничего собирать не нужно: образы уже лежат в GitHub Container Registry (`ghcr.io/ilhenyco/homych-*`, amd64 и arm64), клонировать репозиторий тоже не обязательно. Нужен только [Docker Desktop](https://www.docker.com/products/docker-desktop/). Команды вводите по одной.
+
+```sh
+mkdir homych && cd homych
+```
+```sh
+curl -fsSLO https://raw.githubusercontent.com/ilhenyco/ai-buddy/main/docker-compose.release.yml
+```
+
+**Без AI** — около минуты, ~300 МБ:
+
+```sh
+docker compose -f docker-compose.release.yml up -d --wait
+```
+
+Откройте **http://localhost:8088** и войдите любым тестовым пользователем (таблица ниже). Работает всё, кроме ответов Хомыча на вопросы.
+
+**С AI** — Хомыч отвечает по Avito Playbook. Нужно от 8 ГБ памяти для Docker и ~6 ГБ диска. Первый запуск скачивает две модели (~3,7 ГБ) и индексирует Playbook — 10–20 минут; дальше стенд поднимается за минуту.
+
+```sh
+curl -fsSLO https://raw.githubusercontent.com/ilhenyco/ai-buddy/main/docker-compose.release-ai.yml
+```
+```sh
+docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml up -d --wait
+```
+
+Команда вернётся, когда всё готово. Ход загрузки: `docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml logs -f ollama-init knowledge-init`. Ответ на процессоре Docker занимает до 1–3 минут.
+
+*На Mac быстрее с Ollama на компьютере* (GPU, ответ за 10–20 секунд). Установите с [ollama.com](https://ollama.com), затем:
+
+```sh
+ollama pull bge-m3:567m
+```
+```sh
+ollama pull qwen3:4b
+```
+```sh
+RAG_OLLAMA_URL=http://host.docker.internal:11434 docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml up -d --wait
+```
+
+Остановка: `docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml down` (с `-v` — удалить и данные). Конкретная версия вместо `latest`: `HOMYCH_VERSION=<тег или короткий sha>`. Секреты в этих файлах — демонстрационные, для production их нужно заменить.
+
+Если что-то не так:
+
+| Симптом | Что сделать |
+|---|---|
+| `denied` или `unauthorized` при скачивании образов | Выйти из чужого аккаунта: `docker logout ghcr.io` и повторить |
+| `port is already allocated` | Порт 8088 занят: `HOMYCH_WEB_PORT=8089` перед командой запуска и открыть http://localhost:8089 |
+| `knowledge-init` или `ollama` падает, в логах `killed` / `out of memory` | Дать Docker от 8 ГБ памяти (Docker Desktop → Settings → Resources) или запустить вариант с Ollama на компьютере |
+| Хомыч отвечает «поиск не подключён» | Запущен только `docker-compose.release.yml`: добавьте `-f docker-compose.release-ai.yml` |
+| Ответ ждёт больше минуты | Норма для процессора Docker; на Mac быстрее с Ollama на компьютере |
+
+Ниже — запуск из исходников для разработки.
+
 ## Быстрый старт (без AI)
 
 Нужен [Docker Desktop](https://www.docker.com/products/docker-desktop/). Из корня репозитория:
@@ -199,7 +255,9 @@ docker compose -f docker-compose.yml -f docker-compose.rag.yml logs --tail 50 ap
 ├── tools/            скрипты сборки документации и проверка структуры для CI
 ├── docker-compose.yml            стенд без AI
 ├── docker-compose.rag.yml        добавка: RAG, индексация, Ollama
-└── docker-compose.knowledge.yml  отдельный сервер знаний для внешних агентов
+├── docker-compose.knowledge.yml  отдельный сервер знаний для внешних агентов
+├── docker-compose.release.yml    запуск для жюри из готовых образов GHCR
+└── docker-compose.release-ai.yml добавка: AI из готовых образов
 ```
 
 ## Разработка и проверки

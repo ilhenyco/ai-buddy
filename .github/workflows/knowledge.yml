@@ -51,6 +51,7 @@ jobs:
       - name: Compose configuration
         run: |
           RAG_SERVICE_TOKEN=ci-only-service-token-at-least-24 docker compose -f docker-compose.yml -f docker-compose.rag.yml config --quiet
+          docker compose -f docker-compose.release.yml -f docker-compose.release-ai.yml config --quiet
       - name: Python image build
         run: docker build -t homych-knowledge:test knowledge
       - name: Standalone external Compose configuration

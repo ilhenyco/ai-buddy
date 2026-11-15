@@ -107,6 +107,10 @@ RAG_MCP_TOKENS={"replace-with-a-separate-random-mcp-token":"u-sasha"}
 python -m homych_knowledge.ingest playbook --repo /path/to/playbook
 ```
 
+Образ уже содержит такой clone в `/opt/playbook` (`RAG_PLAYBOOK_REPO`). `python -m homych_knowledge.bootstrap`
+применяет миграции и, если активного snapshot ещё нет, индексирует Playbook, повторяя попытки, пока
+не поднимется Ollama. Так запускается `knowledge-init` в `docker-compose.release-ai.yml`.
+
 Для обновления поменять commit через review и повторить ingestion. Удалённые файлы исключаются
 из нового snapshot. Ошибка embedding, пустой корпус или изменённая существующая ревизия не
 переключают active snapshot. `python -m homych_knowledge.ingest revoke <documentId>` немедленно
