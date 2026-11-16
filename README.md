@@ -279,6 +279,8 @@ cd knowledge && uv sync --frozen && uv run ruff check . && uv run pytest
 | Frontend | типы, юнит-тесты с порогом покрытия, сборка | 57 тестов, логика 98,6 % строк |
 | Документация | `python tools/verify_team_handoff.py` | связи требований, функций, API и BPMN |
 
+**Отчёт о тестировании:** [«Хомыч — отчёт о тестировании» (PDF)](docs/reports/homych-testing-report.pdf) лежит в `docs/reports/`. В нём собраны результаты 11 живых проверок на работающем стенде, покрытие автотестами Go, Python и фронтенда, оценка качества RAG и проверки изоляции команд, сбоев AI и сервиса доступов. Это зафиксированные результаты проверки версии `ad68387` (`main`) на 16 ноября 2026 года; они помогают оценить готовность продукта и дополняют аудит реализации. Команды повторного замера приведены внутри отчёта.
+
 CI — `.github/workflows/`: `backend.yml`, `frontend.yml`, `knowledge.yml` (включая проверку Compose). Новый серверный модуль добавляется в `backend/internal/<модуль>/` по образцу существующих — см. [backend/README.md](backend/README.md).
 
 ## Статус и ограничения
@@ -290,6 +292,7 @@ CI — `.github/workflows/`: `backend.yml`, `frontend.yml`, `knowledge.yml` (в�
 ## Документация
 
 - [Карта документации](docs/README.md) — с чего начать и где что лежит.
+- [Отчёт о тестировании (PDF)](docs/reports/homych-testing-report.pdf) — живые проверки, автотесты и покрытие, качество RAG и устойчивость к сбоям; замер на 16 ноября 2026 года.
 - [Спецификация продукта](docs/product/team-specification.md), [47 требований](docs/product/functional-requirements.md), [Q&A с Авито](docs/product/avito-qa.md).
 - [OpenAPI](docs/architecture/openapi.yaml), [бизнес-события](docs/architecture/events.md), [RAG и MCP](docs/architecture/ai-rag-mcp.md), [BPMN P00–P17](docs/processes/bpmn-v3/README.md).
 - [Полная спецификация в Word](output/ai-buddy-team-specification.docx).

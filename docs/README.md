@@ -10,7 +10,7 @@
 | Разработчику сервера | [OpenAPI](architecture/openapi.yaml) → [backend/README.md](../backend/README.md) → [инварианты данных](architecture/server-handoff.md) |
 | Разработчику фронтенда | [Каталог из 97 функций](product/frontend-functional-specification.md) → [frontend/README.md](../frontend/README.md) |
 | Интегратору AI / агентов Авито | [RAG и MCP](architecture/ai-rag-mcp.md) → [knowledge/README.md](../knowledge/README.md) → [внешний сервер знаний](../knowledge/EXTERNAL.md) |
-| Проверяющему готовность | [Аудит реализации на 14 ноября](reports/implementation-audit-2026-11-14.md) |
+| Проверяющему готовность | [Аудит реализации на 14 ноября](reports/implementation-audit-2026-11-14.md) → [отчёт о тестировании (PDF)](reports/homych-testing-report.pdf) |
 
 ## Продукт — `product/`
 
@@ -44,6 +44,7 @@
 
 ## Отчёты — `reports/`
 
+- [«Хомыч — отчёт о тестировании» (PDF)](reports/homych-testing-report.pdf): результаты 11 живых проверок, покрытие автотестами, качество RAG и устойчивость к сбоям. Замер на 16 ноября 2026 года, коммит `ad68387` (`main`); внутри приведены команды повторного замера. Исходный файл «Хомыч — отчёт о тестировании.pdf» сохранён без изменений под именем `homych-testing-report.pdf`.
 - [Аудит реализации на 14 ноября](reports/implementation-audit-2026-11-14.md): 47 требований и обязательства ТЗ — что готово и чем подтверждено.
 
 ## Архив — `archive/`
